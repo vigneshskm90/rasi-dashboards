@@ -273,6 +273,7 @@ const COLS={division:'div',region:'reg',territory:'ter',district:'dis',category:
   retailershopname:'shop',retailername:'rn',product:'prod',productcategory:'pc',quantityinkg:'kg',qtyinkg:'kg',qtyinkgs:'kg',quantity:'kg',season:'sea',seasoncode:'sea',
   supplydistributorcode:'dc',supplydistributorname:'dn',registrationstatus:'st',sourcecustomercount:'sc',sourcecount:'sc',sourcepattern:'sp',productcategory2:'foc',focus:'foc',focusnonfocus:'foc'};
 const REQ={rc:'Retailer Code',prod:'Product',kg:'Quantity In Kg',sea:'Season'};
+function normSp(v){const n=norm(v);if(!n)return'';if(/many|multi|1n$|more/.test(n))return'ONE TO MANY';if(/onetoone|single|^11$|^one$|1to1/.test(n))return'ONE TO ONE';return String(v).replace(/\s+/g,' ').trim().toUpperCase()}
 function normFoc(v){const n=norm(v);if(!n)return'';if(n.includes('non'))return'Non Focus';if(n.includes('focus')||n==='yes'||n==='y')return'Focus';if(n==='no'||n==='n')return'Non Focus';return String(v).trim()}
 function num(v){if(typeof v==='number')return v;if(v==null||v==='')return NaN;return parseFloat(String(v).replace(/,/g,''))}
 let xlsxReady=null;
@@ -315,14 +316,14 @@ function newBuilder(){
     const dn=st(g.dn),dc=st(g.dc);const xi=B.dst.id(dc||dn||'(BLANK)',[dc,dn||dc||'(BLANK)']);
     const stt=st(g.st).toUpperCase();if(stt)B.hasSt=true;
     let mob=st(g.mob).replace(/\.0+$/,'').replace(/\D/g,'');if(mob.length>10)mob=mob.slice(-10);
-    const spt=st(g.sp),scn=num(g.sc);if(spt||isFinite(scn))B.hasSrc=true;
-    const ri=B.rt.id(rc,[rc,st(g.shop),st(g.rn),mob,stt,ci,spt,isFinite(scn)?scn:null]);
-    if(!(B.rtLast[ri]>sp.ord)){B.rtLast[ri]=sp.ord;const o=B.rt.v[ri];if(st(g.shop))o[1]=st(g.shop);if(st(g.rn))o[2]=st(g.rn);if(mob)o[3]=mob;if(stt)o[4]=stt;o[5]=ci;if(spt)o[6]=spt;if(isFinite(scn))o[7]=scn}
+    const spt=normSp(g.sp),scn=num(g.sc);if(spt||isFinite(scn))B.hasSrc=true;const spx=spt||(isFinite(scn)?(scn>1?'ONE TO MANY':'ONE TO ONE'):'');
+    const ri=B.rt.id(rc,[rc,st(g.shop),st(g.rn),mob,stt,ci,spx,isFinite(scn)?scn:null]);
+    if(!(B.rtLast[ri]>sp.ord)){B.rtLast[ri]=sp.ord;const o=B.rt.v[ri];if(st(g.shop))o[1]=st(g.shop);if(st(g.rn))o[2]=st(g.rn);if(mob)o[3]=mob;if(stt)o[4]=stt;o[5]=ci;if(spx)o[6]=spx;if(isFinite(scn))o[7]=scn}
     const key=sp.code+'|'+di+'|'+gi+'|'+ti+'|'+dsi+'|'+ri+'|'+pi+'|'+xi;
     let z=B.agg.get(key);if(!z){z=[sp.code,di,gi,ti,dsi,ri,pi,xi,0,0];B.agg.set(key,z)}z[8]+=kg;z[9]+=cnt;B.rows+=cnt},
    finish(src){const S=[...B.sea.entries()].sort((a,b)=>a[1]-b[1]).map(x=>x[0]),si=new Map(S.map((s,i)=>[s,i]));
     const R=[...B.agg.values()];R.forEach(r=>{r[0]=si.get(r[0])});
-    return {v:2,S,L:{div:B.div.v,reg:B.reg.v,ter:B.ter.v,dis:B.dis.v,cat:B.cat.v,pc:B.pc.v,dst:B.dst.v},RT:B.rt.v,PR:B.pr.v,R,hasFoc:B.hasFoc,hasSt:B.hasSt,hasSrc:B.hasSrc,src}}};
+    return {v:2,S,L:{div:B.div.v,reg:B.reg.v,ter:B.ter.v,dis:B.dis.v,cat:B.cat.v,pc:B.pc.v,dst:B.dst.v},RT:B.rt.v,PR:B.pr.v,R,hasFoc:B.hasFoc,hasSt:B.hasSt,hasSrc:B.hasSrc,srcCols:[B.colSp||'',B.colSc||''],src}}};
   return B}
 
 function stShow(title,detail,pct,err){const el=$('status');el.style.display='block';el.classList.toggle('err',!!err);$('stTitle').textContent=title;$('stDetail').textContent=detail||'';if(pct!=null)$('stBar').style.width=pct.toFixed(1)+'%'}
@@ -331,6 +332,9 @@ async function loadFiles(files){
   for(const [i,f] of files.entries()){let map=null;
     try{const ok=await streamRows(f,cells=>{const m={};cells.forEach((h,ix)=>{const k=COLS[norm(h)];if(k&&m[k]==null)m[k]=ix});
         if(m.foc==null){const ix=cells.findIndex(h=>/focus/.test(norm(h)));if(ix>=0)m.foc=ix}
+        if(m.sp==null){const ix=cells.findIndex(h=>/pattern|sourcetype|sourcing/.test(norm(h)));if(ix>=0)m.sp=ix}
+        if(m.sc==null){const ix=cells.findIndex(h=>{const n=norm(h);return /source|supplier|cust/.test(n)&&/count|cnt|no$|number/.test(n)&&!/mobile/.test(n)});if(ix>=0)m.sc=ix}
+        if(m.sp!=null)B.colSp=String(cells[m.sp]).trim();if(m.sc!=null)B.colSc=String(cells[m.sc]).trim();
         if(m.rc==null&&m.sea==null)return false;const miss=Object.keys(REQ).filter(k=>m[k]==null);if(miss.length)throw new Error('these columns are missing: '+miss.map(k=>REQ[k]).join(', '));map=m;return true},
       g=>{if(!g||g.length<2)return;const o={};for(const k in map)o[k]=g[map[k]];B.add(o)},
       (b,msg)=>stShow(`Reading file ${i+1} of ${files.length}: ${f.name}`,msg||`${inr(B.rows)} rows so far`,(done+Math.min(b,f.size))/tot*100));
@@ -344,8 +348,8 @@ async function loadFiles(files){
   const src={name:files.map(f=>f.name).join(', '),rows:B.rows,when:new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}),example:false};
   applyData(B.finish(src));
   const saved=await idbSet(D);
-  stShow(errs.length?'Loaded, with problems':'Loaded',`${inr(B.rows)} rows in ${Math.round((performance.now()-t0)/1000)} s`+(B.skipped?` · skipped ${inr(B.skipped)} rows with a blank retailer code, a blank quantity or a season that is not KH or RB${bad?': '+bad:''}`:'')+(errs.length?' · '+errs.join(' · '):'')+(saved?'':' · this browser could not remember the file, so it must be loaded again next time'),100,errs.length>0);
-  if(!errs.length&&!B.skipped)setTimeout(()=>{$('status').style.display='none'},4000);
+  stShow(errs.length?'Loaded, with problems':'Loaded',`${inr(B.rows)} rows in ${Math.round((performance.now()-t0)/1000)} s · Source columns: ${B.hasSrc?'found'+(B.colSp?' ('+B.colSp+(B.colSc?', '+B.colSc:'')+')':' ('+B.colSc+')'):'NOT found, so the Sourcing tab is empty'}`+(B.skipped?` · skipped ${inr(B.skipped)} rows with a blank retailer code, a blank quantity or a season that is not KH or RB${bad?': '+bad:''}`:'')+(errs.length?' · '+errs.join(' · '):'')+(saved?'':' · this browser could not remember the file, so it must be loaded again next time'),100,errs.length>0);
+  if(!errs.length&&!B.skipped&&B.hasSrc)setTimeout(()=>{$('status').style.display='none'},4000);
 }
 $('loadBtn').addEventListener('click',()=>$('file').click());
 $('file').addEventListener('change',e=>{loadFiles([...e.target.files]);e.target.value=''});
@@ -383,7 +387,7 @@ function applyData(nd){
   Object.assign(ST,{focus:-1,comp:-1,div:-1,reg:-1,ter:-1,dis:-1,cat:-1,pc:-1,foc:'',prod:-1,rst:'',src:'',dst:-1,ret:-1,rStatus:'',rq:'',hsGrade:'',hsTer:-1,role:'head',tab:'ov'});OPEN.clear();HSOPEN.clear();TYOPEN.clear();SRC_SET.clear();
   $('filters').style.display=MODE==='pc'?'flex':'';$('filters').classList.remove('open');$('tabs').style.display='flex';$('sum').style.display='block';$('roleSel').style.display='';
   $('roleSel').innerHTML=Object.entries(ROLES).map(([k,v])=>`<option value="${k}">View as: ${v[0]}</option>`).join('');
-  $('exbar').style.display=D.src.example?'block':'none';$('srTab').style.display=D.hasSrc?'':'none';if(!D.hasSrc&&ST.tab==='sr')ST.tab='ov';
+  $('exbar').style.display=D.src.example?'block':'none';
   $('loadinfo').textContent=`${D.src.name} · ${inr(D.src.rows)} rows · ${inr(D.RT.length)} retailers · ${D.S[0]} to ${D.S[D.S.length-1]}`+(D.src.when?' · loaded '+D.src.when:'');
   fillFilters();setTab('ov');
 }
@@ -748,7 +752,8 @@ function bindX(m,regIds){m.querySelectorAll('[data-xall]').forEach(bt=>bt.onclic
 /* ---------- SOURCING ---------- */
 const SRC_SET=new Set();
 const spLab=x=>x||'(BLANK)';
-function renderSource(m){const L=retList(),{F,fi,a,b}=C,act=L.filter(o=>o.cur>0||o.prev>0);
+function renderSource(m){if(!D.hasSrc){m.innerHTML=`<div class="empty"><h2>No source data in the loaded file</h2><div class="drop">${D.hasSrc===undefined?'This data was loaded with an earlier version of the dashboard, before the source columns were read. <b>Load the file again</b> and this tab will fill.':'The file has no <b>Source Pattern</b> or <b>Source Customer Count</b> column, or both are blank. Check the column names in row 1 and load the file again.'}<br><br>Loaded: ${esc(D.src.name)}${D.src.when?' on '+esc(D.src.when):''}</div></div>`;return}
+  const L=retList(),{F,fi,a,b}=C,act=L.filter(o=>o.cur>0||o.prev>0);
   const pats=[...new Set(act.map(o=>o.sp))].sort((x,y)=>(x==='ONE TO ONE'?0:x==='ONE TO MANY'?1:2)-(y==='ONE TO ONE'?0:y==='ONE TO MANY'?1:2)||x.localeCompare(y));
   const pc=p=>p==='ONE TO ONE'?'var(--s1)':p==='ONE TO MANY'?'var(--s2)':'var(--base)';
   const st=k=>{const x={a:0,b:0,ra:0,rb:0,kept:0,nw:0,lost:0,fa:0,br:0,hs:0,hn:0,nd:0,sc:0,scn:0};for(const o of act){if(k(o)===false)continue;x.a+=o.cur;x.b+=o.prev;if(o.cur>0){x.ra++;x.fa+=Math.max(0,o.fa);x.br+=o.br;x.nd+=o.nd;if(o.sc!=null){x.sc+=o.sc;x.scn++}if(o.prev>0)x.kept++;else x.nw++;if(o.h){x.hs+=o.h.s;x.hn++}}if(o.prev>0){x.rb++;if(!(o.cur>0))x.lost++}}return x};
