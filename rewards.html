@@ -575,14 +575,15 @@ function renderGeo(m){const {F,fi,ci,a,b}=C,NP=D.PR.length,N=new Map();
     return `<tr class="${cls}${click?' click':''}" ${click?`data-k="${esc(k)}"`:''}><td>${label}</td>${b?`<td>${MT(o.b)}</td>`:''}<td>${MT(o.a)}</td><td>${b?grTxt(o.a,o.b):''}</td><td>${inr(o.ra.size)}</td><td>${b&&o.rb.size?inr(kept/o.rb.size*100,0)+'%':'–'}</td><td>${b?inr(o.rb.size-kept):'–'}</td>${D.hasFoc?`<td>${o.a>0?inr(o.fa/o.a*100,1)+'%':'–'}</td>`:''}<td>${o.ra.size?inr(o.pr.size/o.ra.size,1):'–'}</td></tr>`};
   const kids=(pre,depth)=>[...N.keys()].filter(k=>k!=='T'&&k.split('¦').length===depth&&(pre==null||k.startsWith(pre+'¦'))).sort((x,y)=>N.get(y).a-N.get(x).a);
   let rows='';
-  for(const dk of kids(null,1)){rows+=line('l0',esc(D.L.div[+dk]),dk);
+  for(const dk of kids(null,1)){const od=OPEN.has(dk);rows+=line('l0',(od?'▾ ':'▸ ')+esc(D.L.div[+dk]),dk,true);if(!od)continue;
     for(const gk of kids(dk,2)){const og=OPEN.has(gk);rows+=line('l1',(og?'▾ ':'▸ ')+esc(D.L.reg[+gk.split('¦')[1]]),gk,true);
       if(og)for(const tk of kids(gk,3)){const ot=OPEN.has(tk);rows+=line('l2',(ot?'▾ ':'▸ ')+esc(D.L.ter[+tk.split('¦')[2]][0]),tk,true);
         if(ot)for(const xk of kids(tk,4))rows+=line('l3',esc(D.L.dis[+xk.split('¦')[3]][0]),xk)}}}
   if(N.has('T'))rows+=line('tot','Total','T');
-  m.innerHTML=`<div class="card"><h3>Division › Region › Territory › District</h3><div class="row" style="margin:0 0 8px"><span class="note" style="margin:0">MT. Select a region to see its territories, then a territory to see its districts. Sorted by ${a} volume.</span>${xBtns('geo')}</div>
+  m.innerHTML=`<div class="card"><h3>Division › Region › Territory › District</h3><div class="row" style="margin:0 0 8px"><span class="note" style="margin:0">MT. Select a division to see its regions, a region to see its territories, then a territory to see its districts. Sorted by ${a} volume.</span><span style="margin-left:auto;display:inline-flex;gap:6px;flex-wrap:wrap"><button class="btn" type="button" data-geo="2">Show all regions</button><button class="btn" type="button" data-geo="3">Show all territories</button><button class="btn" type="button" data-geo="0">Collapse all</button></span></div>
    <div class="scroll" ><table><tr><th class="l">Area</th>${b?`<th>${b}</th>`:''}<th>${a}</th><th>Growth</th><th>Retailers</th><th>Retention</th><th>Lost</th>${D.hasFoc?'<th>Focus %</th>':''}<th>Avg SKUs</th></tr>${rows||'<tr><td colspan="9" class="l muted">No data for these filters</td></tr>'}</table></div></div>`;
-  m.querySelectorAll('tr.click').forEach(tr=>tr.onclick=()=>{const k=tr.dataset.k;OPEN.has(k)?OPEN.delete(k):OPEN.add(k);render()});bindX(m,[...N.keys()].filter(k=>k.split('¦').length===2))}
+  m.querySelectorAll('tr.click').forEach(tr=>tr.onclick=()=>{const k=tr.dataset.k;OPEN.has(k)?OPEN.delete(k):OPEN.add(k);render()});
+  m.querySelectorAll('[data-geo]').forEach(bt=>bt.onclick=()=>{const lv=+bt.dataset.geo;OPEN.clear();if(lv)[...N.keys()].forEach(k=>{const d=k.split('¦').length;if(k!=='T'&&d<lv)OPEN.add(k)});render()})}
 
 /* ---------- RETAILERS ---------- */
 function renderRetailers(m){const L=retList(),{a,b}=C,cnt={};L.forEach(o=>cnt[o.st]=(cnt[o.st]||0)+1);
