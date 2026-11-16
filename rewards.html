@@ -190,6 +190,7 @@ body.m-phone #guide{padding:0} body.m-phone #guide .box{border-radius:0;min-heig
   <div class="f" id="fFocW"><label for="fFoc">Focus</label><select id="fFoc"></select></div>
   <div class="f"><label for="fProd">SKU</label><select id="fProd"></select></div>
   <div class="f" id="fRstW"><label for="fRst">Registration</label><select id="fRst"></select></div>
+  <div class="f" id="fSrcW"><label for="fSrc">Source pattern</label><select id="fSrc"></select></div>
 </div>
 <div id="chips"></div>
 <nav id="tabs">
@@ -200,6 +201,7 @@ body.m-phone #guide{padding:0} body.m-phone #guide .box{border-radius:0;min-heig
   <button type="button" data-t="r360">Retailer 360</button>
   <button type="button" data-t="ty">Retailer Type</button>
   <button type="button" data-t="pr">Products</button>
+  <button type="button" data-t="sr" id="srTab">Sourcing</button>
   <button type="button" data-t="op">Opportunities</button>
 </nav>
 <main id="main">
@@ -236,7 +238,7 @@ const tick=()=>new Promise(r=>setTimeout(r,0));
 /* ===================== STATE ===================== */
 let D=null;            // {S:[season codes], L:{div,reg,ter,dis,cat,pc,dst}, RT:[retailers], PR:[products], R:[rows], hasFoc, hasSt, src}
 // row = [season, div, reg, ter, dis, retailer, product, distributor, kg, transactions]
-const ST={kind:'',focus:-1,comp:-1,div:-1,reg:-1,ter:-1,dis:-1,cat:-1,pc:-1,foc:'',prod:-1,rst:'',dst:-1,
+const ST={kind:'',focus:-1,comp:-1,div:-1,reg:-1,ter:-1,dis:-1,cat:-1,pc:-1,foc:'',prod:-1,rst:'',src:'',dst:-1,
   tab:'ov',rStatus:'',rq:'',sort:{k:'cur',d:-1},ret:-1,hsGrade:'',hsTer:-1,role:'head'};
 let SEA=[], PER=[], SP=[], C=null, RL=null;
 const OPEN=new Set(), HSOPEN=new Set(), TYOPEN=new Set();
@@ -269,7 +271,7 @@ function buildPeriods(){
 /* ===================== LOADING ===================== */
 const COLS={division:'div',region:'reg',territory:'ter',district:'dis',category:'cat',retailercode:'rc',retailermobileno:'mob',retailermobile:'mob',mobileno:'mob',
   retailershopname:'shop',retailername:'rn',product:'prod',productcategory:'pc',quantityinkg:'kg',qtyinkg:'kg',qtyinkgs:'kg',quantity:'kg',season:'sea',seasoncode:'sea',
-  supplydistributorcode:'dc',supplydistributorname:'dn',registrationstatus:'st',productcategory2:'foc',focus:'foc',focusnonfocus:'foc'};
+  supplydistributorcode:'dc',supplydistributorname:'dn',registrationstatus:'st',sourcecustomercount:'sc',sourcecount:'sc',sourcepattern:'sp',productcategory2:'foc',focus:'foc',focusnonfocus:'foc'};
 const REQ={rc:'Retailer Code',prod:'Product',kg:'Quantity In Kg',sea:'Season'};
 function normFoc(v){const n=norm(v);if(!n)return'';if(n.includes('non'))return'Non Focus';if(n.includes('focus')||n==='yes'||n==='y')return'Focus';if(n==='no'||n==='n')return'Non Focus';return String(v).trim()}
 function num(v){if(typeof v==='number')return v;if(v==null||v==='')return NaN;return parseFloat(String(v).replace(/,/g,''))}
@@ -299,7 +301,7 @@ async function streamRows(file,onHeader,onRow,prog){
 
 function newBuilder(){
   const dict=()=>{const m=new Map(),v=[];return {m,v,id(k,val){let i=m.get(k);if(i==null){i=v.length;m.set(k,i);v.push(val===undefined?k:val)}return i}}};
-  const B={sea:new Map(),div:dict(),reg:dict(),ter:dict(),dis:dict(),cat:dict(),pc:dict(),dst:dict(),rt:dict(),pr:dict(),agg:new Map(),rtLast:[],rows:0,skipped:0,badSea:{},hasFoc:false,hasSt:false,
+  const B={sea:new Map(),div:dict(),reg:dict(),ter:dict(),dis:dict(),cat:dict(),pc:dict(),dst:dict(),rt:dict(),pr:dict(),agg:new Map(),rtLast:[],rows:0,skipped:0,badSea:{},hasFoc:false,hasSt:false,hasSrc:false,
    add(g,cnt=1){const st=v=>v==null?'':String(v).replace(/\s+/g,' ').trim().toUpperCase();
     const sp=parseSeason(g.sea);const kg=num(g.kg);const rc=st(g.rc);
     if(!sp){const k=st(g.sea)||'(BLANK)';B.badSea[k]=(B.badSea[k]||0)+1;B.skipped++;return}
@@ -313,13 +315,14 @@ function newBuilder(){
     const dn=st(g.dn),dc=st(g.dc);const xi=B.dst.id(dc||dn||'(BLANK)',[dc,dn||dc||'(BLANK)']);
     const stt=st(g.st).toUpperCase();if(stt)B.hasSt=true;
     let mob=st(g.mob).replace(/\.0+$/,'').replace(/\D/g,'');if(mob.length>10)mob=mob.slice(-10);
-    const ri=B.rt.id(rc,[rc,st(g.shop),st(g.rn),mob,stt,ci]);
-    if(!(B.rtLast[ri]>sp.ord)){B.rtLast[ri]=sp.ord;const o=B.rt.v[ri];if(st(g.shop))o[1]=st(g.shop);if(st(g.rn))o[2]=st(g.rn);if(mob)o[3]=mob;if(stt)o[4]=stt;o[5]=ci}
+    const spt=st(g.sp),scn=num(g.sc);if(spt||isFinite(scn))B.hasSrc=true;
+    const ri=B.rt.id(rc,[rc,st(g.shop),st(g.rn),mob,stt,ci,spt,isFinite(scn)?scn:null]);
+    if(!(B.rtLast[ri]>sp.ord)){B.rtLast[ri]=sp.ord;const o=B.rt.v[ri];if(st(g.shop))o[1]=st(g.shop);if(st(g.rn))o[2]=st(g.rn);if(mob)o[3]=mob;if(stt)o[4]=stt;o[5]=ci;if(spt)o[6]=spt;if(isFinite(scn))o[7]=scn}
     const key=sp.code+'|'+di+'|'+gi+'|'+ti+'|'+dsi+'|'+ri+'|'+pi+'|'+xi;
     let z=B.agg.get(key);if(!z){z=[sp.code,di,gi,ti,dsi,ri,pi,xi,0,0];B.agg.set(key,z)}z[8]+=kg;z[9]+=cnt;B.rows+=cnt},
    finish(src){const S=[...B.sea.entries()].sort((a,b)=>a[1]-b[1]).map(x=>x[0]),si=new Map(S.map((s,i)=>[s,i]));
     const R=[...B.agg.values()];R.forEach(r=>{r[0]=si.get(r[0])});
-    return {v:2,S,L:{div:B.div.v,reg:B.reg.v,ter:B.ter.v,dis:B.dis.v,cat:B.cat.v,pc:B.pc.v,dst:B.dst.v},RT:B.rt.v,PR:B.pr.v,R,hasFoc:B.hasFoc,hasSt:B.hasSt,src}}};
+    return {v:2,S,L:{div:B.div.v,reg:B.reg.v,ter:B.ter.v,dis:B.dis.v,cat:B.cat.v,pc:B.pc.v,dst:B.dst.v},RT:B.rt.v,PR:B.pr.v,R,hasFoc:B.hasFoc,hasSt:B.hasSt,hasSrc:B.hasSrc,src}}};
   return B}
 
 function stShow(title,detail,pct,err){const el=$('status');el.style.display='block';el.classList.toggle('err',!!err);$('stTitle').textContent=title;$('stDetail').textContent=detail||'';if(pct!=null)$('stBar').style.width=pct.toFixed(1)+'%'}
@@ -356,7 +359,7 @@ async function idbGet(){try{const db=await idb();return await new Promise(res=>{
 
 /* data remembered by an older version: re-format names to capitals and merge names that differed only by case */
 function reformat(o){const B=newBuilder(),L=o.L;for(const r of o.R){const rt=o.RT[r[5]],pr=o.PR[r[6]],ds=L.dst[r[7]];
-  B.add({sea:o.S[r[0]],div:L.div[r[1]],reg:L.reg[r[2]],ter:L.ter[r[3]][0],dis:L.dis[r[4]][0],cat:L.cat[rt[5]],rc:rt[0],shop:rt[1],rn:rt[2],mob:rt[3],st:rt[4],prod:pr[0],pc:L.pc[pr[1]],foc:pr[2],dc:ds[0],dn:ds[1],kg:r[8]},r[9])}
+  B.add({sea:o.S[r[0]],div:L.div[r[1]],reg:L.reg[r[2]],ter:L.ter[r[3]][0],dis:L.dis[r[4]][0],cat:L.cat[rt[5]],rc:rt[0],shop:rt[1],rn:rt[2],mob:rt[3],st:rt[4],sp:rt[6],sc:rt[7],prod:pr[0],pc:L.pc[pr[1]],foc:pr[2],dc:ds[0],dn:ds[1],kg:r[8]},r[9])}
   return B.finish(o.src)}
 /* example data, clearly marked */
 function exampleData(){
@@ -366,8 +369,8 @@ function exampleData(){
   const seas=['RB23','KH24','RB24','KH25','RB25','KH26'];const fn=['SHREE','MAA','NEW','JAI','SRI','OM'],ln=['KRISHI KENDRA','BEEJ BHANDAR','AGRO AGENCIES','SEEDS','KHAD BHANDAR','TRADERS'],pn=['RAMESH','SURESH','ANIL','MAHESH','PRAKASH','VIJAY','SANJAY'];
   let n=0;for(const [dv,rg,ters] of geo)for(const [ter,diss] of ters){const dists=[1,2].map(i=>[String(20000000+Math.floor(rnd()*9000)),ter+' DISTRIBUTOR '+i]);
     for(let k=0;k<45;k++){n++;const rc='EX'+String(10000+n),shop='M/S '+pick(fn)+' '+pick(ln)+' (EXAMPLE)',rn=pick(pn),mob='90000'+String(10000+n),dis=pick(diss),cat=rnd()<.12?'DISTRIBUTOR RETAILER':'RETAILER',stt=rnd()<.1?'DELETED':'ACTIVE',ds=pick(dists);
-      const size=(cat==='RETAILER'?60:900)*(0.4+rnd()*5),my=prods.filter(()=>rnd()<.4);if(!my.length)my.push(pick(prods));const start=Math.floor(rnd()*3),stop=rnd()<.15?4+Math.floor(rnd()*2):6;
-      seas.forEach((s,si)=>{if(si<start||si>=stop||rnd()<.12)return;for(const p of my){if(rnd()<.25)continue;const t=1+Math.floor(rnd()*3);for(let j=0;j<t;j++)B.add({div:dv,reg:rg,ter,dis,cat,rc,mob,shop,rn,prod:p[0],pc:p[1],kg:Math.round(size*(0.5+rnd())*(1+si*.06)/t),sea:s,dc:ds[0],dn:ds[1],st:stt,foc:p[2]})}})}}
+      const multi=cat==='RETAILER'&&rnd()<.3,size=(cat==='RETAILER'?60:900)*(0.4+rnd()*5)*(multi?1.6:1),my=prods.filter(()=>rnd()<.4);if(!my.length)my.push(pick(prods));const start=Math.floor(rnd()*3),stop=rnd()<.15?4+Math.floor(rnd()*2):6;
+      seas.forEach((s,si)=>{if(si<start||si>=stop||rnd()<.12)return;for(const p of my){if(rnd()<.25)continue;const t=1+Math.floor(rnd()*3);for(let j=0;j<t;j++)B.add({div:dv,reg:rg,ter,dis,cat,rc,mob,shop,rn,prod:p[0],pc:p[1],kg:Math.round(size*(0.5+rnd())*(1+si*.06)/t),sea:s,dc:(multi&&j%2?dists[1-dists.indexOf(ds)]:ds)[0],dn:(multi&&j%2?dists[1-dists.indexOf(ds)]:ds)[1],st:stt,foc:p[2],sc:multi?2:1,sp:multi?'One To Many':'One To One'})}})}}
   return B.finish({name:'Example data (made up)',rows:B.rows,when:'',example:true})}
 $('exBtn').addEventListener('click',()=>applyData(exampleData()));
 
@@ -377,10 +380,10 @@ function applyData(nd){
   D=nd;const types=[...new Set(D.S.map(s=>s.slice(0,2)))];
   $('fKind').innerHTML=['KH','RB'].filter(t=>types.includes(t)).map(t=>`<option value="${t}">${KIND_NAME[t]}</option>`).join('')+`<option value="FY">${KIND_NAME.FY}</option>`;
   ST.kind=D.S[D.S.length-1].slice(0,2);$('fKind').value=ST.kind;
-  Object.assign(ST,{focus:-1,comp:-1,div:-1,reg:-1,ter:-1,dis:-1,cat:-1,pc:-1,foc:'',prod:-1,rst:'',dst:-1,ret:-1,rStatus:'',rq:'',hsGrade:'',hsTer:-1,role:'head',tab:'ov'});OPEN.clear();HSOPEN.clear();TYOPEN.clear();
+  Object.assign(ST,{focus:-1,comp:-1,div:-1,reg:-1,ter:-1,dis:-1,cat:-1,pc:-1,foc:'',prod:-1,rst:'',src:'',dst:-1,ret:-1,rStatus:'',rq:'',hsGrade:'',hsTer:-1,role:'head',tab:'ov'});OPEN.clear();HSOPEN.clear();TYOPEN.clear();SRC_SET.clear();
   $('filters').style.display=MODE==='pc'?'flex':'';$('filters').classList.remove('open');$('tabs').style.display='flex';$('sum').style.display='block';$('roleSel').style.display='';
   $('roleSel').innerHTML=Object.entries(ROLES).map(([k,v])=>`<option value="${k}">View as: ${v[0]}</option>`).join('');
-  $('exbar').style.display=D.src.example?'block':'none';
+  $('exbar').style.display=D.src.example?'block':'none';$('srTab').style.display=D.hasSrc?'':'none';if(!D.hasSrc&&ST.tab==='sr')ST.tab='ov';
   $('loadinfo').textContent=`${D.src.name} · ${inr(D.src.rows)} rows · ${inr(D.RT.length)} retailers · ${D.S[0]} to ${D.S[D.S.length-1]}`+(D.src.when?' · loaded '+D.src.when:'');
   fillFilters();setTab('ov');
 }
@@ -399,20 +402,21 @@ function fillFilters(){
   ST.dis=opt($('fDis'),[...diss].map(i=>[i,L.dis[i][0]+(ST.ter<0?' ('+L.ter[L.dis[i][1]][0]+')':'')]).sort(byName),ST.dis,'All districts');
   ST.cat=opt($('fCat'),L.cat.map((x,i)=>[i,x]).sort(byName),ST.cat,'All types');
   ST.pc=opt($('fPc'),L.pc.map((x,i)=>[i,x]).sort(byName),ST.pc,'All categories');
-  $('fFocW').style.display=D.hasFoc?'':'none';$('fRstW').style.display=D.hasSt?'':'none';
+  $('fFocW').style.display=D.hasFoc?'':'none';$('fRstW').style.display=D.hasSt?'':'none';$('fSrcW').style.display=D.hasSrc?'':'none';
+  const sps=[...new Set(D.RT.map(r=>r[6]).filter(Boolean))].sort();$('fSrc').innerHTML='<option value="">All</option>'+sps.map(f=>`<option${f===ST.src?' selected':''}>${esc(f)}</option>`).join('');
   const focs=[...new Set(D.PR.map(p=>p[2]).filter(Boolean))].sort();$('fFoc').innerHTML='<option value="">Focus + Non Focus</option>'+focs.map(f=>`<option${f===ST.foc?' selected':''}>${esc(f)}</option>`).join('');
   ST.prod=opt($('fProd'),D.PR.map((p,i)=>[i,p[0],p]).filter(x=>(ST.pc<0||x[2][1]===ST.pc)&&(!ST.foc||x[2][2]===ST.foc)).sort(byName),ST.prod,'All SKUs');
   const sts=[...new Set(D.RT.map(r=>r[4]).filter(Boolean))].sort();$('fRst').innerHTML='<option value="">All</option>'+sts.map(f=>`<option${f===ST.rst?' selected':''}>${esc(f)}</option>`).join('');
 }
-const FMAP={fKind:'kind',fFocus:'focus',fComp:'comp',fDiv:'div',fReg:'reg',fTer:'ter',fDis:'dis',fCat:'cat',fPc:'pc',fFoc:'foc',fProd:'prod',fRst:'rst'};
-Object.keys(FMAP).forEach(id=>$(id).addEventListener('change',e=>{const k=FMAP[id],v=e.target.value;ST[k]=(k==='kind'||k==='foc'||k==='rst')?v:+v;
+const FMAP={fKind:'kind',fFocus:'focus',fComp:'comp',fDiv:'div',fReg:'reg',fTer:'ter',fDis:'dis',fCat:'cat',fPc:'pc',fFoc:'foc',fProd:'prod',fRst:'rst',fSrc:'src'};
+Object.keys(FMAP).forEach(id=>$(id).addEventListener('change',e=>{const k=FMAP[id],v=e.target.value;ST[k]=(k==='kind'||k==='foc'||k==='rst'||k==='src')?v:+v;
   if(id==='fKind'){ST.focus=-1;ST.comp=-1}if(id==='fFocus')ST.comp=-1;if(id==='fDiv'){ST.reg=-1;ST.ter=-1;ST.dis=-1}if(id==='fReg'){ST.ter=-1;ST.dis=-1}if(id==='fTer')ST.dis=-1;if(id==='fPc'||id==='fFoc')ST.prod=-1;
   ST.hsTer=-1;fillFilters();render()}));
 $('tabs').addEventListener('click',e=>{const t=e.target.dataset.t;if(t)setTab(t)});
 function setTab(t){ST.tab=t;[...$('tabs').children].forEach(b=>b.classList.toggle('on',b.dataset.t===t));render()}
 $('fltBtn').addEventListener('click',()=>{$('filters').classList.toggle('open');fltSummary()});
 function fltSummary(){const b=$('fltBtn');if(!D){b.style.display='none';return}const L=D.L;
-  const parts=[PER[ST.focus]+(ST.comp>=0?' vs '+PER[ST.comp]:''),ST.div>=0?L.div[ST.div]:'',ST.reg>=0?L.reg[ST.reg]:'',ST.ter>=0?L.ter[ST.ter][0]:'',ST.dis>=0?L.dis[ST.dis][0]:'',ST.cat>=0?L.cat[ST.cat]:'',ST.pc>=0?L.pc[ST.pc]:'',ST.foc,ST.prod>=0?D.PR[ST.prod][0]:'',ST.rst].filter(Boolean);
+  const parts=[PER[ST.focus]+(ST.comp>=0?' vs '+PER[ST.comp]:''),ST.div>=0?L.div[ST.div]:'',ST.reg>=0?L.reg[ST.reg]:'',ST.ter>=0?L.ter[ST.ter][0]:'',ST.dis>=0?L.dis[ST.dis][0]:'',ST.cat>=0?L.cat[ST.cat]:'',ST.pc>=0?L.pc[ST.pc]:'',ST.foc,ST.prod>=0?D.PR[ST.prod][0]:'',ST.rst,ST.src].filter(Boolean);
   b.innerHTML=`<span><b>Filters:</b> ${esc(parts.join(' · '))}</span><span>${$('filters').classList.contains('open')?'▲':'▼'}</span>`;b.style.display='';
   $('miniSum').textContent=parts.join(' · ');$('miniTab').innerHTML=[...$('tabs').children].map(t=>`<option value="${t.dataset.t}"${t.dataset.t===ST.tab?' selected':''}>${t.textContent}</option>`).join('')}
 $('miniTab').addEventListener('change',e=>{setTab(e.target.value);scrollTo(0,0)});
@@ -428,20 +432,20 @@ function topOf2pc(){const m=new Map();for(const r of D.R){const p=D.PR[r[6]][1];
 /* ===================== AGGREGATION ===================== */
 function filtered(){const PR=D.PR,RT=D.RT,s=ST;
   return D.R.filter(r=>(s.div<0||r[1]===s.div)&&(s.reg<0||r[2]===s.reg)&&(s.ter<0||r[3]===s.ter)&&(s.dis<0||r[4]===s.dis)&&(s.prod<0||r[6]===s.prod)&&(s.dst<0||r[7]===s.dst)
-    &&(s.pc<0||PR[r[6]][1]===s.pc)&&(!s.foc||PR[r[6]][2]===s.foc)&&(s.cat<0||RT[r[5]][5]===s.cat)&&(!s.rst||RT[r[5]][4]===s.rst))}
+    &&(s.pc<0||PR[r[6]][1]===s.pc)&&(!s.foc||PR[r[6]][2]===s.foc)&&(s.cat<0||RT[r[5]][5]===s.cat)&&(!s.rst||RT[r[5]][4]===s.rst)&&(!s.src||RT[r[5]][6]===s.src))}
 const isFoc=p=>D.PR[p][2]==='Focus';
 const brOf=m=>{let n=0;if(m)for(const v of m.values())if(v>0)n++;return n};
 function retList(){ if(RL)return RL;
   const {F,fi,ci}=C,np=PER.length,ns=D.S.length,M=new Map();
-  for(const r of F){let o=M.get(r[5]);if(!o){o={k:r[5],v:new Array(np).fill(0),sv:new Array(ns).fill(0),fa:0,fb:0,pa:new Map(),pb:new Map(),n:0,ls:-1};M.set(r[5],o)}
+  for(const r of F){let o=M.get(r[5]);if(!o){o={k:r[5],v:new Array(np).fill(0),sv:new Array(ns).fill(0),fa:0,fb:0,pa:new Map(),pb:new Map(),da:new Map(),n:0,ls:-1};M.set(r[5],o)}
     o.sv[r[0]]+=r[8];if(r[0]>=o.ls){o.ls=r[0];o.d=r[1];o.g=r[2];o.t=r[3];o.di=r[4]}
     const p=SP[r[0]];if(p<0)continue;o.v[p]+=r[8];
-    if(p===fi){if(isFoc(r[6]))o.fa+=r[8];o.pa.set(r[6],(o.pa.get(r[6])||0)+r[8]);o.n+=r[9]}else if(p===ci){if(isFoc(r[6]))o.fb+=r[8];o.pb.set(r[6],(o.pb.get(r[6])||0)+r[8])}}
+    if(p===fi){if(isFoc(r[6]))o.fa+=r[8];o.pa.set(r[6],(o.pa.get(r[6])||0)+r[8]);o.da.set(r[7],(o.da.get(r[7])||0)+r[8]);o.n+=r[9]}else if(p===ci){if(isFoc(r[6]))o.fb+=r[8];o.pb.set(r[6],(o.pb.get(r[6])||0)+r[8])}}
   const out=[];
   for(const o of M.values()){const cur=Math.max(0,o.v[fi]),prev=ci>=0?Math.max(0,o.v[ci]):0;let earlier=false;for(let i=0;i<fi;i++)if(i!==ci&&o.v[i]>0){earlier=true;break}
     let st;if(cur>0&&prev>0){const g=(cur-prev)/prev;st=g>=.1?'grow':g<=-.1?'decl':'stab'}else if(cur>0)st=earlier?'react':'new';else if(prev>0)st='lost';else if(earlier)st='dorm';else continue;
     const rt=D.RT[o.k];o.cur=cur;o.prev=prev;o.st=st;o.g100=gr(cur,prev);o.br=brOf(o.pa);o.brp=brOf(o.pb);o.fp=D.hasFoc&&cur>0?Math.max(0,o.fa)/cur*100:null;
-    o.code=rt[0];o.name=rt[1]||rt[2]||rt[0];o.owner=rt[1]?rt[2]:'';o.mob=rt[3];o.reg=rt[4];o.h=health(o);o.tn=D.L.ter[o.t][0];o.dn=D.L.dis[o.di][0];o.gn=D.L.reg[o.g];out.push(o)}
+    o.code=rt[0];o.name=rt[1]||rt[2]||rt[0];o.owner=rt[1]?rt[2]:'';o.mob=rt[3];o.reg=rt[4];o.sp=rt[6]||'';o.sc=rt[7];o.nd=brOf(o.da);if(o.nd){let mx=0,mk=-1;for(const [d,v] of o.da)if(v>mx){mx=v;mk=d}o.md=mk;o.mds=o.cur>0?mx/o.cur*100:null}o.h=health(o);o.tn=D.L.ter[o.t][0];o.dn=D.L.dis[o.di][0];o.gn=D.L.reg[o.g];out.push(o)}
   return RL=out}
 
 /* ===================== HEALTH SCORE ===================== */
@@ -470,6 +474,9 @@ const GUIDE=[
  ['Transactions','Number of rows in the file. Identical rows are all counted.'],
  ['Retailer type','From the Category column. Distributor Retailer = retails and gets stock directly from the company. Retailer = retail only, gets stock from distributors. Volume slabs use larger bands for Distributor Retailers.'],
  ['Capitals','All names are put in capitals and extra spaces removed when the file loads, so the same name typed in different cases is counted once.'],
+ ['Source pattern','From the Source Pattern and Source Customer Count columns. One To One = the retailer is supplied by one source (distributor or company). One To Many = supplied by more than one. Each retailer takes the value from its latest season in the file.'],
+ ['Distributors used','Number of different Supply Distributor codes the retailer actually bought through in the period, from the transactions. Compared with Source Customer Count to find mismatches.'],
+ ['Main distributor share %','Kg bought through the retailer\'s largest distributor in the period ÷ the retailer\'s total kg. Below 60% means no distributor clearly owns the retailer.'],
  ['Opportunities','Follow-up lists built from the current filters: retailers with no Focus SKU, large lost retailers, large declining retailers, and retailers whose registration is not ACTIVE but who still buy.']];
 $('guideBtn').addEventListener('click',()=>{$('guideBox').innerHTML=`<div class="row"><h3 style="margin:0;font-size:17px">How each measure is calculated</h3><span style="flex:1"></span><button class="btn" type="button" id="gClose">Close</button></div><table><tr><th>Measure</th><th>Calculation</th></tr>${GUIDE.map(g=>`<tr><td><b>${g[0]}</b></td><td>${g[1]}</td></tr>`).join('')}</table>`;$('guide').style.display='flex';$('gClose').onclick=()=>$('guide').style.display='none'});
 $('guide').addEventListener('click',e=>{if(e.target===$('guide'))$('guide').style.display='none'});
@@ -518,7 +525,7 @@ function render(){ if(!D)return; RL=null;
   fltSummary();$('fltBtn').style.display=MODE==='phone'?'':'none';if(MODE!=='phone')$('filters').style.display=MODE==='pc'?'flex':'grid';else $('filters').style.display='';
   const ch=$('chips');if(ST.dst>=0){ch.style.display='flex';ch.innerHTML=`<button class="fchip" type="button" id="dstX">Distributor: ${esc(D.L.dst[ST.dst][1])} ✕</button>`;$('dstX').onclick=()=>{ST.dst=-1;render()}}else ch.style.display='none';
   summary();
-  ({ov:renderOverview,geo:renderGeo,hs:renderHealth,rt:renderRetailers,r360:render360,ty:renderType,pr:renderProducts,op:renderOpp})[ST.tab]($('main'));
+  ({ov:renderOverview,geo:renderGeo,hs:renderHealth,rt:renderRetailers,r360:render360,ty:renderType,sr:renderSource,pr:renderProducts,op:renderOpp})[ST.tab]($('main'));
 }
 function totals(){const {F,fi,ci}=C;const A={kg:0,n:0,f:0,act:0},B={kg:0,n:0,f:0};
   for(const r of F){const p=SP[r[0]];if(p===fi){A.kg+=r[8];A.n+=r[9];if(isFoc(r[6]))A.f+=r[8];if(D.RT[r[5]][4]==='ACTIVE')A.act+=r[8]}else if(p===ci&&ci>=0){B.kg+=r[8];B.n+=r[9];if(isFoc(r[6]))B.f+=r[8]}}
@@ -600,14 +607,14 @@ function drawRet(){const L=retList(),{a,b,fi,ci}=C,q=ST.rq.trim().toLowerCase();
   rows.sort((x,y)=>{const p=key(x),z=key(y);return (p>z?1:p<z?-1:0)*d});RVIEW=rows;
   const th=(k,l,c='')=>`<th class="s ${c}" data-k="${k}">${l}${ST.sort.k===k?(ST.sort.d>0?' ▲':' ▼'):''}</th>`,lim=MODE==='phone'?200:800;
   $('rTbl').innerHTML=`<table><tr>${th('name','Retailer','l')}${th('ter','Territory / District','l')}${b?th('prev',b+' kg'):''}${th('cur',a+' kg')}${th('g','Growth')}${th('st','Status','l')}${th('br','SKUs')}${D.hasFoc?th('fp','Focus %'):''}${th('hs','Health','l')}<th class="l">Contact</th></tr>
-   ${rows.slice(0,lim).map(o=>`<tr class="click" data-ret="${o.k}"><td><div class="cn"><span>${esc(o.name)}${regTag(o.reg)}<br><small>${esc(o.owner?o.owner+' · ':'')}${esc(o.code)}</small></span>${sparkCell(o.sv)}</div></td><td class="l">${esc(o.tn)}<br><small class="muted">${esc(o.dn)}</small></td>${b?`<td>${o.prev?KG(o.prev):dash}</td>`:''}<td>${o.cur?KG(o.cur):dash}</td><td>${grTxt(o.cur,o.prev)}</td><td class="l">${chip(o.st)}</td><td>${o.br||dash}</td>${D.hasFoc?`<td>${pctTxt(o.fp)}</td>`:''}<td class="l">${gradeChip(o.h)}</td><td class="l">${callCell(o.mob)}</td></tr>`).join('')}</table>`;
+   ${rows.slice(0,lim).map(o=>`<tr class="click" data-ret="${o.k}"><td><div class="cn"><span>${esc(o.name)}${regTag(o.reg)}<br><small>${esc(o.owner?o.owner+' · ':'')}${esc(o.code)}${o.sp?' · '+esc(o.sp):''}</small></span>${sparkCell(o.sv)}</div></td><td class="l">${esc(o.tn)}<br><small class="muted">${esc(o.dn)}</small></td>${b?`<td>${o.prev?KG(o.prev):dash}</td>`:''}<td>${o.cur?KG(o.cur):dash}</td><td>${grTxt(o.cur,o.prev)}</td><td class="l">${chip(o.st)}</td><td>${o.br||dash}</td>${D.hasFoc?`<td>${pctTxt(o.fp)}</td>`:''}<td class="l">${gradeChip(o.h)}</td><td class="l">${callCell(o.mob)}</td></tr>`).join('')}</table>`;
   $('rCount').textContent=`${inr(rows.length)} retailers${rows.length>lim?` (first ${lim} shown; search or export to see the rest)`:''}`;
   $('rTbl').querySelectorAll('th.s').forEach(h=>h.onclick=()=>{const k=h.dataset.k;ST.sort=ST.sort.k===k?{k,d:-ST.sort.d}:{k,d:(k==='name'||k==='ter'||k==='st')?1:-1};drawRet()});
   bindRows($('rTbl'))}
 function bindRows(el){el.querySelectorAll('tr[data-ret]').forEach(tr=>tr.onclick=e=>{if(e.target.closest('[data-stop]'))return;open360(+tr.dataset.ret)})}
 const csvq=s=>'"'+String(s??'').replace(/"/g,'""')+'"';
-function retCsv(list){const {a,b}=C;const lines=[['Retailer Code','Shop','Owner','Mobile','Registration','Division','Region','Territory','District',(b||'Compare')+' kg',a+' kg','Growth %','Status','SKU breadth','Focus %','Health score','Grade'].join(',')];
-  for(const o of list)lines.push([o.code,csvq(o.name),csvq(o.owner),o.mob,o.reg,csvq(D.L.div[o.d]),csvq(o.gn),csvq(o.tn),csvq(o.dn),Math.round(o.prev),Math.round(o.cur),o.g100==null?'':o.g100.toFixed(1),STATUS[o.st][0],o.br,o.fp==null?'':o.fp.toFixed(1),o.h?o.h.s:'',o.h?o.h.grade:''].join(','));return lines.join('\n')}
+function retCsv(list){const {a,b}=C;const lines=[['Retailer Code','Shop','Owner','Mobile','Registration','Source Pattern','Source Customer Count','Distributors used in period','Main distributor','Main distributor share %','Division','Region','Territory','District',(b||'Compare')+' kg',a+' kg','Growth %','Status','SKU breadth','Focus %','Health score','Grade'].join(',')];
+  for(const o of list)lines.push([o.code,csvq(o.name),csvq(o.owner),o.mob,o.reg,csvq(o.sp),o.sc??'',o.nd||'',o.nd?csvq(D.L.dst[o.md][1]):'',o.mds==null?'':o.mds.toFixed(1),csvq(D.L.div[o.d]),csvq(o.gn),csvq(o.tn),csvq(o.dn),Math.round(o.prev),Math.round(o.cur),o.g100==null?'':o.g100.toFixed(1),STATUS[o.st][0],o.br,o.fp==null?'':o.fp.toFixed(1),o.h?o.h.s:'',o.h?o.h.grade:''].join(','));return lines.join('\n')}
 function exportRet(){saveFile(`Retailers_${C.a}_${ST.rStatus||'all'}.csv`,retCsv(RVIEW))}
 let DL=null;if(window.claude&&typeof window.claude.use==='function')window.claude.use('downloads').then(d=>{DL=d}).catch(()=>{});
 async function saveFile(name,text){name=name.replace(/[^\w.\-]+/g,'_');
@@ -646,7 +653,7 @@ function draw360(){const el=$('b360'),k=ST.ret;if(k<0||!D.RT[k]){el.innerHTML='<
   const cols=D.S.map((c,i)=>i).slice(-6),pRows=[...byP.entries()].sort((x,y)=>y[1][cols[cols.length-1]]-x[1][cols[cols.length-1]]||y[1].reduce((s,v)=>s+v,0)-x[1].reduce((s,v)=>s+v,0));
   const sCol=t=>t==='KH'?'var(--s2)':'var(--s1)';
   el.innerHTML=`<div class="row" style="align-items:flex-start;gap:8px 24px"><div><h2 style="margin:0;font-size:20px">${esc(rt[1]||rt[2]||rt[0])}${regTag(rt[4])}</h2>
-     <div class="muted">${esc(rt[2])}${rt[2]?' · ':''}${esc(rt[0])} · ${esc(D.L.cat[rt[5]])}${rt[4]?' · Registration '+esc(rt[4]):''}</div>
+     <div class="muted">${esc(rt[2])}${rt[2]?' · ':''}${esc(rt[0])} · ${esc(D.L.cat[rt[5]])}${rt[4]?' · Registration '+esc(rt[4]):''}${rt[6]?' · Source '+esc(rt[6])+(rt[7]!=null?' ('+rt[7]+')':''):''}</div>
      <div class="muted">${esc(D.L.div[last[1]])} › ${esc(D.L.reg[last[2]])} › ${esc(D.L.ter[last[3]][0])} › ${esc(D.L.dis[last[4]][0])}</div></div><div style="padding-top:4px">${callCell(rt[3])}</div></div>
    <div class="tiles">
     <div class="tile"><div class="k">${a}</div><div class="v">${KG(cur)} kg</div><div class="d">${b?grTxt(cur,prev)+' vs '+b:''}</div></div>
@@ -675,16 +682,15 @@ function criteriaHTML(){const {a,b}=C,gc=HC.gCut,fc=HC.fCut,bc=HC.bCut;
     <div><b>3 · SKU breadth</b><table class="crit"><tr><th class="l">Band</th><th>Points</th></tr>${band('SKUs bought',bc,'b','',false)}</table></div>
     <div><b>Grade</b><table class="crit"><tr><th class="l">Grade</th><th>Minimum score</th></tr>${['A','B','C'].map((g,i)=>`<tr><td class="l"><span class="chip g-${g}">${g} · ${GRADE_TXT[g]}</span></td><td>${ci_('grade.'+i)}</td></tr>`).join('')}<tr><td class="l"><span class="chip g-D">D · At risk</span></td><td class="muted">below ${HC.grade[2]}</td></tr></table>
      <button class="btn" type="button" id="hcReset" style="margin-top:8px">Reset to default</button></div></div></div>`}
-let HSVIEW=[];
+let HSVIEW=[],HT=null;
 function renderHealth(m){const L=retList(),{a,b}=C,scored=L.filter(o=>o.h),totV=scored.reduce((s,o)=>s+o.cur,0),G={A:[],B:[],C:[],D:[]};scored.forEach(o=>G[o.h.grade].push(o));
   let h=`<div class="statusbar">${['','A','B','C','D'].map(g=>{const X=g?G[g]:scored,v=X.reduce((s,o)=>s+o.cur,0);return `<button type="button" class="stat ${ST.hsGrade===g?'on':''}" data-g="${g}" style="min-width:150px"><div class="s">${g?`<span class="chip g-${g}">${g} · ${GRADE_TXT[g]}</span>`:'<b>All scored retailers</b>'}</div><div class="n">${inr(X.length)}</div><div class="s">${totV?inr(v/totV*100,1):0}% of ${a} volume</div></button>`}).join('')}</div>`+criteriaHTML();
-  const mix=()=>({A:0,B:0,C:0,D:0,n:0,s:0}),addM=(M,k,o)=>{let x=M.get(k);if(!x){x=mix();M.set(k,x)}x[o.h.grade]++;x.n++;x.s+=o.h.s},byR=new Map(),byT=new Map();
-  scored.forEach(o=>{addM(byR,o.g,o);addM(byT,o.t,o)});const gcol={A:'var(--good)',B:'var(--s1)',C:'var(--s4)',D:'var(--bad)'};
+  const mix=()=>({A:0,B:0,C:0,D:0,n:0,s:0}),addM=(M,k,o)=>{let x=M.get(k);if(!x){x=mix();M.set(k,x)}x[o.h.grade]++;x.n++;x.s+=o.h.s},HT=new Map();
+  scored.forEach(o=>treeAdd(HT,o.d,o.g,o.t,x=>{x=x||mix();x[o.h.grade]++;x.n++;x.s+=o.h.s;return x}));const gcol={A:'var(--good)',B:'var(--s1)',C:'var(--s4)',D:'var(--bad)'};
   const mrow=(cls,label,x,attr)=>`<tr class="${cls}" ${attr}><td>${label}</td><td>${x.n}</td>${['A','B','C','D'].map(g=>`<td>${x[g]||'<span class="muted">0</span>'}</td>`).join('')}<td style="min-width:120px"><div style="display:flex;height:12px;gap:2px" data-tip="${['A','B','C','D'].map(g=>g+': '+x[g]+' ('+inr(x[g]/x.n*100,0)+'%)').join('<br>')}">${['A','B','C','D'].filter(g=>x[g]).map(g=>`<div style="flex:${x[g]};background:${gcol[g]};border-radius:2px"></div>`).join('')}</div></td><td><b>${inr(x.s/x.n,0)}</b></td></tr>`;
-  let rr='';for(const [g,x] of [...byR].sort((p,q)=>q[1].s/q[1].n-p[1].s/p[1].n)){const op=HSOPEN.has(g);rr+=mrow('l0 click',(op?'▾ ':'▸ ')+esc(D.L.reg[g]),x,`data-hr="${g}"`);
-    if(op)for(const [t,y] of [...byT].filter(([t])=>D.L.ter[t][1]===g).sort((p,q)=>q[1].s/q[1].n-p[1].s/p[1].n))rr+=mrow('l1 click'+(ST.hsTer===t?' sel':''),esc(D.L.ter[t][0]),y,`data-ht="${t}"`)}
-  h+=`<div class="card"><h3>Grade mix by region · ${a}</h3><div class="row" style="margin:0 0 8px"><span class="note" style="margin:0">Sorted by average score. Select a region to see its territories, then a territory to list its retailers below.</span>${xBtns('hs')}</div><div class="legend">${['A','B','C','D'].map(g=>`<span><i style="background:${gcol[g]}"></i>${g} · ${GRADE_TXT[g]}</span>`).join('')}</div>
-   <div class="scroll" style="max-height:440px"><table><tr><th class="l">Region › Territory</th><th>Retailers</th><th>A</th><th>B</th><th>C</th><th>D</th><th class="l">Mix</th><th>Avg score</th></tr>${rr}</table></div></div>`;
+  const rr=treeRows(HT,(p,q)=>q[1].s/q[1].n-p[1].s/p[1].n,HSOPEN,mrow,t=>ST.hsTer===t);
+  h+=`<div class="card"><h3>Grade mix by division · ${a}</h3><div class="row" style="margin:0 0 8px"><span class="note" style="margin:0">Sorted by average score. Select a division to see its regions, a region to see its territories, then a territory to list its retailers below.</span>${treeBtns('hs')}</div><div class="legend">${['A','B','C','D'].map(g=>`<span><i style="background:${gcol[g]}"></i>${g} · ${GRADE_TXT[g]}</span>`).join('')}</div>
+   <div class="scroll" style="max-height:440px"><table><tr><th class="l">Division › Region › Territory</th><th>Retailers</th><th>A</th><th>B</th><th>C</th><th>D</th><th class="l">Mix</th><th>Avg score</th></tr>${rr}</table></div></div>`;
   const base=ST.hsTer>=0?scored.filter(o=>o.t===ST.hsTer):scored,list=(ST.hsGrade?base.filter(o=>o.h.grade===ST.hsGrade):base).slice().sort((x,y)=>y.h.s-x.h.s||y.cur-x.cur);HSVIEW=list;
   h+=`<div class="card" id="hsCard"><h3>Retailer scorecard · ${a}${ST.hsTer>=0?' · '+esc(D.L.ter[ST.hsTer][0]):''}${ST.hsGrade?' · Grade '+ST.hsGrade:''}</h3>
    <div class="row"><span class="note" style="margin:0">${inr(list.length)} retailers · kg</span>${ST.hsTer>=0?'<button class="btn" type="button" id="hsAllT">Show all territories</button>':''}<button class="btn" type="button" id="hsExp">Export CSV</button></div>
@@ -692,11 +698,11 @@ function renderHealth(m){const L=retList(),{a,b}=C,scored=L.filter(o=>o.h),totV=
    ${list.slice(0,MODE==='phone'?200:800).map(o=>`<tr class="click" data-ret="${o.k}"><td>${esc(o.name)} <small class="muted">${esc(o.code)}</small></td><td class="l">${esc(o.tn)}</td>${b?`<td>${o.prev?KG(o.prev):dash}</td>`:''}<td>${KG(o.cur)}</td><td>${grTxt(o.cur,o.prev)}</td><td class="muted">${o.h.gp}</td>${D.hasFoc?`<td>${pctTxt(o.h.fs)}</td><td class="muted">${o.h.fpP}</td>`:''}<td>${o.br}</td><td class="muted">${o.h.bp}</td><td><b>${o.h.s}</b></td><td class="l"><span class="chip g-${o.h.grade}">${o.h.grade} · ${GRADE_TXT[o.h.grade]}</span></td></tr>`).join('')}</table></div></div>`;
   m.innerHTML=h;
   m.querySelectorAll('.stat').forEach(s=>s.onclick=()=>{ST.hsGrade=s.dataset.g;render()});
-  m.querySelectorAll('[data-hr]').forEach(t=>t.onclick=()=>{const g=+t.dataset.hr;HSOPEN.has(g)?HSOPEN.delete(g):HSOPEN.add(g);render()});
-  m.querySelectorAll('[data-ht]').forEach(t=>t.onclick=()=>{const v=+t.dataset.ht;ST.hsTer=ST.hsTer===v?-1:v;render();if(ST.hsTer>=0)$('hsCard').scrollIntoView({block:'start'})});
+  bindTree(m,HT,HSOPEN);
+  m.querySelectorAll('[data-tt]').forEach(t=>t.onclick=()=>{const v=+t.dataset.tt;ST.hsTer=ST.hsTer===v?-1:v;render();if(ST.hsTer>=0)$('hsCard').scrollIntoView({block:'start'})});
   m.querySelectorAll('.crit input').forEach(inp=>inp.addEventListener('change',e=>{const [k,i]=e.target.dataset.p.split('.'),v=parseFloat(e.target.value);if(isNaN(v))return;if(i==null)HC[k]=v;else HC[k][+i]=v;saveHC();render()}));
   $('hcReset').onclick=()=>{HC=JSON.parse(JSON.stringify(HC_DEFAULT));saveHC();render()};if($('hsAllT'))$('hsAllT').onclick=()=>{ST.hsTer=-1;render()};
-  bindX(m,[...byR.keys()]);$('hsExp').onclick=()=>saveFile(`Retailer_Health_${a}_${ST.hsGrade||'all'}.csv`,retCsv(HSVIEW));bindRows($('hsTbl'))}
+  $('hsExp').onclick=()=>saveFile(`Retailer_Health_${a}_${ST.hsGrade||'all'}.csv`,retCsv(HSVIEW));bindRows($('hsTbl'))}
 
 /* ---------- RETAILER TYPE ---------- */
 const TYPE_NOTE=n=>/DISTRIB/.test(n)?'Retails, and gets stock directly from the company':/^RETAILER$/.test(n)?'Retail only; gets stock from distributors':'';
@@ -709,28 +715,95 @@ function typeTable(L,click){const {a,b}=C,T=typeStats(L),TA=T.reduce((s,x)=>s+x.
   return `<div style="overflow-x:auto"><table><tr><th class="l">Retailer type</th>${b?`<th>${b} MT</th>`:''}<th>${a} MT</th><th>Growth</th><th>% of volume</th><th>Retailers</th><th>% of retailers</th><th>Avg kg / retailer</th>${b?'<th>Retention</th><th>New</th><th>Lost</th>':''}${D.hasFoc?'<th>Focus %</th>':''}<th>Avg SKUs</th><th>Avg health</th></tr>
    ${T.map(x=>row(click?'click':'',`<i style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;background:${pcColor(x.t)}"></i>${esc(D.L.cat[x.t])}${TYPE_NOTE(D.L.cat[x.t])?`<br><small class="muted">${TYPE_NOTE(D.L.cat[x.t])}</small>`:''}`,x,click?`data-ty="${x.t}"`:'')).join('')}${T.length>1?row('tot','Total',tot):''}</table></div>`}
 function renderType(m){const L=retList(),{F,fi,ci,a,b}=C,T=typeStats(L),gcol={A:'var(--good)',B:'var(--s1)',C:'var(--s4)',D:'var(--bad)'};
-  const byST=new Map(),byG=new Map();for(const r of F){const t=D.RT[r[5]][5];byST.set(r[0]*100+t,(byST.get(r[0]*100+t)||0)+r[8]);if(SP[r[0]]===fi){for(const gk of TYOPEN.has(r[2])?[r[2],'t'+r[3]]:[r[2]]){let g=byG.get(gk);if(!g){g={tot:0,m:new Map(),rs:new Map()};byG.set(gk,g)}g.tot+=r[8];g.m.set(t,(g.m.get(t)||0)+r[8]);if(r[8]>0){let rs=g.rs.get(t);if(!rs){rs=new Set();g.rs.set(t,rs)}rs.add(r[5])}}}}
+  const byST=new Map(),byG=new Map();for(const r of F){const t=D.RT[r[5]][5];byST.set(r[0]*100+t,(byST.get(r[0]*100+t)||0)+r[8]);if(SP[r[0]]===fi)treeAdd(byG,r[1],r[2],r[3],g=>{if(!g)g={tot:0,m:new Map(),rs:new Map()};g.tot+=r[8];g.m.set(t,(g.m.get(t)||0)+r[8]);if(r[8]>0){let rs=g.rs.get(t);if(!rs){rs=new Set();g.rs.set(t,rs)}rs.add(r[5])}return g})}
   const types=T.map(x=>x.t),sItems=D.S.map((code,s)=>({label:code,segs:types.map(t=>({v:Math.max(0,byST.get(s*100+t)||0),color:pcColor(t),name:D.L.cat[t]}))}));
-  const regs=[...byG].filter(([k])=>typeof k==='number').sort((p,q)=>q[1].tot-p[1].tot);
   const tyCells=x=>`<td>${MT(x.tot)}</td>${types.map(t=>`<td>${x.m.get(t)?MT(x.m.get(t)):dash}</td><td>${x.tot>0?inr((x.m.get(t)||0)/x.tot*100,1)+'%':'–'}</td><td>${x.rs.get(t)?inr(x.rs.get(t).size):dash}</td>`).join('')}`;
-  const tyRows=regs.map(([g,x])=>{const op=TYOPEN.has(g);let h=`<tr class="l0 click" data-tyr="${g}"><td>${op?'▾ ':'▸ '}${esc(D.L.reg[g])}</td>${tyCells(x)}</tr>`;
-    if(op)h+=[...byG].filter(([k])=>typeof k==='string'&&D.L.ter[+k.slice(1)][1]===g).sort((p,q)=>q[1].tot-p[1].tot).map(([k,y])=>`<tr class="l1"><td>${esc(D.L.ter[+k.slice(1)][0])}</td>${tyCells(y)}</tr>`).join('');return h}).join('');
+  const tyRows=treeRows(byG,(p,q)=>q[1].tot-p[1].tot,TYOPEN,(cls,lab,x,attr)=>`<tr class="${cls}" ${attr}><td>${lab}</td>${tyCells(x)}</tr>`);
   let h=`<div class="note"><b>Distributor Retailer</b>: retails, and gets stock directly from the company. <b>Retailer</b>: retail only, gets stock from distributors. The type comes from the Category column.</div>
    <div class="card"><h3>Retailer type compared · ${a}${b?' against '+b:''}</h3><div class="note">Select a type to list its retailers.</div>${typeTable(L,true)}</div>
    <div class="grid2"><div class="card"><h3>Volume by season and retailer type</h3><div class="note">MT</div><div class="legend">${types.map(t=>`<span><i style="background:${pcColor(t)}"></i>${esc(D.L.cat[t])}</span>`).join('')}</div>${vbars(sItems)}</div>
     <div class="card"><h3>Health grade mix by retailer type · ${a}</h3><div class="note">Share of scored retailers in each grade</div><div class="legend">${['A','B','C','D'].map(g=>`<span><i style="background:${gcol[g]}"></i>${g} · ${GRADE_TXT[g]}</span>`).join('')}</div>
      <table><tr><th class="l">Retailer type</th><th>A</th><th>B</th><th>C</th><th>D</th><th class="l">Mix</th></tr>${T.map(x=>{const n=x.A+x.B+x.C+x.D;return `<tr><td>${esc(D.L.cat[x.t])}</td>${['A','B','C','D'].map(g=>`<td>${x[g]}</td>`).join('')}<td style="min-width:140px">${n?`<div style="display:flex;height:12px;gap:2px" data-tip="${['A','B','C','D'].map(g=>g+': '+x[g]+' ('+inr(x[g]/n*100,0)+'%)').join('<br>')}">${['A','B','C','D'].filter(g=>x[g]).map(g=>`<div style="flex:${x[g]};background:${gcol[g]};border-radius:2px"></div>`).join('')}</div>`:''}</td></tr>`}).join('')}</table></div></div>
-   <div class="card"><h3>Retailer type by region · ${a}</h3><div class="row" style="margin:0 0 8px"><span class="note" style="margin:0">MT and number of retailers. Shows where volume comes direct from the company and where it moves through distributors. Select a region to see its territories.</span>${xBtns('ty')}</div><div class="scroll" style="max-height:420px"><table><tr><th class="l">Region › Territory</th><th>Total MT</th>${types.map(t=>`<th>${esc(D.L.cat[t])} MT</th><th>% of volume</th><th>Retailers</th>`).join('')}</tr>
+   <div class="card"><h3>Retailer type by division · ${a}</h3><div class="row" style="margin:0 0 8px"><span class="note" style="margin:0">MT and number of retailers. Shows where volume comes direct from the company and where it moves through distributors. Select a division to see its regions, then a region to see its territories.</span>${treeBtns('ty')}</div><div class="scroll" style="max-height:420px"><table><tr><th class="l">Division › Region › Territory</th><th>Total MT</th>${types.map(t=>`<th>${esc(D.L.cat[t])} MT</th><th>% of volume</th><th>Retailers</th>`).join('')}</tr>
      ${tyRows}</table></div></div>
    <div class="card"><h3>Retailers by volume slab · ${a}</h3><div class="note">Each retailer is placed by total kg in the period. Slabs differ by retailer type.</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:0 20px">${slabs(L,true)}</div></div>
    <div class="grid2">${T.map(x=>{const top=L.filter(o=>o.cur>0&&D.RT[o.k][5]===x.t).sort((p,q)=>q.cur-p.cur).slice(0,10).map(o=>({label:o.name,value:o.cur,txt:KG(o.cur),click:o.k,tip:`<b>${esc(o.name)}</b><br>${esc(o.tn)} · ${esc(o.code)}<br>${KG(o.cur)} kg`}));
      return `<div class="card"><h3>Top 10 · ${esc(D.L.cat[x.t])} · ${a}</h3><div class="note">kg. Select one to open Retailer 360.</div>${hbars(top)}</div>`}).join('')}</div>`;
   m.innerHTML=h;m.querySelectorAll('[data-ret]').forEach(el=>el.onclick=()=>open360(+el.dataset.ret));
   m.querySelectorAll('tr[data-ty]').forEach(tr=>tr.onclick=()=>{ST.cat=+tr.dataset.ty;ST.rStatus='';fillFilters();setTab('rt');scrollTo(0,0)});
-  m.querySelectorAll('tr[data-tyr]').forEach(tr=>tr.onclick=()=>{const g=+tr.dataset.tyr;TYOPEN.has(g)?TYOPEN.delete(g):TYOPEN.add(g);render()});bindX(m,regs.map(x=>x[0]))}
+  bindTree(m,byG,TYOPEN)}
 
+/* Division › Region › Territory tree. M: Map of keys 'd|<div>', 'g|<div>|<reg>', 't|<div>|<reg>|<ter>' -> stats */
+function treeAdd(M,d,g,t,fn){for(const k of ['d|'+d,'g|'+d+'|'+g,'t|'+d+'|'+g+'|'+t]){let x=M.get(k);x=fn(x);M.set(k,x)}}
+function treeRows(M,S,set,rowFn,tAttr){const lv=k=>k.split('|').length-1,ch=(pre,n)=>[...M].filter(([k])=>lv(k)===n&&(pre==null||k.startsWith(pre.slice(2)+'|',2))).sort(S);let h='';
+  for(const [dk,dx] of ch(null,1)){const od=set.has(dk);h+=rowFn('l0 click',(od?'▾ ':'▸ ')+esc(D.L.div[+dk.split('|')[1]]),dx,`data-tk="${dk}"`);if(!od)continue;
+    for(const [gk,gx] of ch(dk,2)){const og=set.has(gk);h+=rowFn('l1 click',(og?'▾ ':'▸ ')+esc(D.L.reg[+gk.split('|')[2]]),gx,`data-tk="${gk}"`);if(!og)continue;
+      for(const [tk,tx] of ch(gk,3)){const t=+tk.split('|')[3];h+=rowFn('l2'+(tAttr?' click'+(tAttr(t)?' sel':''):''),esc(D.L.ter[t][0]),tx,tAttr?`data-tt="${t}"`:'')}}}
+  return h}
+const treeBtns=k=>`<span style="margin-left:auto;display:inline-flex;gap:6px;flex-wrap:wrap"><button class="btn" type="button" data-tlv="2" data-tset="${k}">Show all regions</button><button class="btn" type="button" data-tlv="3" data-tset="${k}">Show all territories</button><button class="btn" type="button" data-tlv="0" data-tset="${k}">Collapse all</button></span>`;
+function bindTree(m,M,set){m.querySelectorAll('[data-tk]').forEach(tr=>tr.onclick=()=>{const k=tr.dataset.tk;set.has(k)?set.delete(k):set.add(k);render()});
+  m.querySelectorAll('[data-tlv]').forEach(bt=>bt.onclick=()=>{const lv=+bt.dataset.tlv;set.clear();if(lv)[...M.keys()].forEach(k=>{if(k.split('|').length-1<lv)set.add(k)});render()})}
 function bindX(m,regIds){m.querySelectorAll('[data-xall]').forEach(bt=>bt.onclick=()=>{const k=bt.dataset.xall,o=bt.dataset.o==='1',S=k==='ty'?TYOPEN:k==='hs'?HSOPEN:OPEN;
   if(k==='geo'){[...OPEN].forEach(x=>{if(x.split('¦').length===2)OPEN.delete(x)});if(o)regIds.forEach(x=>OPEN.add(x));else OPEN.clear()}else{S.clear();if(o)regIds.forEach(x=>S.add(x))}render()})}
+/* ---------- SOURCING ---------- */
+const SRC_SET=new Set();
+const spLab=x=>x||'(BLANK)';
+function renderSource(m){const L=retList(),{F,fi,a,b}=C,act=L.filter(o=>o.cur>0||o.prev>0);
+  const pats=[...new Set(act.map(o=>o.sp))].sort((x,y)=>(x==='ONE TO ONE'?0:x==='ONE TO MANY'?1:2)-(y==='ONE TO ONE'?0:y==='ONE TO MANY'?1:2)||x.localeCompare(y));
+  const pc=p=>p==='ONE TO ONE'?'var(--s1)':p==='ONE TO MANY'?'var(--s2)':'var(--base)';
+  const st=k=>{const x={a:0,b:0,ra:0,rb:0,kept:0,nw:0,lost:0,fa:0,br:0,hs:0,hn:0,nd:0,sc:0,scn:0};for(const o of act){if(k(o)===false)continue;x.a+=o.cur;x.b+=o.prev;if(o.cur>0){x.ra++;x.fa+=Math.max(0,o.fa);x.br+=o.br;x.nd+=o.nd;if(o.sc!=null){x.sc+=o.sc;x.scn++}if(o.prev>0)x.kept++;else x.nw++;if(o.h){x.hs+=o.h.s;x.hn++}}if(o.prev>0){x.rb++;if(!(o.cur>0))x.lost++}}return x};
+  const P=pats.map(p=>[p,st(o=>o.sp===p)]),TT=st(()=>true),TA=TT.a,TR=TT.ra;
+  const one=P.find(x=>x[0]==='ONE TO ONE'),many=P.find(x=>x[0]==='ONE TO MANY');
+  const avg=x=>x.ra?x.a/x.ra:0,ret=x=>x.rb?x.kept/x.rb*100:null;
+  // tiles
+  let h=`<div class="note">One To One: the retailer is supplied by one source. One To Many: supplied by more than one. From the Source Pattern and Source Customer Count columns; ${a}${b?' against '+b:''}, with the filters above.</div><div class="tiles">
+   ${many?`<div class="tile"><div class="k">One To Many retailers</div><div class="v">${TR?inr(many[1].ra/TR*100,1):0}%</div><div class="d">${inr(many[1].ra)} of ${inr(TR)} active retailers</div></div>
+   <div class="tile"><div class="k">Volume from One To Many</div><div class="v">${TA?inr(many[1].a/TA*100,1):0}%</div><div class="d">${MT(many[1].a)} MT${b?' · '+grTxt(many[1].a,many[1].b)+' vs '+b:''}</div></div>`:''}
+   ${one&&many?`<div class="tile"><div class="k">Avg kg per retailer</div><div class="v" style="font-size:17px">${KG(avg(many[1]))} <span class="muted" style="font-size:12px">many</span> · ${KG(avg(one[1]))} <span class="muted" style="font-size:12px">one</span></div><div class="d">${avg(one[1])?'One To Many retailers buy '+inr(avg(many[1])/avg(one[1]),1)+'× as much':''}</div></div>
+   <div class="tile"><div class="k">Retention</div><div class="v" style="font-size:17px">${pctTxt(ret(many[1]),0)} <span class="muted" style="font-size:12px">many</span> · ${pctTxt(ret(one[1]),0)} <span class="muted" style="font-size:12px">one</span></div><div class="d">${b?'Bought again in '+a:'Needs a compare period'}</div></div>`:''}
+   <div class="tile"><div class="k">Avg distributors used</div><div class="v">${TR?inr(TT.nd/TR,2):'–'}</div><div class="d">per active retailer in ${a}, from transactions</div></div>
+  </div>`;
+  // pattern comparison
+  const row=(lab,x,attr,cls)=>`<tr class="${cls||''}" ${attr||''}><td>${lab}</td>${b?`<td>${MT(x.b)}</td>`:''}<td>${MT(x.a)}</td><td>${b?grTxt(x.a,x.b):''}</td><td>${TA?inr(x.a/TA*100,1):0}%</td><td>${inr(x.ra)}</td><td>${TR?inr(x.ra/TR*100,1):0}%</td><td>${x.ra?KG(x.a/x.ra):'–'}</td>${b?`<td>${pctTxt(ret(x),0)}</td><td class="up">${inr(x.nw)}</td><td class="dn">${inr(x.lost)}</td>`:''}${D.hasFoc?`<td>${x.a>0?inr(x.fa/x.a*100,1)+'%':'–'}</td>`:''}<td>${x.ra?inr(x.br/x.ra,1):'–'}</td><td>${x.scn?inr(x.sc/x.scn,1):'–'}</td><td>${x.ra?inr(x.nd/x.ra,2):'–'}</td><td>${x.hn?inr(x.hs/x.hn,0):'–'}</td></tr>`;
+  const head=first=>`<tr><th class="l">${first}</th>${b?`<th>${b} MT</th>`:''}<th>${a} MT</th><th>Growth</th><th>% of volume</th><th>Retailers</th><th>% of retailers</th><th>Avg kg / retailer</th>${b?'<th>Retention</th><th>New</th><th>Lost</th>':''}${D.hasFoc?'<th>Focus %</th>':''}<th>Avg SKUs</th><th>Avg source count</th><th>Avg distributors used</th><th>Avg health</th></tr>`;
+  const dot=p=>`<i style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;background:${pc(p)}"></i>`;
+  h+=`<div class="card"><h3>One To One against One To Many · ${a}</h3><div class="note">Select a pattern to list its retailers.</div><div style="overflow-x:auto"><table>${head('Source pattern')}
+    ${P.map(([p,x])=>row(dot(p)+esc(spLab(p)),x,`data-sp="${esc(p)}"`,'click')).join('')}${P.length>1?row('Total',TT,'','tot'):''}</table></div></div>`;
+  // by source count + by retailer type
+  const cnts=[...new Set(act.map(o=>o.sc==null?-1:Math.min(o.sc,4)))].sort((x,y)=>x-y);
+  const cLab=c=>c<0?'(blank)':c>=4?'4 or more':String(c);
+  const types=[...new Set(act.map(o=>D.RT[o.k][5]))].sort((x,y)=>D.L.cat[x].localeCompare(D.L.cat[y]));
+  h+=`<div class="grid2"><div class="card"><h3>By source customer count · ${a}</h3><div class="note">How many sources each retailer is linked to</div><div style="overflow-x:auto"><table><tr><th class="l">Sources</th><th>Retailers</th><th>% of retailers</th><th>${a} MT</th><th>% of volume</th><th>Avg kg / retailer</th>${b?'<th>Growth</th>':''}</tr>
+     ${cnts.map(c=>{const x=st(o=>(o.sc==null?-1:Math.min(o.sc,4))===c);return `<tr><td>${cLab(c)}</td><td>${inr(x.ra)}</td><td>${TR?inr(x.ra/TR*100,1):0}%</td><td>${MT(x.a)}</td><td>${TA?inr(x.a/TA*100,1):0}%</td><td>${x.ra?KG(x.a/x.ra):'–'}</td>${b?`<td>${grTxt(x.a,x.b)}</td>`:''}</tr>`}).join('')}</table></div></div>
+   <div class="card"><h3>Source pattern by retailer type · ${a}</h3><div class="note">Retailers and % of the type's volume</div><div style="overflow-x:auto"><table><tr><th class="l">Retailer type</th>${pats.map(p=>`<th>${esc(spLab(p))}<br>retailers</th><th>% of volume</th>`).join('')}</tr>
+     ${types.map(t=>{const all=st(o=>D.RT[o.k][5]===t);return `<tr><td>${esc(D.L.cat[t])}</td>${pats.map(p=>{const x=st(o=>D.RT[o.k][5]===t&&o.sp===p);return `<td>${inr(x.ra)}</td><td>${all.a>0?inr(x.a/all.a*100,1)+'%':'–'}</td>`}).join('')}</tr>`}).join('')}</table></div></div></div>`;
+  // season trend by pattern
+  const byS=new Map();for(const r of F){const p=D.RT[r[5]][6]||'';byS.set(r[0]+'|'+p,(byS.get(r[0]+'|'+p)||0)+r[8])}
+  const sItems=D.S.map((code,si)=>({label:code,segs:pats.map(p=>({v:Math.max(0,byS.get(si+'|'+p)||0),color:pc(p),name:spLab(p)}))}));
+  // tree: division > region > territory
+  const ST3=new Map();for(const o of act){if(!(o.cur>0))continue;treeAdd(ST3,o.d,o.g,o.t,x=>{x=x||{ra:0,rm:0,a:0,am:0,nd:0};x.ra++;x.a+=o.cur;x.nd+=o.nd;if(o.sp==='ONE TO MANY'){x.rm++;x.am+=o.cur}return x})}
+  const tr=(cls,lab,x,attr)=>`<tr class="${cls}" ${attr}><td>${lab}</td><td>${inr(x.ra)}</td><td>${inr(x.rm)}</td><td>${inr(x.rm/x.ra*100,1)}%</td><td>${MT(x.a)}</td><td>${MT(x.am)}</td><td>${x.a>0?inr(x.am/x.a*100,1)+'%':'–'}</td><td>${inr(x.nd/x.ra,2)}</td></tr>`;
+  h+=`<div class="grid2"><div class="card"><h3>Volume by season and source pattern</h3><div class="note">MT. Pattern is each retailer's latest value in the file.</div><div class="legend">${pats.map(p=>`<span><i style="background:${pc(p)}"></i>${esc(spLab(p))}</span>`).join('')}</div>${vbars(sItems)}</div>
+   <div class="card"><h3>Main distributor share · ${a}</h3><div class="note">For retailers who bought through 2 or more distributors in ${a}: how much went through their largest one</div>${(()=>{const mm=act.filter(o=>o.cur>0&&o.nd>=2),bands=[[90,'90% or more'],[75,'75–90%'],[60,'60–75%'],[0,'Below 60%']],c=bands.map(()=>[0,0]);mm.forEach(o=>{const i=bands.findIndex(x=>o.mds>=x[0]);c[i][0]++;c[i][1]+=o.cur});const tv=mm.reduce((s2,o)=>s2+o.cur,0);
+     return mm.length?`<table><tr><th class="l">Largest distributor's share</th><th>Retailers</th><th>${a} kg</th><th>% of these retailers' volume</th></tr>${bands.map((x,i)=>`<tr><td>${x[1]}</td><td>${inr(c[i][0])}</td><td>${KG(c[i][1])}</td><td>${tv?inr(c[i][1]/tv*100,1):0}%</td></tr>`).join('')}</table><div class="note" style="margin-top:8px">${inr(mm.length)} retailers bought through more than one distributor in ${a}. Below 60% means no distributor clearly owns the retailer.</div>`:'<div class="muted">No retailer bought through more than one distributor in '+a+'.</div>'})()}</div></div>
+   <div class="card"><h3>Multi-sourcing by division · ${a}</h3><div class="row" style="margin:0 0 8px"><span class="note" style="margin:0">Active retailers marked One To Many, and their share of volume. Select a division to see its regions, then a region to see its territories.</span>${treeBtns('sr')}</div>
+    <div class="scroll" style="max-height:440px"><table><tr><th class="l">Division › Region › Territory</th><th>Retailers</th><th>One To Many</th><th>% of retailers</th><th>${a} MT</th><th>One To Many MT</th><th>% of volume</th><th>Avg distributors used</th></tr>${treeRows(ST3,(p,q)=>q[1].a-p[1].a,SRC_SET,tr)}</table></div></div>`;
+  // action lists
+  const mism=act.filter(o=>o.cur>0&&o.sc!=null&&o.nd>0&&((o.sp==='ONE TO ONE'&&o.nd>1)||(o.sp==='ONE TO MANY'&&o.nd===1))).sort((x,y)=>y.cur-x.cur);
+  const split=act.filter(o=>o.cur>0&&o.nd>=2&&o.mds<60).sort((x,y)=>y.cur-x.cur);
+  const lostM=b?act.filter(o=>o.st==='lost'&&o.sp==='ONE TO MANY').sort((x,y)=>y.prev-x.prev):[];
+  const X={mism,split,lostM};
+  const sec=(id,title,note,list,cols,cells)=>`<div class="card"><h3>${title} <span class="chip c-stab">${inr(list.length)}</span></h3><div class="note">${note}</div>${list.length?`<div class="row"><button class="btn" type="button" data-sx="${id}">Export CSV</button></div><div class="scroll" style="max-height:380px" data-tb="1"><table><tr><th class="l">Retailer</th><th class="l">Territory / District</th>${cols}<th class="l">Contact</th></tr>
+    ${list.slice(0,100).map(o=>`<tr class="click" data-ret="${o.k}"><td>${esc(o.name)}${regTag(o.reg)}<br><small class="muted">${esc(o.owner?o.owner+' · ':'')}${esc(o.code)}</small></td><td class="l">${esc(o.tn)}<br><small class="muted">${esc(o.dn)}</small></td>${cells(o)}<td class="l">${callCell(o.mob)}</td></tr>`).join('')}</table></div>${list.length>100?'<div class="note" style="margin-top:6px">First 100 shown. Export for the full list.</div>':''}`:'<div class="muted">None for these filters.</div>'}</div>`;
+  const dlist=o=>[...o.da].filter(x=>x[1]>0).sort((p,q)=>q[1]-p[1]).slice(0,3).map(([d,v])=>esc(D.L.dst[d][1])+' '+inr(v/o.cur*100,0)+'%').join('<br>');
+  h+=sec('split','Split between distributors',`Bought through 2 or more distributors in ${a}, with no distributor above 60% of the retailer's kg. Largest first.`,split,`<th>${a} kg</th><th>Distributors used</th><th class="l">Split</th>`,o=>`<td>${KG(o.cur)}</td><td>${o.nd}</td><td class="l" style="white-space:normal;min-width:220px">${dlist(o)}</td>`)
+   +(b?sec('lostM','Lost One To Many retailers',`Marked One To Many, bought in ${b}, nothing in ${a}. They may now buy through a source outside this data.`,lostM,`<th>${b} kg</th><th>Source count</th>`,o=>`<td>${KG(o.prev)}</td><td>${o.sc??dash}</td>`):'')
+   +sec('mism','Pattern does not match the transactions',`One To One retailers who bought through more than one distributor in ${a}, or One To Many retailers who used only one. Check the master data.`,mism,`<th class="l">Source pattern</th><th>Source count</th><th>Distributors used</th><th>${a} kg</th>`,o=>`<td class="l">${esc(o.sp)}</td><td>${o.sc}</td><td>${o.nd}</td><td>${KG(o.cur)}</td>`);
+  m.innerHTML=h;
+  m.querySelectorAll('tr[data-sp]').forEach(t=>t.onclick=()=>{ST.src=t.dataset.sp;ST.rStatus='';fillFilters();setTab('rt');scrollTo(0,0)});
+  bindTree(m,ST3,SRC_SET);m.querySelectorAll('[data-sx]').forEach(bt=>bt.onclick=()=>saveFile(`Sourcing_${bt.dataset.sx}_${a}.csv`,retCsv(X[bt.dataset.sx])));
+  m.querySelectorAll('[data-tb]').forEach(bindRows)}
+
 /* ---------- PRODUCTS ---------- */
 function renderProducts(m){const {F,fi,ci,a,b}=C;let TA=0;
   const grp=keyFn=>{const M=new Map();for(const r of F){const p=SP[r[0]];if(p!==fi&&p!==ci)continue;const k=keyFn(r);let o=M.get(k);if(!o){o={k,a:0,b:0,ra:new Set(),rb:new Set()};M.set(k,o)}if(p===fi){o.a+=r[8];if(r[8]>0)o.ra.add(r[5])}else{o.b+=r[8];if(r[8]>0)o.rb.add(r[5])}}return [...M.values()].sort((x,y)=>y.a-x.a||y.b-x.b)};
