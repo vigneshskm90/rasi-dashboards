@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17432c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Rasi Plan vs Invoicing vs POG</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#f4f6f3; --card:#fff; --ink:#1d2a22; --muted:#6b776f; --line:#e1e6e0;
+  --green:#2f7d4f; --green2:#e6f2ea; --amber:#c98a12; --amber2:#fbf1dc;
+  --blue:#2c6aa6; --blue2:#e5eff8; --red:#c0453a; --red2:#fae8e6; --head:#17432c;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:13px}
+header{background:linear-gradient(120deg,#17432c,#2f7d4f);color:#fff;padding:14px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{font-size:19px;margin:0;font-weight:600;letter-spacing:.2px}
+header .sub{opacity:.8;font-size:12px}
+header .sp{flex:1}
+.btn{border:0;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer;font-size:13px}
+.btn.pri{background:#fff;color:var(--head)}
+.btn.ghost{background:rgba(255,255,255,.15);color:#fff}
+.btn.sm{padding:5px 10px;font-size:12px;background:var(--green2);color:var(--green)}
+.seg{display:inline-flex;background:rgba(255,255,255,.15);border-radius:8px;padding:3px}
+.seg button{border:0;background:transparent;color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:600}
+.seg button.on{background:#fff;color:var(--head)}
+main{padding:16px 22px 40px}
+.status{font-size:12px;color:var(--muted);margin-bottom:12px;display:flex;gap:14px;flex-wrap:wrap}
+.status b{color:var(--ink)}
+.warn{background:var(--amber2);border:1px solid #efd9a6;color:#7a5408;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:12px}
+.filters{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+.f{display:flex;flex-direction:column;gap:4px;min-width:130px}
+.f label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.f select,.f input{border:1px solid var(--line);border-radius:7px;padding:6px 8px;font-size:13px;background:#fff;color:var(--ink)}
+.ms{position:relative}
+.ms .msbtn{border:1px solid var(--line);border-radius:7px;padding:6px 8px;background:#fff;cursor:pointer;min-width:170px;text-align:left;font-size:13px}
+.ms .menu{display:none;position:absolute;z-index:20;top:100%;left:0;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:300px;overflow:auto;min-width:230px;padding:6px}
+.ms.open .menu{display:block}
+.ms .menu label{display:flex;gap:6px;padding:4px 6px;font-size:12.5px;text-transform:none;letter-spacing:0;color:var(--ink);font-weight:400;cursor:pointer;border-radius:5px}
+.ms .menu label:hover{background:var(--bg)}
+.ms .menu .ctl{display:flex;gap:6px;padding:2px 4px 6px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi .l{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.kpi .v{font-size:22px;font-weight:700;margin-top:4px}
+.kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:14px;align-items:start}
+@media(max-width:1100px){.row2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card h2{font-size:14px;margin:0;padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.card h2 .sp{flex:1}
+.tw{overflow:auto;max-height:68vh}
+tr.lv1 td{background:#f6f9f5} tr.lv2 td{background:#fff} tr.lv3 td{background:#fcfcfa;color:#41504a;font-size:12px}
+.tog{cursor:pointer;color:var(--green);font-weight:700;display:inline-block;width:16px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{position:sticky;top:0;background:#eef3ee;color:var(--head);text-align:left;font-weight:600;padding:8px 9px;border-bottom:1px solid var(--line);white-space:nowrap;z-index:2}
+th.n,td.n{text-align:right}
+td{padding:7px 9px;border-bottom:1px solid #eef1ed;white-space:nowrap}
+tr:hover td{background:#fafcf9}
+tr.tot td{font-weight:700;background:#f2f6f1;position:sticky;bottom:0}
+tr.sku td{background:#fbfcfb;color:#41504a;font-size:12px}
+tr.sku td:first-child{padding-left:22px}
+.grp{background:#f7faf6}
+th.gD{background:#c3a089;color:#2b1d14} th.gI{background:#6f86b4;color:#fff} th.gP{background:#c9a548;color:#2b2208}
+.bar{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.bar .t{width:70px;height:7px;background:#e8ece7;border-radius:4px;overflow:hidden}
+.bar .t i{display:block;height:100%;border-radius:4px}
+.neg{color:var(--red)}
+.mut{color:var(--muted)}
+.tog{cursor:pointer;color:var(--green);font-weight:700;display:inline-block;width:14px}
+.side table td,.side table th{padding:6px 8px}
+.side .card{overflow:auto}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.drop{border:2px dashed #b9c9bd;border-radius:12px;padding:26px;text-align:center;color:var(--muted);background:#fff;margin-bottom:14px}
+.drop b{color:var(--ink)}
+.hide{display:none!important}
+.pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600}
+.pill.g{background:var(--green2);color:var(--green)} .pill.a{background:var(--amber2);color:#8a5d06} .pill.r{background:var(--red2);color:var(--red)}
+
+/* ---------- device layouts ---------- */
+.fbtn{display:none}
+.msdone{display:none}
+body.dev-phone .msdone,body.dev-ipad .msdone{display:inline-block;background:var(--green);color:#fff}
+.sub{font-size:11px;color:var(--muted);font-weight:400;margin-top:1px}
+.ctag{display:inline-block;margin-left:6px;padding:0 6px;border-radius:8px;background:var(--green2);color:var(--green);font-size:10.5px;font-weight:600;vertical-align:middle}
+tr[data-k]{cursor:pointer}
+
+/* iPad (11-inch iPad Pro: 834 × 1194 portrait, 1194 × 834 landscape) */
+body.dev-ipad{font-size:14px}
+body.dev-ipad header{padding:12px 18px;gap:10px}
+body.dev-ipad .btn,body.dev-ipad .seg button{min-height:40px}
+body.dev-ipad main{padding:14px 16px 40px}
+body.dev-ipad .f select,body.dev-ipad .f input,body.dev-ipad .ms .msbtn{min-height:40px;font-size:14px}
+body.dev-ipad .filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+body.dev-ipad .f{min-width:0}
+body.dev-ipad .ms .msbtn{min-width:0;width:100%}
+body.dev-ipad .kpis{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+body.dev-ipad table{font-size:13.5px}
+body.dev-ipad td{padding:10px 8px}
+body.dev-ipad th{padding:10px 8px}
+body.dev-ipad .tog{width:22px;font-size:15px}
+body.dev-ipad .tw{max-height:calc(100dvh - 140px)}
+body.dev-ipad .ms .menu label{padding:9px 8px;font-size:14px}
+@media (orientation:portrait){ body.dev-ipad header .sub{display:none} }
+
+/* Phone (Pixel 10 Pro ≈ 412 px wide) */
+body.dev-phone{font-size:14px;-webkit-text-size-adjust:100%}
+body.dev-phone header{padding:10px 12px calc(10px) 12px;padding-top:max(10px,env(safe-area-inset-top));gap:8px}
+body.dev-phone header h1{font-size:16px}
+body.dev-phone header .sub,body.dev-phone header .sp{display:none}
+body.dev-phone header>div:first-child{flex:1 1 100%}
+body.dev-phone #devSeg button{padding:8px 7px;font-size:12px}
+body.dev-phone #viewSeg{flex:1 1 100%;display:flex}
+body.dev-phone #viewSeg button{flex:1;padding:9px 4px;font-size:13px}
+body.dev-phone #unitSeg button{padding:8px 12px}
+body.dev-phone .acts{display:flex;gap:6px;margin-left:auto}
+body.dev-phone .acts .btn{padding:8px 11px;min-height:38px;font-size:15px}
+body.dev-phone .acts .lbl{display:none}
+body.dev-phone main{padding:10px 10px calc(30px + env(safe-area-inset-bottom))}
+body.dev-phone .status{font-size:11px;gap:4px 10px}
+body.dev-phone .fbtn{display:block;width:100%;background:#fff;border:1px solid var(--line);color:var(--head);padding:11px;margin-bottom:10px;text-align:left}
+body.dev-phone .filters{display:none;grid-template-columns:1fr 1fr;gap:10px;padding:12px}
+body.dev-phone .filters.open{display:grid}
+body.dev-phone .f{min-width:0}
+body.dev-phone .f select,body.dev-phone .ms .msbtn{min-height:42px;font-size:14px;width:100%;min-width:0}
+body.dev-phone .ms .menu{position:fixed;left:0;right:0;bottom:0;top:auto;max-height:60vh;border-radius:14px 14px 0 0;padding:10px 10px calc(14px + env(safe-area-inset-bottom));min-width:0;box-shadow:0 -10px 30px rgba(0,0,0,.25)}
+body.dev-phone .ms .menu label{padding:11px 8px;font-size:15px}
+body.dev-phone .kpis{grid-template-columns:1fr 1fr;gap:8px}
+body.dev-phone .kpi{padding:10px 11px}
+body.dev-phone .kpi .v{font-size:19px}
+body.dev-phone .kpi:last-child:nth-child(odd){grid-column:1/-1}
+body.dev-phone .card h2{padding:10px 11px;font-size:13.5px;flex-wrap:wrap}
+body.dev-phone .card h2 .btn.sm{padding:7px 10px}
+body.dev-phone .tw{max-height:calc(100dvh - 120px);-webkit-overflow-scrolling:touch}
+body.dev-phone table{font-size:12.5px}
+body.dev-phone th{padding:8px 6px;white-space:normal;line-height:1.15;vertical-align:bottom}
+body.dev-phone td{padding:9px 6px}
+body.dev-phone td:first-child,body.dev-phone th:first-child{position:sticky;left:0;z-index:1;max-width:46vw;white-space:normal;word-break:break-word}
+body.dev-phone td:first-child{background:#fff}
+body.dev-phone tr.lv1 td:first-child{background:#f6f9f5}
+body.dev-phone tr.lv3 td:first-child{background:#fcfcfa}
+body.dev-phone th:first-child{z-index:3}
+body.dev-phone tr.tot td:first-child{background:#f2f6f1}
+body.dev-phone .tog{width:20px;font-size:14px}
+body.dev-phone .warn{font-size:11.5px}
+body.dev-phone .drop{padding:18px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Rasi Plan vs Invoicing vs POG</h1>
+    <div class="sub">Plan.xlsx · Invoice.csv · POG file (optional) — from the Portal_Files folder</div>
+  </div>
+  <div class="sp"></div>
+  <div class="seg" id="devSeg" title="Screen layout"><button data-d="pc">🖥 PC</button><button data-d="phone">📱 Phone</button><button data-d="ipad">▭ iPad</button></div>
+  <div class="seg" id="viewSeg"><button data-v="business" class="on">Business View</button><button data-v="crop">Crop View</button><button data-v="product">Product View</button></div>
+  <div class="seg" id="unitSeg"><button data-u="kg" class="on">Kg</button><button data-u="mt">MT</button></div>
+  <div class="acts"><button class="btn ghost" id="btnLoad" title="Choose Invoice / Plan / POG files">📂 <span class="lbl">Load Files</span></button>
+  <button class="btn ghost" id="btnExport" title="Export Excel">⬇ <span class="lbl">Export Excel</span></button>
+  <button class="btn pri" id="btnRefresh" title="Refresh">⟳ <span class="lbl">Refresh</span></button></div>
+</header>
+
+<main>
+  <div class="status" id="status"></div>
+  <div id="warns"></div>
+
+  <div class="drop" id="drop">
+    <div style="font-size:15px;margin-bottom:6px"><b>Connect the Portal_Files folder</b></div>
+    Click <b>Refresh</b> and pick the <b>Portal_Files</b> folder once — after that, Refresh reads the latest
+    <b>Invoice*.csv</b>, <b>Plan*.xlsx</b> and <b>POG*</b> file from it automatically.<br>
+    <span style="font-size:12px">Or click <b>📂 Load Files</b> (select all three together), or drop the files here / <a href="#" id="pickFiles">choose files</a>.</span>
+    <input type="file" id="fileInput" multiple accept=".csv,.xlsx,.xls,text/csv,text/comma-separated-values,application/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hide">
+  </div>
+
+  <div id="dash" class="hide">
+    <button class="btn fbtn" id="btnFilt" type="button">☰ Filters <span id="fCount"></span></button>
+    <div class="filters" id="filters">
+      <div class="f"><label>Division</label><select id="fDiv"></select></div>
+      <div class="f"><label>Region</label><select id="fReg"></select></div>
+      <div class="f"><label>Territory</label><select id="fTer"></select></div>
+      <div class="f"><label>Crop</label><select id="fCrop"></select></div>
+      <div class="f"><label>Season</label><div class="ms" id="fSea"></div></div>
+      <div class="f"><label>Variety Name</label><div class="ms" id="fVar"></div></div>
+      <div class="f"><label>SKU</label><div class="ms" id="fSku"></div></div>
+      <div class="f"><label>&nbsp;</label><button class="btn sm" id="btnClear">Clear filters</button></div>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="card">
+      <h2><span id="tblTitle">Business View</span><span class="sp"></span><span id="bizCtl"><button class="btn sm" id="btnExpAll" type="button">Expand all</button> <button class="btn sm" id="btnColAll" type="button">Collapse all</button></span><span class="mut" style="font-weight:400;font-size:12px" id="tblUnit"></span></h2>
+      <div class="tw"><table id="tbl"></table></div>
+    </div>
+  </div>
+</main>
+
+<script>
+/* ---------------- Reference tables (Index.xlsx → Info) ---------------- */
+const PLANTS = {B001:'Secunderabad - TG',B002:'Hubli - KA',B003:'Agra - UP',B004:'INDORE',B005:'JAIPUR',B006:'Aslali - GJ',B007:'Hisar - HR',B008:'Bathinda - PB',B009:'Lucknow - UP',B010:'Bihar - BR (Patna)',B011:'CT-Raipur',B012:'OR-Bhuwaneswar',B013:'Ranchi - JH',B016:'AKOLA',B018:'MH-Pune',B024:'MP-Jabalpur',B030:'TG-Warangal',B031:'TRICHY',B032:'CT-Ambikapur',B033:'OD-Nabarangapur',P008:'Wheat - 1',P014:'Wheat - 2',P030:'Wheat - 3',U006:'Toopran',U008:'Kallakurichi',U005:'Define'};
+// Table 3: plant → division/region (a plant can serve several regions)
+const PLANT_REGION = [
+ ['B001','South','Telangana-1'],['B002','South','Karnataka'],['B003','North2','UP-West'],['B004','Central','MP-Indore'],['B004','Central','MP-Chhindwara'],
+ ['B005','North1','RJ-Jaipur'],['B005','North1','RJ-Bhilwara'],['B006','Central','Gujarat'],['B007','North1','Haryana'],['B008','North1','Punjab'],
+ ['B009','North2','UP-Central'],['B009','North2','UP-East'],['B010','North2','Bihar'],['B011','South','Chhattisgarh'],['B012','South','Odisha'],
+ ['B013','North2','Jharkhand'],['B016','Central','Maharashtra'],['B018','Central','Maharashtra'],['B024','Central','MP-Jabalpur'],['B030','South','Telangana-1'],
+ ['B031','Tamil Nadu','Tamil Nadu'],['B032','South','Chhattisgarh'],['B033','South','Odisha']];
+// Table 4: order types with the sign used in the data (+ve adds to invoicing, -ve reduces it)
+const ORDER_TYPES = {
+  ZMFC:{d:'Plant Invoice',g:'Plant Invoice',s:1},
+  ZCFC:{d:'C&F Invoice',g:'C&F Invoice',s:1},
+  ZMRF:{d:'Plant Returns',g:'Returns',s:-1},
+  ZCRF:{d:'C&F Returns',g:'Returns',s:-1},
+  ZS1:{d:'Cancel Invoice RSPL',g:'Cancellations',s:-1},
+  ZS2:{d:'Cancel Cred. Memo RSPL',g:'Cancellations',s:1},
+  ZRFC:{d:'Returns (Without Invoice Reference)',g:'Returns',s:-1}
+};
+const EXCLUDE_TYPES = ['ZGRR'];   // ignored
+const GROUPS = ['Plant Invoice','C&F Invoice','Returns','Cancellations'];
+// Region names that differ between files → name used in the Plan (key = lowercase, letters/digits only)
+const REGION_ALIAS = {
+  mahrashatra:'Maharashtra', maharastra:'Maharashtra', maharashtra:'Maharashtra',
+  mpidr:'MP-Indore'          // POG file: MP-IDR = MP-Indore
+};
+// Territory names that differ between files → name used in the Plan (key = lowercase, letters/digits only)
+const TERRITORY_ALIAS = {
+  haveri1haveri:'Haveri',    // Invoice file: HAVERI 1 (HAVERI)
+  kustagikoppal:'Koppal'     // Invoice file: Kustagi(koppal)
+};
+
+/* ---------------- State ---------------- */
+let S = { inv:[], plan:[], pog:[], files:{}, view:'business', open:new Set(), unit:'kg', excluded:0, unknownTypes:{}, unmatched:{} };
+const $ = id => document.getElementById(id);
+
+/* ---------------- Helpers ---------------- */
+const norm = s => String(s??'').trim();
+const key = s => norm(s).toUpperCase().replace(/\s+/g,' ');
+const lk = s => norm(s).toLowerCase().replace(/[^a-z0-9]/g,'');
+function num(v){ if(typeof v==='number') return v; const s=norm(v).replace(/,/g,''); if(!s) return 0; const n=parseFloat(s.replace(/^\((.*)\)$/,'-$1')); return isNaN(n)?0:n; }
+function parseDate(v){
+  if(v instanceof Date) return v;
+  if(typeof v==='number' && v>20000 && v<80000) return new Date(Math.round((v-25569)*864e5));
+  const s=norm(v); let m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/);
+  if(m){ let y=+m[3]; if(y<100) y+=2000; return new Date(y,+m[2]-1,+m[1]); }
+  m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m) return new Date(+m[1],+m[2]-1,+m[3]);
+  return null;
+}
+function cropOf(product){
+  const p=key(product);
+  if(/CORN|MAIZE/.test(p)) return 'CORN';
+  if(/WHEAT/.test(p)) return 'WHEAT';
+  if(/PADDY|RICE/.test(p)) return 'PADDY';
+  if(/COTTON/.test(p)) return 'COTTON';
+  if(/MUSTARD/.test(p)) return 'MUSTARD';
+  if(/BAJRA|PEARL/.test(p)) return 'BAJRA';
+  return p.replace(/\s*SEEDS?$/,'') || '—';
+}
+function bigrams(s){ const a=[]; for(let i=0;i<s.length-1;i++) a.push(s.slice(i,i+2)); return a; }
+function dice(a,b){ if(a===b) return 1; const A=bigrams(a),B=bigrams(b); if(!A.length||!B.length) return 0; let hit=0; const m={}; B.forEach(x=>m[x]=(m[x]||0)+1); A.forEach(x=>{ if(m[x]){hit++;m[x]--;} }); return 2*hit/(A.length+B.length); }
+let VCANON={}, VDIG={};
+function buildVarCanon(){
+  VCANON={}; VDIG={};
+  S.plan.forEach(p=>{ VCANON[lk(p.variety)]=p.variety; const m=p.variety.match(/(\d{3,})$/); if(m){ (VDIG[m[1]]=VDIG[m[1]]||new Set()).add(p.variety); } });
+}
+function canonVar(v){
+  const k=key(v); if(!k) return '—';
+  if(VCANON[lk(k)]) return VCANON[lk(k)];
+  const m=k.match(/(\d{3,})$/); if(m && VDIG[m[1]] && VDIG[m[1]].size===1) return [...VDIG[m[1]]][0];   // 3414 → R-3414
+  return k;
+}
+let CANON = {};   // lk(region) -> {name, div}
+function buildCanon(){
+  CANON={};
+  PLANT_REGION.forEach(([p,d,r])=>CANON[lk(r)]={name:r,div:d});
+  S.plan.forEach(p=>{ if(p.region && !CANON[lk(p.region)]) CANON[lk(p.region)]={name:p.region,div:p.div}; });
+}
+function canonRegion(raw){
+  const k=lk(raw); if(!k) return null;
+  if(CANON[k]) return CANON[k];
+  if(REGION_ALIAS[k] && CANON[lk(REGION_ALIAS[k])]) return CANON[lk(REGION_ALIAS[k])];
+  let best=null,bs=0; for(const c in CANON){ const s=dice(k,c); if(s>bs){bs=s;best=CANON[c];} }
+  return bs>=0.72 ? best : null;
+}
+const fmtN = (v,dec) => (v||0).toLocaleString('en-IN',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+function q(kg){ if(kg===null||kg===undefined) return '<span class="mut">—</span>'; const v=S.unit==='mt'?kg/1000:kg; const s=fmtN(v,S.unit==='mt'?2:0); return v<0?`<span class="neg">${s}</span>`:s; }
+function qv(kg){ return S.unit==='mt'?+(kg/1000).toFixed(3):Math.round(kg); }
+function pct(a,b){ return b? a/b*100 : null; }
+function bar(p,color){
+  if(p===null) return '<span class="mut">—</span>';
+  const w=Math.max(0,Math.min(100,p)); const c=color||(p>=90?'var(--green)':p>=50?'var(--amber)':'var(--red)');
+  return `<div class="bar"><span>${fmtN(p,1)}%</span><span class="t"><i style="width:${w}%;background:${c}"></i></span></div>`;
+}
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------------- File reading ---------------- */
+async function readBook(file){
+  const name=file.name.toLowerCase();
+  if(name.endsWith('.csv')){ const txt=await file.text(); return XLSX.read(txt,{type:'string',raw:true}); }
+  return XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});
+}
+const rowsOf = (ws) => XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''});
+function findCol(hdr, res, fallbackIdx){
+  for(const re of res){ const i=hdr.findIndex(h=>re.test(norm(h))); if(i>=0) return i; }
+  return fallbackIdx;
+}
+
+/* Invoice.csv — column positions as given: J=Invoice Type, N=Variety Name, O=SKU, X=Qty (Kg) */
+function parseInvoice(wb){
+  const rows=rowsOf(wb.Sheets[wb.SheetNames[0]]);
+  if(!rows.length) return [];
+  const h=rows[0].map(norm);
+  h[13]='Variety Name'; h[14]='SKU';            // N1, O1 renamed
+  const C={
+    zone:findCol(h,[/^zone$/i,/division/i],1), region:findCol(h,[/^region$/i],2),
+    territory:findCol(h,[/^territory/i],3), season:findCol(h,[/season/i],6), plant:findCol(h,[/invoice plant/i],7),
+    type:9, date:findCol(h,[/invoice date/i],11), product:findCol(h,[/^product$/i],12),
+    variety:13, sku:14, qty:23, invNo:findCol(h,[/invoice no/i],10)
+  };
+  const out=[]; S.excluded=0; S.unknownTypes={}; S.unmatched={};
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i]; const type=key(r[C.type]); const variety=canonVar(r[C.variety]);
+    if(!type && !norm(r[C.variety]) && !num(r[C.qty])) continue;         // blank row
+    if(EXCLUDE_TYPES.includes(type)){ S.excluded++; continue; }
+    const ot=ORDER_TYPES[type];
+    if(!ot){ S.unknownTypes[type||'(blank)']=(S.unknownTypes[type||'(blank)']||0)+1; }
+    // Table 4 sign applied to the quantity; types not in Table 4 keep the sign as in the data
+    const qty = ot ? Math.abs(num(r[C.qty]))*ot.s : num(r[C.qty]);
+    const plant=key(r[C.plant]);
+    let reg=canonRegion(r[C.region]);
+    if(!reg){ // fall back to plant → region when plant serves only one region
+      const m=PLANT_REGION.filter(x=>x[0]===plant); if(m.length===1) reg={name:m[0][2],div:m[0][1]};
+    }
+    const regionName = reg? reg.name : (norm(r[C.region])||'(No region)');
+    if(!reg) S.unmatched[regionName]=1;
+    out.push({
+      div: norm(r[C.zone]) || (reg&&reg.div) || '—', region: regionName,
+      crop: cropOf(r[C.product]), variety: variety||'—', territory: norm(r[C.territory]), sku: key(r[C.sku])||'—',
+      plant, type, group: ot? ot.g : 'Other', qty,
+      date: parseDate(r[C.date]), season: norm(r[C.season]), invNo: norm(r[C.invNo])
+    });
+  }
+  return out;
+}
+
+/* Plan.xlsx — long (Region | Variety | Qty) or wide (Region | <variety columns>) */
+function parseTabular(wb, kind){
+  let ws = wb.Sheets[wb.SheetNames.find(n=>new RegExp(kind,'i').test(n))||wb.SheetNames[0]];
+  const rows=rowsOf(ws);
+  let hi=rows.findIndex((r,i)=>i<15 && r.some(c=>/region/i.test(norm(c))));
+  if(hi<0) hi=0;
+  const h=rows[hi].map(norm);
+  const iDiv=findCol(h,[/^division$/i,/^zone$/i,/division|zone/i],-1);
+  const iReg=findCol(h,[/^region$/i,/region/i],-1);
+  const iCrop=findCol(h,[/^crop$/i,/crop/i],-1);
+  const iTer=findCol(h,[/^territory/i,/territory/i],-1);
+  const iSea=findCol(h,[/^season/i],-1);
+  const iVar=findCol(h,[/^variety/i,/variety/i,/hybrid/i,/actual item/i,/^product$/i,/item id/i],-1);
+  const iSku=findCol(h,[/^sku$/i,/item code/i,/sku/i],-1);
+  const qtyRes = kind==='pog' ? [/pog/i,/liquidat/i,/qty|quantity/i,/kg/i] : [/plan/i,/target/i,/qty|quantity/i,/kg/i];
+  let iQty=findCol(h,qtyRes,-1);
+  if(kind==='pog' && /pog/i.test(h[12]||'') && !/%|perc/i.test(h[12])) iQty=12;          // POG Qty = column M
+  if(kind==='pog' && /%|perc/i.test(h[iQty]||'')) iQty=h.findIndex(x=>/pog\s*q/i.test(x));
+  const iAct = kind==='plan' ? h.findIndex((x,i)=>i!==iQty && /act/i.test(x)) : -1;
+  if(kind==='plan') S.actLabel = iAct>=0 ? h[iAct].replace(/_/g,' ') : '';
+  const used=new Set([iDiv,iReg,iCrop,iVar,iSku,iTer,iSea,iAct].filter(i=>i>=0));
+  const out=[];
+  const push=(r,variety,qty,sku,act)=>{
+    if(!qty && !act) return;
+    const reg=canonRegion(r[iReg])||{name:norm(r[iReg]),div:''};
+    if(!reg.name || /total/i.test(reg.name)) return;
+    out.push({div:((iDiv>=0&&norm(r[iDiv]).replace(/\s*division$/i,''))||reg.div||'—'), region:reg.name, territory:iTer>=0?norm(r[iTer]):'', season:iSea>=0?norm(r[iSea]):'', crop:iCrop>=0?cropOf(r[iCrop]):'', variety:kind==='plan'?key(variety):canonVar(variety), sku:sku?key(sku):'', qty, act:act||0});
+  };
+  for(let i=hi+1;i<rows.length;i++){
+    const r=rows[i]; if(iReg<0 || !norm(r[iReg])) continue;
+    if(iVar>=0 && iQty>=0){ push(r,r[iVar],num(r[iQty]),iSku>=0?r[iSku]:'',iAct>=0?num(r[iAct]):0); }
+    else { // wide layout: each other column with a header is a variety
+      h.forEach((hh,ci)=>{ if(!hh||used.has(ci)||/total|remark/i.test(hh)) return; push(r,hh,num(r[ci]),''); });
+    }
+  }
+  return out;
+}
+
+async function loadFiles(files){
+  const pick=(re)=>files.filter(f=>re.test(f.name)).sort((a,b)=>b.lastModified-a.lastModified)[0];
+  const prev=S.files||{};
+  const fInv=pick(/invoice.*\.(csv|xlsx?)$/i)||prev.inv, fPlan=pick(/plan.*\.xlsx?$/i)||prev.plan, fPog=pick(/pog.*\.(csv|xlsx?)$/i)||prev.pog;
+  if(!fInv&&!fPlan&&!fPog){ alert('No Invoice, Plan or POG file found. File names must contain "Invoice", "Plan" or "POG".'); return; }
+  S.files={inv:fInv,plan:fPlan,pog:fPog};
+  S.plan = fPlan? parseTabular(await readBook(fPlan),'plan') : [];
+  buildCanon(); buildVarCanon();
+  S.inv  = fInv? parseInvoice(await readBook(fInv)) : [];
+  S.pog  = fPog? parseTabular(await readBook(fPog),'pog') : [];
+  // fill crop for plan/POG rows that carry none, from the invoice variety → crop map
+  const vc={}; S.inv.forEach(r=>vc[r.variety]=r.crop);
+  [...S.plan,...S.pog].forEach(p=>{ if(!p.crop) p.crop=vc[p.variety]||'CORN'; });
+  // One Division naming everywhere: "North Division 1" → North1, "North Division 2" → North2, "Central Division" → Central.
+  // A blank division is filled from the region (Plan / Table 3).
+  const known={}, regDiv={};
+  PLANT_REGION.forEach(([p,d,r])=>{ known[lk(d)]=d; regDiv[lk(r)]=d; });
+  S.plan.forEach(p=>{ const d=norm(p.div); if(d&&d!=='—'){ known[lk(d).replace('division','')]=d; regDiv[lk(p.region)]=d; } });
+  const canonDiv=(d,region)=>{ const k=lk(d).replace('division',''); if(k&&known[k]) return known[k]; if(regDiv[lk(region)]) return regDiv[lk(region)]; return norm(d)&&norm(d)!=='—'?norm(d):'—'; };
+  [...S.plan,...S.inv,...S.pog].forEach(r=>{ r.div=canonDiv(r.div,r.region); });
+  // Territory names: apply the alias list, then use the Plan's spelling (e.g. HAVERI → Haveri)
+  const terName={}; S.plan.forEach(p=>{ if(p.territory) terName[lk(p.territory)]=p.territory; });
+  [...S.inv,...S.pog].forEach(r=>{ if(!r.territory) return; let t=TERRITORY_ALIAS[lk(r.territory)]||r.territory; r.territory=terName[lk(t)]||t; });
+  S.loadedAt=new Date();
+  $('drop').classList.add('hide'); $('dash').classList.remove('hide');
+  initFilters(); render();
+}
+
+/* Folder access (remembered between sessions) */
+const DB='rasi-plan-inv-pog';
+function idb(){ return new Promise((res,rej)=>{ const o=indexedDB.open(DB,1); o.onupgradeneeded=()=>o.result.createObjectStore('kv'); o.onsuccess=()=>res(o.result); o.onerror=()=>rej(o.error); }); }
+async function kvGet(k){ try{ const d=await idb(); return await new Promise(r=>{ const t=d.transaction('kv').objectStore('kv').get(k); t.onsuccess=()=>r(t.result); t.onerror=()=>r(null); }); }catch(e){ return null; } }
+async function kvSet(k,v){ try{ const d=await idb(); d.transaction('kv','readwrite').objectStore('kv').put(v,k); }catch(e){} }
+async function refresh(){
+  if(!window.showDirectoryPicker){ $('fileInput').click(); return; }
+  try{
+    let dir=await kvGet('dir');
+    if(dir){ let p=await dir.queryPermission({mode:'read'}); if(p!=='granted') p=await dir.requestPermission({mode:'read'}); if(p!=='granted') dir=null; }
+    if(!dir){ dir=await window.showDirectoryPicker({id:'portal_files',mode:'read'}); await kvSet('dir',dir); }
+    const files=[]; for await (const e of dir.values()){ if(e.kind==='file' && /\.(csv|xlsx|xls)$/i.test(e.name)) files.push(await e.getFile()); }
+    await loadFiles(files);
+  }catch(e){ if(e.name!=='AbortError'){ console.error(e); alert('Could not read the folder: '+e.message); } }
+}
+
+/* ---------------- Filters ---------------- */
+function msBuild(el, values, label){
+  el.innerHTML=`<button class="msbtn" type="button">All</button><div class="menu"><div class="ctl"><button class="btn sm" data-a="all" type="button">All</button><button class="btn sm" data-a="none" type="button">None</button><span style="flex:1"></span><button class="btn sm msdone" type="button">Done</button></div>${values.map(v=>`<label><input type="checkbox" value="${esc(v)}" checked>${esc(v)}</label>`).join('')}</div>`;
+  el._all=values;
+  const upd=()=>{ const sel=msVals(el); el.querySelector('.msbtn').textContent = sel===null?'All':sel.length===0?'None':sel.length<=2?sel.join(', '):sel.length+' selected'; render(); };
+  el.querySelector('.msbtn').onclick=e=>{ e.stopPropagation(); document.querySelectorAll('.ms.open').forEach(m=>m!==el&&m.classList.remove('open')); el.classList.toggle('open'); };
+  el.querySelector('.menu').onclick=e=>e.stopPropagation();
+  el.querySelectorAll('input').forEach(i=>i.onchange=upd);
+  el.querySelector('.msdone').onclick=()=>el.classList.remove('open');
+  el.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{ el.querySelectorAll('input').forEach(i=>i.checked=b.dataset.a==='all'); upd(); });
+}
+function msVals(el){ const c=[...el.querySelectorAll('input')]; const s=c.filter(i=>i.checked).map(i=>i.value); return s.length===c.length?null:s; }
+document.addEventListener('click',()=>document.querySelectorAll('.ms.open').forEach(m=>m.classList.remove('open')));
+
+function fillSelect(sel, vals){ const cur=sel.value; sel.innerHTML='<option value="">All</option>'+vals.map(v=>`<option>${esc(v)}</option>`).join(''); if(vals.includes(cur)) sel.value=cur; }
+const uniq = a => [...new Set(a.filter(x=>x&&x!=='—'))].sort((x,y)=>String(x).localeCompare(String(y),undefined,{numeric:true}));
+function allRows(){ return [...S.plan,...S.inv,...S.pog]; }
+function initFilters(){
+  const A=allRows();
+  $('fSea')._all=null; fillSelect($('fDiv'),uniq(A.map(r=>r.div)));
+  cascade();
+}
+function cascade(){
+  const A=allRows(), d=$('fDiv').value;
+  fillSelect($('fReg'),uniq(A.filter(r=>!d||r.div===d).map(r=>r.region)));
+  const rg=$('fReg').value;
+  fillSelect($('fTer'),uniq(A.filter(r=>(!d||r.div===d)&&(!rg||r.region===rg)).map(r=>r.territory)));
+  const tr=$('fTer').value;
+  fillSelect($('fCrop'),uniq(A.filter(r=>(!d||r.div===d)&&(!rg||r.region===rg)&&(!tr||r.territory===tr)).map(r=>r.crop)));
+  const c=$('fCrop').value;
+  const base=A.filter(r=>(!d||r.div===d)&&(!rg||r.region===rg)&&(!tr||r.territory===tr)&&(!c||r.crop===c));
+  if(!$('fSea')._all) msBuild($('fSea'),uniq([...S.inv,...S.pog].map(r=>r.season)));
+  msBuild($('fVar'),uniq(base.map(r=>r.variety)));
+  msBuild($('fSku'),uniq(S.inv.filter(r=>(!d||r.div===d)&&(!rg||r.region===rg)&&(!c||r.crop===c)).map(r=>r.sku)));
+}
+['fDiv','fReg','fTer','fCrop'].forEach((id,i)=>$(id).addEventListener('change',()=>{ if(id==='fDiv') $('fReg').value=''; if(id==='fDiv'||id==='fReg') $('fTer').value=''; if(id!=='fCrop') $('fCrop').value=''; cascade(); render(); }));
+$('btnClear').onclick=()=>{ $('fDiv').value='';$('fReg').value='';$('fTer').value='';$('fSea')._all=null;$('fCrop').value=''; cascade(); render(); };
+
+function filtered(){
+  const d=$('fDiv').value, rg=$('fReg').value, tr=$('fTer').value, sea=msVals($('fSea')), c=$('fCrop').value, vs=msVals($('fVar')), ss=msVals($('fSku'));
+  const base=r=>(!d||r.div===d)&&(!rg||r.region===rg)&&(!tr||r.territory===tr)&&(!c||r.crop===c)&&(!vs||vs.includes(r.variety));
+  const seaOk=r=>!sea||sea.includes(r.season);
+  const pm = 1;   // Plan file is in Kg
+  return {
+    plan: S.plan.filter(base).map(p=>({...p,qty:p.qty*pm,act:p.act*pm})),
+    inv:  S.inv.filter(r=>base(r)&&seaOk(r)&&(!ss||ss.includes(r.sku))),
+    pog:  S.pog.filter(r=>base(r)&&seaOk(r)&&(!ss||!r.sku||ss.includes(r.sku))),
+    skuFiltered: !!ss
+  };
+}
+
+/* ---------------- Aggregation ---------------- */
+function aggregate(F, view){
+  const kf = view==='business' ? r=>[r.div,r.region,lk(r.territory),r.crop].join('|') : r=>[r.div,r.region,lk(r.territory),r.crop].concat(view==='product'?[r.variety]:[]).join('|');
+  const M=new Map();
+  const get=r=>{ const k=kf(r); if(!M.has(k)) M.set(k,{div:r.div,region:r.region,territory:r.territory||'',crop:r.crop,variety:r.variety,plan:0,inv:0,pog:0,hasPlan:false,hasPog:false}); const a=M.get(k); if(!a.territory&&r.territory) a.territory=r.territory; return a; };
+  const ok=r=>r.div && r.div!=='—';          // rows with a blank Division are left out
+  F.plan.filter(ok).forEach(r=>{ const a=get(r); a.plan+=r.qty; a.hasPlan=true; });
+  F.inv.filter(ok).forEach(r=>{ get(r).inv+=r.qty; });
+  F.pog.filter(ok).forEach(r=>{ const a=get(r); a.pog+=r.qty; a.hasPog=true; });
+  const c=(x,y)=>String(x).localeCompare(String(y),undefined,{numeric:true});
+  return [...M.values()].sort((x,y)=>c(x.div,y.div)||c(x.region,y.region)||c(x.territory,y.territory)||c(x.crop,y.crop)||c(x.variety,y.variety));
+}
+
+/* ---------------- Render ---------------- */
+let LAST=[];
+function render(){
+  if($('dash').classList.contains('hide')) return;
+  const F=filtered(), view=S.view;
+  const rows=aggregate(F,view); LAST=rows;
+  const hasPog=S.pog.length>0, U=S.unit==='mt'?'MT':'Kg';
+  $('tblTitle').textContent = {business:'Business View',crop:'Crop View',product:'Product View'}[view];
+  $('tblUnit').textContent = 'Quantities in '+U;
+  $('bizCtl').classList.toggle('hide',view==='product');
+
+  const f=S.files, t=d=>d?new Date(d).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+  $('status').innerHTML = `<span>Invoice: <b>${f.inv?esc(f.inv.name):'not loaded'}</b> ${f.inv?'('+t(f.inv.lastModified)+')':''}</span>
+    <span>Plan: <b>${f.plan?esc(f.plan.name):'not loaded'}</b></span>
+    <span>POG: <b>${f.pog?esc(f.pog.name):'not loaded'}</b></span>
+    <span>Refreshed: <b>${t(S.loadedAt)}</b></span>`;
+  const w=[];
+  if(!f.plan) w.push('Plan file not loaded — Plan Qnty shows as —.');
+  if(!f.pog) w.push('POG file not loaded — POG Quantity shows as —.');
+  const um=Object.keys(S.unmatched); if(um.length) w.push('Invoice regions not matched to a plan region: <b>'+um.map(esc).join(', ')+'</b>');
+  $('warns').innerHTML = w.map(x=>`<div class="warn">${x}</div>`).join('');
+
+  const T={plan:0,inv:0,pog:0}; rows.forEach(r=>{T.plan+=r.plan;T.inv+=r.inv;T.pog+=r.pog;});
+  const ip=pct(T.inv,T.plan), pp=pct(T.pog,T.inv);
+  $('kpis').innerHTML=[
+    ['Plan Qnty',q(T.plan),U],
+    ['Invoice Quantity',q(T.inv),U],
+    ['Invoice vs Plan',ip===null?'—':fmtN(ip,1)+'%',`Balance ${q(Math.max(0,T.plan-T.inv))} ${U}`],
+    ['POG Quantity',hasPog?q(T.pog):'—',U],
+    ['%POG',hasPog&&pp!==null?fmtN(pp,1)+'%':'—','POG ÷ Invoice Quantity']
+  ].map(([l,v,s])=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+
+  const PH = S.device==='phone';
+  updFiltCount();
+  const lead = PH ? [{business:'Division › Region › Territory',crop:'Division › Region › Territory',product:'Variety'}[view]] : view==='business' ? ['Division / Region / Territory'] : ['Division','Region','Territory','Crop'].concat(view==='product'?['Variety Name']:[]);
+  let h='<thead><tr>'+lead.map(x=>`<th class="gD">${x}</th>`).join('')+
+    (PH ? '<th class="n gD">Plan</th><th class="n gI">Invoice</th><th class="n gP">POG</th><th class="n gP">% POG</th>'
+        : '<th class="n gD">Plan Qnty</th><th class="n gI">Invoice Quantity</th><th class="n gP">POG Quantity</th><th class="n gP" title="POG Quantity ÷ Invoice Quantity">% POG</th>')+'</tr></thead><tbody>';
+  if(!rows.length) h+=`<tr><td colspan="9" class="empty">No data for these filters.</td></tr>`;
+  const dash='<span class="mut">—</span>';
+  const cell=(r)=>`<td class="n">${r.hasPlan?q(r.plan):dash}</td><td class="n"><b>${r.inv?q(r.inv):dash}</b></td><td class="n">${r.hasPog?q(r.pog):dash}</td><td class="n">${r.hasPog&&r.inv?fmtN(pct(r.pog,r.inv),1)+'%':dash}</td>`;
+  if(view==='business'){
+    // roll territory rows up to Division+Crop → Region → Territory
+    const add=(a,r)=>{ a.plan+=r.plan; a.inv+=r.inv; a.pog+=r.pog; a.hasPlan=a.hasPlan||r.hasPlan; a.hasPog=a.hasPog||r.hasPog; };
+    const node=()=>({plan:0,inv:0,pog:0,hasPlan:false,hasPog:false,kids:new Map()});
+    const tree=new Map();
+    rows.forEach(r=>{
+      const k1=r.div; if(!tree.has(k1)) tree.set(k1,Object.assign(node(),{name:r.div}));
+      const d=tree.get(k1); add(d,r);
+      if(!d.kids.has(r.region)) d.kids.set(r.region,Object.assign(node(),{name:r.region}));
+      const g=d.kids.get(r.region); add(g,r);
+      const tk=lk(r.territory)||'(none)'; if(!g.kids.has(tk)) g.kids.set(tk,Object.assign(node(),{name:r.territory||'(No territory)'})); add(g.kids.get(tk),r);
+    });
+    const c=(x,y)=>String(x).localeCompare(String(y),undefined,{numeric:true});
+    const tg=(id,has)=>has?`<span class="tog" data-k="${esc(id)}">${S.open.has(id)?'▾':'▸'}</span>`:'<span class="tog"></span>';
+    [...tree.entries()].sort((a,b)=>c(a[1].name,b[1].name)).forEach(([k1,d])=>{
+      h+=`<tr class="lv1" data-k="${esc(k1)}"><td>${tg(k1,true)}<b>${esc(d.name)}</b></td>${cell(d)}</tr>`;
+      if(!S.open.has(k1)) return;
+      [...d.kids.values()].sort((a,b)=>c(a.name,b.name)).forEach(g=>{
+        const k2=k1+'|'+g.name;
+        h+=`<tr class="lv2" data-k="${esc(k2)}"><td style="padding-left:${PH?18:30}px">${tg(k2,true)}${esc(g.name)}</td>${cell(g)}</tr>`;
+        if(!S.open.has(k2)) return;
+        [...g.kids.values()].sort((a,b)=>c(a.name,b.name)).forEach(t=>{
+          h+=`<tr class="lv3"><td style="padding-left:${PH?42:62}px">${esc(t.name)}</td>${cell(t)}</tr>`;
+        });
+      });
+    });
+  } else if(view==='crop'){
+    // Division + Crop first; ▸ opens Regions, then Territories
+    const sum=(g,r)=>{ g.plan+=r.plan; g.inv+=r.inv; g.pog+=r.pog; g.hasPlan=g.hasPlan||r.hasPlan; g.hasPog=g.hasPog||r.hasPog; };
+    const nd=o=>Object.assign({plan:0,inv:0,pog:0,hasPlan:false,hasPog:false,kids:new Map()},o);
+    const D=new Map();
+    rows.forEach(r=>{ const k1='C|'+r.div+'|'+r.crop;
+      if(!D.has(k1)) D.set(k1,nd({div:r.div,crop:r.crop})); const d=D.get(k1); sum(d,r);
+      if(!d.kids.has(r.region)) d.kids.set(r.region,nd({region:r.region,list:[]})); const g=d.kids.get(r.region); sum(g,r); g.list.push(r); });
+    const c=(x,y)=>String(x).localeCompare(String(y),undefined,{numeric:true});
+    [...D.entries()].sort((a,b)=>c(a[1].div,b[1].div)||c(a[1].crop,b[1].crop)).forEach(([k1,d])=>{
+      const o1=S.open.has(k1), nT=[...d.kids.values()].reduce((n,g)=>n+g.list.length,0);
+      const t1=`<span class="tog">${o1?'▾':'▸'}</span>`;
+      h+= PH ? `<tr class="lv1" data-k="${esc(k1)}"><td>${t1}<b>${esc(d.div)}</b><span class="ctag">${esc(d.crop)}</span><div class="sub" style="padding-left:20px">${d.kids.size} region${d.kids.size===1?'':'s'} · ${nT} territor${nT===1?'y':'ies'}</div></td>${cell(d)}</tr>`
+             : `<tr class="lv1" data-k="${esc(k1)}"><td>${t1}<b>${esc(d.div)}</b></td><td class="mut">${d.kids.size} region${d.kids.size===1?'':'s'}</td><td class="mut">${nT} territor${nT===1?'y':'ies'}</td><td>${esc(d.crop)}</td>${cell(d)}</tr>`;
+      if(!o1) return;
+      [...d.kids.values()].sort((a,b)=>c(a.region,b.region)).forEach(g=>{
+        const k2=k1+'|'+g.region, o2=S.open.has(k2);
+        const t2=`<span class="tog">${o2?'▾':'▸'}</span>`;
+        h+= PH ? `<tr class="lv2" data-k="${esc(k2)}"><td style="padding-left:18px">${t2}${esc(g.region)}</td>${cell(g)}</tr>`
+               : `<tr class="lv2" data-k="${esc(k2)}"><td></td><td>${t2}${esc(g.region)}</td><td class="mut">${g.list.length} territor${g.list.length===1?'y':'ies'}</td><td>${esc(d.crop)}</td>${cell(g)}</tr>`;
+        if(o2) g.list.forEach(r=>{ h+= PH ? `<tr class="lv3"><td style="padding-left:42px">${esc(r.territory||'(No territory)')}</td>${cell(r)}</tr>`
+                                          : `<tr class="lv3"><td></td><td></td><td style="padding-left:20px">${esc(r.territory||'(No territory)')}</td><td>${esc(r.crop)}</td>${cell(r)}</tr>`; });
+      });
+    });
+  } else if(PH){
+    rows.forEach(r=>{ h+=`<tr><td><b>${esc(r.variety)}</b><span class="ctag">${esc(r.crop)}</span><div class="sub">${esc(r.div)} › ${esc(r.region)}${r.territory?' › '+esc(r.territory):''}</div></td>${cell(r)}</tr>`; });
+  } else rows.forEach(r=>{
+    const dims = [r.div,r.region,r.territory,r.crop].map(esc);
+    h+='<tr>'+dims.map(x=>`<td>${x}</td>`).join('')+
+      (view==='product'?`<td><b>${esc(r.variety)}</b></td>`:'')+
+      `<td class="n">${r.hasPlan?q(r.plan):dash}</td><td class="n"><b>${r.inv?q(r.inv):dash}</b></td><td class="n">${r.hasPog?q(r.pog):dash}</td><td class="n">${r.hasPog&&r.inv?fmtN(pct(r.pog,r.inv),1)+'%':dash}</td></tr>`;
+  });
+  if(rows.length) h+=`<tr class="tot"><td colspan="${lead.length}">Total</td><td class="n">${q(T.plan)}</td><td class="n">${q(T.inv)}</td><td class="n">${hasPog?q(T.pog):'—'}</td><td class="n">${hasPog&&pp!==null?fmtN(pp,1)+'%':'—'}</td></tr>`;
+  $('tbl').innerHTML=h+'</tbody>';
+  // Business / Crop View: expand and collapse
+  $('tbl').querySelectorAll('tr[data-k]').forEach(tr=>tr.onclick=()=>{ const k=tr.dataset.k; S.open.has(k)?S.open.delete(k):S.open.add(k); render(); });
+}
+function setView(v){ S.view=v; $('viewSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.v===v)); render(); }
+
+/* ---------------- Export ---------------- */
+$('btnExport').onclick=()=>{
+  if(!LAST.length) return;
+  const U=S.unit==='mt'?'MT':'Kg', v=S.view, name={business:'Business View',crop:'Crop View',product:'Product View'}[v];
+  const out=LAST.map(r=>{
+    const o = v==='business' ? {Division:r.div,Region:r.region,Territory:r.territory} : {Division:r.div,Region:r.region,Territory:r.territory,Crop:r.crop}; if(v==='product') o['Variety Name']=r.variety;
+    o[`Plan Qnty (${U})`]=r.hasPlan?qv(r.plan):''; o[`Invoice Quantity (${U})`]=qv(r.inv); o[`POG Quantity (${U})`]=r.hasPog?qv(r.pog):''; o['% POG']=r.hasPog&&r.inv?+(r.pog/r.inv*100).toFixed(1):'';
+    return o;
+  });
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(out),name);
+  XLSX.writeFile(wb,`Plan_vs_Invoice_vs_POG_${name.replace(' View','')}_${new Date().toISOString().slice(0,10)}.xlsx`);
+};
+
+/* ---------------- Device layout ---------------- */
+function detectDevice(){
+  const ua=navigator.userAgent, w=Math.min(screen.width,screen.height), touch=navigator.maxTouchPoints>1;
+  if(/Android.*Mobile|iPhone|Pixel/i.test(ua) || (touch && w<600)) return 'phone';
+  if(/iPad/i.test(ua) || (/Macintosh/i.test(ua)&&touch) || (/Android/i.test(ua)&&!/Mobile/i.test(ua)) || (touch && w<1100)) return 'ipad';
+  return 'pc';
+}
+function setDevice(d){
+  S.device=d; try{ localStorage.setItem('rpi_device',d); }catch(e){}
+  document.body.classList.remove('dev-pc','dev-phone','dev-ipad'); document.body.classList.add('dev-'+d);
+  $('devSeg').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.d===d));
+  render();
+}
+$('devSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>setDevice(b.dataset.d));
+$('btnFilt').onclick=()=>$('filters').classList.toggle('open');
+function updFiltCount(){
+  let n=['fDiv','fReg','fTer','fCrop'].filter(id=>$(id).value).length + ['fSea','fVar','fSku'].filter(id=>$(id)._all&&msVals($(id))).length;
+  $('fCount').textContent = n? '('+n+' active)' : '';
+}
+
+/* ---------------- Wiring ---------------- */
+$('btnRefresh').onclick=refresh;
+$('pickFiles').onclick=e=>{e.preventDefault();$('fileInput').click();};
+$('fileInput').onchange=e=>{ loadFiles([...e.target.files]); e.target.value=''; };
+$('btnLoad').onclick=()=>$('fileInput').click();
+const drop=$('drop');
+['dragover','dragenter'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();}));
+document.addEventListener('drop',e=>{ e.preventDefault(); if(e.dataTransfer.files.length) loadFiles([...e.dataTransfer.files]); });
+$('viewSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>setView(b.dataset.v));
+$('btnColAll').onclick=()=>{ S.open.clear(); render(); };
+$('btnExpAll').onclick=()=>{ LAST.forEach(r=>{ if(S.view==='crop'){ S.open.add('C|'+r.div+'|'+r.crop); S.open.add('C|'+r.div+'|'+r.crop+'|'+r.region); } else { S.open.add(r.div); S.open.add(r.div+'|'+r.region); } }); render(); };
+$('unitSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{ $('unitSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); S.unit=b.dataset.u; render(); });
+
+let _d='pc'; try{ _d=localStorage.getItem('rpi_device')||detectDevice(); }catch(e){ _d=detectDevice(); }
+setDevice(_d);
+// auto-load on open if the folder was connected before and permission is still granted
+(async()=>{ if(!window.showDirectoryPicker) return; const dir=await kvGet('dir'); if(dir && (await dir.queryPermission({mode:'read'}))==='granted') refresh(); })();
+</script>
+</body>
+</html>

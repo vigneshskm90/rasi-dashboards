@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rasi Dispatch Dashboard – STO</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bg:#f4f6f3; --card:#ffffff; --ink:#1d2a22; --muted:#66756b; --line:#e3e8e2;
+    --brand:#1f6b3a; --brand2:#2f8f50; --brandSoft:#e6f2ea; --gold:#c98a12;
+    --plan:#3d5a80; --stock:#7a5195; --indent:#1f6b3a; --disp:#2a9d8f; --pend:#d1495b; --tot:#264653;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:13px}
+  header{background:linear-gradient(120deg,#163f25,#1f6b3a 55%,#3b9a5a);color:#fff;padding:14px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:20;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+  .logo{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.15);display:grid;place-items:center;font-size:20px}
+  header h1{font-size:19px;margin:0;font-weight:650;letter-spacing:.2px}
+  header .sub{font-size:11.5px;opacity:.85;margin-top:2px}
+  .spacer{flex:1}
+  .btn{border:0;border-radius:8px;padding:8px 14px;font-weight:600;font-size:12.5px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+  .btn-w{background:#fff;color:var(--brand)}
+  .btn-g{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35)}
+  .btn:hover{filter:brightness(.96)}
+  .seg{display:inline-flex;background:rgba(255,255,255,.14);border-radius:8px;padding:2px;border:1px solid rgba(255,255,255,.3)}
+  .seg button{background:transparent;border:0;color:#fff;padding:6px 10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px}
+  .seg button.on{background:#fff;color:var(--brand)}
+  main{padding:18px 22px 40px}
+  .status{font-size:12px;color:var(--muted);margin-bottom:12px;display:flex;gap:14px;flex-wrap:wrap}
+  .status b{color:var(--ink)}
+  .pill{background:var(--brandSoft);color:var(--brand);border-radius:20px;padding:2px 9px;font-weight:600}
+  .warn{background:#fff4e0;color:#8a5a00}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+  .kpi{background:var(--card);border-radius:12px;padding:12px 14px;border:1px solid var(--line);position:relative;overflow:hidden}
+  .kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c)}
+  .kpi .l{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:600}
+  .kpi .v{font-size:22px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+  .kpi .s{font-size:11px;color:var(--muted);margin-top:2px}
+  .bar{height:5px;background:#edf0ec;border-radius:4px;margin-top:7px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--c);border-radius:4px}
+  .panel{background:var(--card);border-radius:12px;border:1px solid var(--line);padding:0;overflow:hidden}
+  .toolbar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid var(--line);background:#fbfcfa}
+  .tabs{display:flex;gap:4px;margin-right:10px}
+  .tab{padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600;color:var(--muted);background:transparent;border:1px solid transparent}
+  .tab.on{background:var(--brandSoft);color:var(--brand);border-color:#cfe5d6}
+  .f{display:flex;flex-direction:column;gap:3px}
+  .f label{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600}
+  select,input[type=search]{border:1px solid var(--line);border-radius:7px;padding:6px 8px;font-size:12.5px;background:#fff;min-width:130px;color:var(--ink)}
+  .ms{position:relative}
+  .ms-btn{border:1px solid var(--line);border-radius:7px;padding:6px 8px;background:#fff;min-width:140px;text-align:left;cursor:pointer;font-size:12.5px}
+  .ms-pop{display:none;position:absolute;top:100%;left:0;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.12);padding:6px;z-index:30;min-width:170px;max-height:260px;overflow:auto}
+  .ms.open .ms-pop{display:block}
+  .ms-pop label{display:flex;gap:7px;align-items:center;padding:4px 6px;border-radius:5px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:12.5px;color:var(--ink);font-weight:500}
+  .ms-pop label:hover{background:#f2f5f1}
+  .tright{margin-left:auto;display:flex;gap:8px}
+  .btn-s{background:#fff;border:1px solid var(--line);color:var(--ink);padding:6px 11px;font-weight:600}
+  .tablewrap{overflow:auto;max-height:calc(100vh - 330px)}
+  table{border-collapse:separate;border-spacing:0;width:100%;font-variant-numeric:tabular-nums}
+  th{position:sticky;top:0;background:#20402b;color:#fff;font-weight:600;font-size:11.5px;padding:9px 10px;text-align:left;white-space:nowrap;z-index:2}
+  th.n{text-align:right}
+  th.grp-plan{background:#2e4a6b} th.grp-plant{background:#20402b}
+  td{padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle}
+  td.n{text-align:right}
+  td.blank{background:#fafbf9}
+  tr.cl-start td{border-top:2px solid #cfd8cf}
+  tbody tr:hover td{background:#f3f8f4}
+  tr.regtot td{background:#eef4fb;font-weight:700;color:#2e4a6b;border-bottom:1px solid #d4e0ee}
+  td.plant{cursor:pointer}
+  td.plant:hover .pc{text-decoration:underline}
+  .pc{font-weight:700;color:var(--brand)}
+  .tag{font-size:10px;background:#fff1d6;color:#8a5a00;border-radius:10px;padding:1px 7px;margin-left:6px;font-weight:600}
+  .div{font-weight:600}
+  tfoot td{position:sticky;bottom:0;background:#eaf3ec;font-weight:700;border-top:2px solid #b9d5c1}
+  .pct{display:inline-flex;align-items:center;gap:6px;min-width:90px;justify-content:flex-end}
+  .pct .mini{width:46px;height:5px;background:#e8ece7;border-radius:3px;overflow:hidden}
+  .pct .mini i{display:block;height:100%}
+  .neg{color:var(--pend);font-weight:600}
+  .empty{padding:60px 20px;text-align:center;color:var(--muted)}
+  .empty h2{color:var(--ink);font-size:17px;margin:0 0 6px}
+  .drop{border:2px dashed #b9d5c1;border-radius:12px;padding:24px;margin:18px auto;max-width:520px;background:#f8fbf8}
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,30,20,.45);z-index:50;align-items:center;justify-content:center}
+  .modal-bg.on{display:flex}
+  .modal{background:#fff;border-radius:14px;width:min(1100px,94vw);max-height:84vh;display:flex;flex-direction:column;overflow:hidden}
+  .modal h3{margin:0;padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;font-size:15px}
+  .modal .body{overflow:auto}
+  .x{cursor:pointer;border:0;background:#f0f2ef;border-radius:7px;padding:4px 10px;font-size:14px}
+  .note{font-size:11.5px;color:var(--muted);padding:8px 14px;border-top:1px solid var(--line);background:#fbfcfa}
+  .st-ok{color:var(--disp);font-weight:600}.st-pa{color:var(--gold);font-weight:600}.st-pe{color:var(--pend);font-weight:600}
+
+  /* ---------- device switch ---------- */
+  .hdr-row{display:contents}
+  .dev button{min-width:38px}
+  .dev .lbl{margin-left:4px}
+  .filt-toggle{display:none}
+  .cards{display:none}
+
+  /* ---------- iPad (11-inch iPad Pro: 834 × 1194 / 1194 × 834) ---------- */
+  body.m-ipad{font-size:13.5px}
+  body.m-ipad header{padding:10px 16px;gap:10px}
+  body.m-ipad header .sub{display:none}
+  body.m-ipad #btnFiles{display:none}
+  body.m-ipad header h1 span{display:none}
+  body.m-ipad main{padding:12px 14px 30px}
+  body.m-ipad .btn,body.m-ipad .seg button{min-height:40px}
+  body.m-ipad .kpis{grid-template-columns:repeat(5,1fr);gap:8px}
+  body.m-ipad .kpi{padding:10px 11px}
+  body.m-ipad .kpi .v{font-size:19px}
+  body.m-ipad .toolbar{gap:8px}
+  body.m-ipad .tabs{width:100%;margin:0}
+  body.m-ipad .tab{flex:1;text-align:center;padding:10px}
+  body.m-ipad select,body.m-ipad input[type=search],body.m-ipad .ms-btn{min-height:40px;font-size:14px;min-width:120px}
+  body.m-ipad .tright{margin-left:auto}
+  body.m-ipad th{font-size:11.5px;padding:8px 7px;white-space:normal}
+  body.m-ipad td{padding:9px 7px;font-size:13px}
+  body.m-ipad .tablewrap{max-height:calc(100dvh - 300px);-webkit-overflow-scrolling:touch}
+  body.m-ipad .modal{width:96vw;max-height:90dvh}
+  @media (orientation:portrait){
+    body.m-ipad .col-name{display:none}
+    body.m-ipad .kpis{grid-template-columns:repeat(3,1fr)}
+  }
+
+  /* ---------- Smartphone (Pixel 10 Pro ≈ 412 px wide) ---------- */
+  body.m-phone{font-size:14px;-webkit-text-size-adjust:100%}
+  body.m-phone header{padding:10px 12px calc(10px) 12px;gap:8px}
+  body.m-phone header .logo{width:32px;height:32px;font-size:17px}
+  body.m-phone header h1{font-size:16px}
+  body.m-phone header h1 span,body.m-phone header .sub,body.m-phone #btnFiles,body.m-phone .spacer{display:none}
+  body.m-phone header > div:nth-child(2){flex:1;min-width:0}
+  body.m-phone .hdr-row{width:100%;display:flex;gap:8px;align-items:center}
+  body.m-phone .hdr-row .seg{flex:1;display:flex}
+  body.m-phone .hdr-row .seg button{flex:1}
+  body.m-phone .dev .lbl{display:none}
+  body.m-phone .btn,body.m-phone .seg button{min-height:42px}
+  body.m-phone #btnRefresh{padding:8px 14px}
+  body.m-phone main{padding:10px 10px 90px}
+  body.m-phone .status{font-size:11.5px;gap:4px 10px}
+  body.m-phone .kpis{grid-template-columns:1fr 1fr;gap:8px}
+  body.m-phone .kpi{padding:10px 12px}
+  body.m-phone .kpi .v{font-size:19px}
+  body.m-phone .kpi:first-child{grid-column:1 / -1}
+  body.m-phone .panel{background:transparent;border:0;overflow:visible}
+  body.m-phone .toolbar{padding:0 0 10px;background:transparent;border:0;gap:8px;position:sticky;top:var(--hh,108px);z-index:15;background:var(--bg)}
+  body.m-phone .tabs{width:100%;margin:0;background:#fff;border-radius:10px;padding:3px;border:1px solid var(--line)}
+  body.m-phone .tab{flex:1;text-align:center;padding:10px 4px;font-size:13.5px}
+  body.m-phone .filt-toggle{display:flex;width:100%;gap:8px}
+  body.m-phone .filt-toggle .btn{flex:1;justify-content:center;background:#fff;border:1px solid var(--line);color:var(--ink);min-height:42px}
+  body.m-phone .toolbar .f,body.m-phone .toolbar .tright{display:none}
+  body.m-phone .toolbar.open .f{display:flex;width:calc(50% - 4px)}
+  body.m-phone .toolbar.open #wrapSearch{width:100%}
+  body.m-phone .toolbar.open .tright{display:flex;width:100%;margin:0}
+  body.m-phone .toolbar.open .tright .btn{flex:1;justify-content:center;min-height:42px}
+  body.m-phone select,body.m-phone input[type=search],body.m-phone .ms-btn{width:100%;min-width:0;min-height:42px;font-size:16px}
+  body.m-phone .ms-pop{width:100%}
+  body.m-phone .ms-pop label{padding:9px 6px;font-size:15px}
+  body.m-phone .tablewrap{max-height:none;overflow:visible}
+  body.m-phone .note{border:0;background:transparent;padding:10px 2px;font-size:11.5px}
+  body.m-phone .modal-bg{align-items:flex-end}
+  body.m-phone .modal{width:100vw;max-height:88dvh;border-radius:16px 16px 0 0}
+  body.m-phone .modal .body{padding:10px}
+  body.m-phone .cards{display:flex;flex-direction:column;gap:10px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .card .ch{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:11px 13px;background:#f3f6fa;border-bottom:1px solid var(--line)}
+  .card .reg{font-weight:700;font-size:15.5px;color:#22385a}
+  .card .meta{font-size:12px;color:var(--muted);margin-top:2px}
+  .card .planbox{text-align:right;white-space:nowrap}
+  .card .planbox span{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600}
+  .card .planbox b{font-size:17px;color:var(--plan)}
+  .card .rl{display:flex;justify-content:space-between;padding:6px 13px;font-size:13px;border-bottom:1px dashed var(--line)}
+  .card .pl{padding:10px 13px;border-top:1px solid var(--line)}
+  .card .pl:first-of-type{border-top:0}
+  .card .plh{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:13px}
+  .card .plh .nm{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .q4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .q3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .q4 div,.q3 div{background:#f7f9f6;border-radius:8px;padding:6px 7px}
+  .q4 span,.q3 span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600}
+  .q4 b,.q3 b{font-size:14px;font-variant-numeric:tabular-nums}
+  .card .pl.tot{background:#eef4fb}
+  .card .pl.tot .plh{color:#2e4a6b;font-weight:700}
+  .card .pl.tot .q4 div{background:#fff}
+  .card.grand{border:2px solid #b9d5c1}
+  .card.grand .ch{background:#eaf3ec}
+  .ic{padding:11px 13px}
+  .ic .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .ic .top b{font-size:14px}
+  .ic .sub2{font-size:12.5px;color:var(--muted);margin-bottom:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🌽</div>
+  <div>
+    <h1>Rasi Dispatch Dashboard <span style="font-weight:400;opacity:.8">· STO</span></h1>
+    <div class="sub">Stock transfer to C&amp;F — Plan vs Stock, Indent, Dispatch &amp; Pending</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="hdr-row">
+    <div class="seg dev" id="devSeg" title="Layout">
+      <button data-d="pc">🖥<span class="lbl">PC</span></button><button data-d="phone">📱<span class="lbl">Smartphone</span></button><button data-d="ipad">📲<span class="lbl">iPad</span></button>
+    </div>
+    <div class="seg" id="unitSeg" title="Display unit">
+      <button data-u="kg">Kg</button><button data-u="mt">MT</button>
+    </div>
+    <button class="btn btn-g" id="btnFiles" title="Pick Dispatch.csv, Plan.xlsx and Stock.csv">📂 Load files</button>
+    <button class="btn btn-w" id="btnRefresh">⟳ Refresh</button>
+  </div>
+  <input type="file" id="fileInput" multiple accept=".csv,.xlsx,.xls,text/csv,text/comma-separated-values,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none">
+</header>
+
+<main>
+  <div class="status" id="status"></div>
+  <div class="kpis" id="kpis"></div>
+
+  <div class="panel">
+    <div class="toolbar">
+      <div class="tabs">
+        <div class="tab on" data-v="crop">Crop View</div>
+        <div class="tab" data-v="product">Product View</div>
+        <div class="tab" data-v="data">STO Data</div>
+      </div>
+      <div class="filt-toggle"><button class="btn" id="btnFilt">⚙ Filters</button></div>
+      <div class="f"><label>Division</label><select id="fDiv"></select></div>
+      <div class="f"><label>Region</label><select id="fReg"></select></div>
+      <div class="f"><label>Crop</label><select id="fCrop"></select></div>
+      <div class="f" id="wrapVar"><label>Variety</label><select id="fVar"></select></div>
+      <div class="f"><label>SKU (pack)</label>
+        <div class="ms" id="msSku"><button class="ms-btn" id="msSkuBtn">All SKUs ▾</button><div class="ms-pop" id="msSkuPop"></div></div>
+      </div>
+      <div class="f" id="wrapSearch" style="display:none"><label>Search</label><input type="search" id="fSearch" placeholder="Indent no, plant, variety…"></div>
+      <div class="tright">
+        <button class="btn btn-s" id="btnReset">Reset</button>
+        <button class="btn btn-s" id="btnExport">⬇ Export Excel</button>
+      </div>
+    </div>
+    <div class="tablewrap" id="tableWrap"></div>
+    <div class="cards" id="cards"></div>
+    <div class="note" id="note"></div>
+  </div>
+</main>
+
+<div class="modal-bg" id="modal"><div class="modal"><h3><span id="mTitle"></span><button class="x" id="mClose">✕</button></h3><div class="body" id="mBody"></div></div></div>
+
+<script>
+/* ============================================================
+   1. MASTER MAPPING  (Index.xlsx › Info › H2:K25)
+   Plant Code → Plant/C&F Name, Division, Region.
+   A plant listed twice supplies more than one region (B004, B005, B009).
+   Edit here if the mapping changes.
+   ============================================================ */
+const PLANT_REGION_MAP = [
+  ["B001","Secunderabad - TG","South","Telangana-1"],
+  ["B002","Hubli - KA","South","Karnataka"],
+  ["B003","Agra - UP","North2","UP-West"],
+  ["B004","INDORE","Central","MP-Indore"],
+  ["B004","INDORE","Central","MP-Chhindwara"],
+  ["B005","JAIPUR","North1","RJ-Jaipur"],
+  ["B005","JAIPUR","North1","RJ-Bhilwara"],
+  ["B006","Aslali - GJ","Central","Gujarat"],
+  ["B007","Hisar - HR","North1","Haryana"],
+  ["B008","Bathinda - PB","North1","Punjab"],
+  ["B009","Lucknow - UP","North2","UP-Central"],
+  ["B009","Lucknow - UP","North2","UP-East"],
+  ["B010","Bihar - BR (Patna)","North2","Bihar"],
+  ["B011","CT-Raipur","South","Chhattisgarh"],
+  ["B012","OR-Bhuwaneswar","South","Odisha"],
+  ["B013","Ranchi - JH","North2","Jharkhand"],
+  ["B016","AKOLA","Central","Maharashtra"],
+  ["B018","MH-Pune","Central","Maharashtra"],
+  ["B024","MP-Jabalpur","Central","MP-Jabalpur"],
+  ["B030","TG-Warangal","South","Telangana-1"],
+  ["B031","TRICHY","Tamil Nadu","Tamil Nadu"],
+  ["B032","CT-Ambikapur","South","Chhattisgarh"],
+  ["B033","OD-Nabarangapur","South","Odisha"]
+];
+
+/* Column changes for Dispatch.csv: remove N, O, S, T; rename L, H, I */
+const REMOVE_COLS = ["delivery qty","pending qty","no of bags","deliver address"];      // N,O,S,T
+const RENAME_COLS = {"uom":"SKU","actual item id":"Variety Name","variety_name":"Variety Name","variety name":"Variety Name","customer/plant code":"Plant Code"};
+const STO_TYPE = "STO";
+
+/* ============================================================
+   2. HELPERS
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const norm = s => String(s ?? "").trim();
+const key = s => norm(s).toLowerCase().replace(/[^a-z0-9]/g,"");
+const num = v => { if (v===null||v===undefined) return 0; if (typeof v==="number") return v; const s=String(v).replace(/,/g,"").trim(); const n=parseFloat(s); return isNaN(n)?0:n; };
+const cropName = c => norm(c).replace(/^hybrid\s+/i,"").toUpperCase();
+const varKey = v => { const s=norm(v).toUpperCase(); const d=s.match(/\d{3,}/); return d?d[0]:s.replace(/[^A-Z0-9]/g,""); };
+const esc = s => String(s ?? "").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const UNITS = {kg:{d:1,l:"Kg"},mt:{d:1000,l:"MT"}};   // 1 MT = 1000 Kg
+let unit = localStorage.getItem("rasi_sto_unit"); if (!UNITS[unit]) unit = "kg";
+const fmt = v => { if (v===null||v===undefined||v==="") return ""; const x=v/UNITS[unit].d; return x.toLocaleString("en-IN",{maximumFractionDigits: unit==="kg"?0:2}); };
+const fmtPct = (a,b) => b>0 ? Math.round(a/b*100) : null;
+
+function parseCSV(text){
+  const rows=[]; let row=[], f="", q=false;
+  for (let i=0;i<text.length;i++){
+    const c=text[i];
+    if (q){ if (c==='"'){ if (text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if (c==='"') q=true;
+    else if (c===','){ row.push(f); f=""; }
+    else if (c==='\n'||c==='\r'){ if (c==='\r'&&text[i+1]==='\n') i++; row.push(f); rows.push(row); row=[]; f=""; }
+    else f+=c;
+  }
+  if (f!==""||row.length){ row.push(f); rows.push(row); }
+  return rows;
+}
+
+/* ============================================================
+   3. DISPATCH FILE → cleaned table + STO records
+   ============================================================ */
+function cleanDispatch(aoa){
+  const hi = aoa.findIndex(r => r.some(c => /indent\s*type/i.test(norm(c))));
+  if (hi<0) throw new Error("Dispatch file: header row with 'Indent Type' not found");
+  const rawH = aoa[hi].map(norm);
+  const keep = [];                                    // indices kept after removing N,O,S,T
+  rawH.forEach((h,i)=>{ if (h && !REMOVE_COLS.includes(h.toLowerCase())) keep.push(i); });
+  const headers = keep.map(i => RENAME_COLS[rawH[i].toLowerCase()] || rawH[i]);
+  const rows = [];
+  for (let r=hi+1;r<aoa.length;r++){
+    const src=aoa[r]; if (!src || !src.some(c=>norm(c)!=="")) continue;
+    rows.push(keep.map(i => norm(src[i])));
+  }
+  return {headers, rows};
+}
+function stoRecords(clean){
+  const H = clean.headers.map(h=>h.toLowerCase());
+  const col = (...names) => { for (const n of names){ const i=H.indexOf(n.toLowerCase()); if (i>=0) return i; } return -1; };
+  const c = {
+    type:col("Indent Type"), no:col("Indent No"), line:col("Indent Line No"), date:col("Indent Date"), crop:col("Crop"),
+    mat:col("Material"), variety:col("Variety Name"), plant:col("Plant Code"), pname:col("Customer/Plant Name","Plant Name"),
+    sku:col("SKU"), ind:col("Indent Qty (Kgs)"), del:col("Delivery Qty (Kgs)"), pen:col("Pending Qty (Kgs)"),
+    indP:col("Indent Qty"), dd:col("Dispatch Date"), season:col("Season")
+  };
+  if (c.type<0||c.plant<0||c.ind<0) throw new Error("Dispatch file: required columns missing (Indent Type / Plant Code / Indent Qty (Kgs))");
+  const g=(r,i)=> i>=0 ? r[i] : "";
+  return clean.rows.filter(r => norm(g(r,c.type)).toUpperCase()===STO_TYPE).map(r=>{
+    const ind=num(g(r,c.ind)), del=num(g(r,c.del));
+    let pen = c.pen>=0 ? num(g(r,c.pen)) : ind-del;
+    return { no:g(r,c.no), line:g(r,c.line), date:g(r,c.date), crop:cropName(g(r,c.crop)), material:g(r,c.mat),
+      variety:norm(g(r,c.variety)), vkey:varKey(g(r,c.variety)), plant:norm(g(r,c.plant)).toUpperCase(), pname:g(r,c.pname),
+      sku:norm(g(r,c.sku)), indent:ind, dispatch:del, pending:pen, packets:num(g(r,c.indP)), ddate:norm(g(r,c.dd)), season:g(r,c.season) };
+  });
+}
+
+/* ============================================================
+   4. PLAN FILE (Plan.xlsx) → plan rows + stock rows
+   Reads every sheet. Recognises, case-insensitively:
+     Region | Division/Zone | Crop | Variety/Hybrid/Product | Plan/Target qty | Stock | Plant Code
+   Also accepts a "wide" layout: Region in col A and one column per variety.
+   ============================================================ */
+function parsePlan(sheets){       // sheets: [{name, aoa}]
+  const plan=[], stock=[];
+  for (const {name,aoa} of sheets){
+    let hi=-1, hdr=null;
+    for (let r=0;r<Math.min(20,aoa.length);r++){
+      const h=(aoa[r]||[]).map(x=>norm(x).toLowerCase());
+      if (h.filter(x=>x).length<3) continue;            // skip title rows
+      if (h.some(x=>/region|plant|c&f/.test(x)) && h.some(x=>/plan|target|qty|quantity|stock|^\d{3,}$|\d{3,}/.test(x))){ hi=r; hdr=h; break; }
+    }
+    if (hi<0) continue;
+    const find = re => hdr.findIndex(x=>re.test(x));
+    const iReg=find(/region/), iDiv=find(/division|zone/), iCrop=find(/crop/),
+          iVar=find(/variety|hybrid|product|item|material/), iStock=find(/stock/),
+          iPlant=find(/plant\s*code|^plant$|c&f\s*code|^code$/);
+    let iPlan=find(/plan|target/); if (iPlan<0) iPlan=hdr.findIndex((x,i)=>/qty|quantity/.test(x) && i!==iStock);
+    const sheetCrop = /corn|maize/i.test(name) ? "CORN" : "";
+    const wideCols = (iPlan<0 && iVar<0) ? hdr.map((x,i)=>({x,i})).filter(o=>o.i!==iReg&&o.i!==iDiv&&o.i!==iCrop&&o.i!==iStock&&o.i!==iPlant&&/\d{3,}/.test(o.x)) : [];
+    for (let r=hi+1;r<aoa.length;r++){
+      const row=aoa[r]||[]; const region=norm(row[iReg]); const plant=iPlant>=0?norm(row[iPlant]).toUpperCase():"";
+      if (!region && !plant) continue;
+      if (/total/i.test(region)) continue;
+      const crop = iCrop>=0 ? cropName(row[iCrop]) : (sheetCrop||"CORN");
+      const base = {region, division:iDiv>=0?norm(row[iDiv]):"", crop, plant};
+      if (wideCols.length){
+        for (const w of wideCols){ const q=num(row[w.i]); if (q) plan.push({...base, variety:norm(aoa[hi][w.i]), vkey:varKey(aoa[hi][w.i]), qty:q}); }
+      } else {
+        const variety = iVar>=0 ? norm(row[iVar]) : "";
+        if (iPlan>=0 && region){ const q=num(row[iPlan]); if (q) plan.push({...base, variety, vkey:variety?varKey(variety):"", qty:q}); }
+        if (iStock>=0){ const s=num(row[iStock]); if (s) stock.push({...base, variety, vkey:variety?varKey(variety):"", qty:s}); }
+      }
+    }
+  }
+  return {plan, stock};
+}
+
+/* ============================================================
+   4b. STOCK FILE (Stock.csv) → stock by Plant Code + Variety
+   Columns used: Plant Code | Crop | Actual ItemID (variety) | Material No | Qty
+   The sample file repeats its headers in a second (empty) block; only the first is read.
+   ============================================================ */
+const STOCK_QTY_TO_KG = 1000;   // Stock.csv Qty is in MT → ×1000 to Kg. Set to 1 if the file is in Kg.
+const skuOf = m => { const x=norm(m).match(/(\d+(?:\.\d+)?)\s*KG/i); return x?String(parseFloat(x[1])):""; };
+function parseStock(aoa){
+  const hi=aoa.findIndex(r=>r.some(c=>/plant\s*code/i.test(norm(c))) && r.some(c=>/^qty|quantity|stock/i.test(norm(c))));
+  if (hi<0) throw new Error("Stock file: header row with 'Plant Code' and 'Qty' not found");
+  const H=aoa[hi].map(x=>norm(x).toLowerCase());
+  const first=re=>H.findIndex(x=>re.test(x));
+  const iP=first(/plant\s*code/), iN=first(/plant\s*name/), iC=first(/^crop/), iV=first(/actual\s*item\s*id|variety/),
+        iM=first(/material/), iQ=first(/^qty|quantity|stock/);
+  const out=[];
+  for (let r=hi+1;r<aoa.length;r++){
+    const row=aoa[r]||[]; const plant=norm(row[iP]).toUpperCase(); const q=num(row[iQ]);
+    if (!plant || !q) continue;
+    const variety=norm(row[iV]);
+    out.push({plant, pname:norm(row[iN]), region:"", crop:cropName(row[iC])||"CORN", variety, vkey:varKey(variety),
+              material:norm(row[iM]), sku:skuOf(row[iM]), qty:q*STOCK_QTY_TO_KG});
+  }
+  return out;
+}
+
+/* ============================================================
+   5. MODEL: clusters of regions ↔ plants
+   A cluster joins regions and plants that share supply (e.g. B004 → MP-Indore + MP-Chhindwara;
+   Maharashtra ← B016 + B018). Plan is counted once per region, Stock/Indent/Dispatch once per plant.
+   ============================================================ */
+let STATE = {sto:[], clean:null, plan:[], stock:[], files:{}, view:"crop"};
+
+function buildModel(){
+  const regInfo = new Map();  // rkey → {region, division, order}
+  const plantInfo = new Map();// plant → {name}
+  const edges = [];
+  PLANT_REGION_MAP.forEach(([p,n,d,r],i)=>{
+    const rk=key(r); if (!regInfo.has(rk)) regInfo.set(rk,{region:r,division:d,order:i});
+    if (!plantInfo.has(p)) plantInfo.set(p,{name:n,order:i});
+    edges.push([p,rk]);
+  });
+  // plan regions not in master
+  STATE.plan.forEach(p=>{ const rk=key(p.region); if (rk && !regInfo.has(rk)) regInfo.set(rk,{region:p.region,division:p.division||"Unmapped",order:900+regInfo.size}); });
+  // indent plants not in master
+  [...STATE.sto, ...STATE.stock.filter(s=>s.plant)].forEach(s=>{ if (!plantInfo.has(s.plant)) plantInfo.set(s.plant,{name:s.pname||s.plant,order:900+plantInfo.size,unmapped:true}); });
+  // union-find
+  const parent={}; const f=x=>parent[x]===x?x:(parent[x]=f(parent[x])); const u=(a,b)=>{parent[f(a)]=f(b);};
+  regInfo.forEach((_,rk)=>parent["R:"+rk]="R:"+rk); plantInfo.forEach((_,p)=>parent["P:"+p]="P:"+p);
+  edges.forEach(([p,rk])=>u("P:"+p,"R:"+rk));
+  const cl=new Map();
+  const get=id=>{ const root=f(id); if(!cl.has(root)) cl.set(root,{regions:[],plants:[],order:1e9}); return cl.get(root); };
+  regInfo.forEach((v,rk)=>{ const c=get("R:"+rk); c.regions.push({rk,...v}); c.order=Math.min(c.order,v.order); });
+  plantInfo.forEach((v,p)=>{ const c=get("P:"+p); c.plants.push({code:p,...v}); c.order=Math.min(c.order,v.order); });
+  const clusters=[...cl.values()].sort((a,b)=>a.order-b.order);
+  clusters.forEach(c=>{ c.regions.sort((a,b)=>a.order-b.order); c.plants.sort((a,b)=>a.order-b.order);
+    c.division = c.regions[0]?.division || "Unmapped"; });
+  return {clusters, regInfo, plantInfo};
+}
+
+/* ============================================================
+   6. FILTERS
+   ============================================================ */
+let FILTER = {div:"",reg:"",crop:"",vkey:"",skus:null,search:""};
+function skuPass(s){ return !FILTER.skus || FILTER.skus.has(s.sku); }
+
+function populateFilters(model){
+  const divs=[...new Set(model.clusters.flatMap(c=>c.regions.map(r=>r.division)))];
+  fillSel($("#fDiv"),divs,"All Divisions",FILTER.div);
+  const regs=model.clusters.flatMap(c=>c.regions).filter(r=>!FILTER.div||r.division===FILTER.div).map(r=>r.region);
+  if (FILTER.reg && !regs.includes(FILTER.reg)) FILTER.reg="";
+  fillSel($("#fReg"),[...new Set(regs)],"All Regions",FILTER.reg);
+  const crops=[...new Set([...STATE.sto.map(s=>s.crop),...STATE.plan.map(p=>p.crop),...STATE.stock.map(p=>p.crop)].filter(Boolean))].sort();
+  fillSel($("#fCrop"),crops,"All Crops",FILTER.crop);
+  const vm=new Map(); STATE.sto.forEach(s=>{ if(!FILTER.crop||s.crop===FILTER.crop) vm.set(s.vkey,s.variety); });
+  [...STATE.plan, ...STATE.stock].forEach(p=>{ if(p.vkey && (!FILTER.crop||p.crop===FILTER.crop) && !vm.has(p.vkey)) vm.set(p.vkey,p.variety); });
+  const vs=[...vm.entries()].sort((a,b)=>a[1].localeCompare(b[1]));
+  const sv=$("#fVar"); sv.innerHTML=`<option value="">All Varieties</option>`+vs.map(([k,n])=>`<option value="${esc(k)}"${k===FILTER.vkey?" selected":""}>${esc(n)}</option>`).join("");
+  const skus=[...new Set([...STATE.sto,...STATE.stock].map(s=>s.sku).filter(Boolean))].sort((a,b)=>num(a)-num(b));
+  $("#msSkuPop").innerHTML = skus.map(s=>`<label><input type="checkbox" value="${esc(s)}" ${!FILTER.skus||FILTER.skus.has(s)?"checked":""}> ${esc(s)} kg</label>`).join("") || "<div style='padding:6px;color:#888'>No SKUs</div>";
+  $("#msSkuBtn").textContent = !FILTER.skus ? "All SKUs ▾" : (FILTER.skus.size+" selected ▾");
+}
+function fillSel(el,arr,all,cur){ el.innerHTML=`<option value="">${all}</option>`+arr.map(v=>`<option${v===cur?" selected":""}>${esc(v)}</option>`).join(""); }
+
+/* ============================================================
+   7. AGGREGATION for Crop / Product view
+   ============================================================ */
+function computeView(model, byVariety){
+  const blocks=[]; const tot={plan:0,stock:0,indent:0,dispatch:0,pending:0};
+  const stoF = STATE.sto.filter(s=>skuPass(s) && (!FILTER.crop||s.crop===FILTER.crop) && (!byVariety||!FILTER.vkey||s.vkey===FILTER.vkey));
+  const planF= STATE.plan.filter(p=>(!FILTER.crop||p.crop===FILTER.crop) && (!byVariety||!FILTER.vkey||p.vkey===FILTER.vkey));
+  const stockF=STATE.stock.filter(p=>(!p.sku||skuPass(p)) && (!FILTER.crop||p.crop===FILTER.crop) && (!byVariety||!FILTER.vkey||p.vkey===FILTER.vkey));
+  // stock → plant: by plant code, else via the region's first plant
+  const regFirstPlant={}; model.clusters.forEach(c=>c.regions.forEach(r=>{ const p=PLANT_REGION_MAP.find(m=>key(m[3])===r.rk); regFirstPlant[r.rk]=p?p[0]:(c.plants[0]?.code||""); }));
+  const stockRows = stockF.map(s=>({...s, plant: s.plant || regFirstPlant[key(s.region)] || ""}));
+  const vName=new Map(); STATE.sto.forEach(s=>vName.set(s.vkey,s.variety)); STATE.plan.forEach(p=>{ if(p.vkey&&!vName.has(p.vkey)) vName.set(p.vkey,p.variety); });
+  STATE.stock.forEach(p=>{ if(p.vkey&&!vName.has(p.vkey)) vName.set(p.vkey,p.variety); });
+
+  for (const c of model.clusters){
+    const regs = c.regions.filter(r=>(!FILTER.div||r.division===FILTER.div)&&(!FILTER.reg||r.region===FILTER.reg));
+    if (!regs.length && (FILTER.div||FILTER.reg||c.regions.length)) { if (FILTER.div||FILTER.reg) continue; }
+    const hiddenRegs = c.regions.length - regs.length;
+    const rkeys=new Set(c.regions.map(r=>r.rk)), pset=new Set(c.plants.map(p=>p.code));
+    // group keys within cluster: crop (+variety)
+    const gk = o => byVariety ? o.crop+"|"+(o.vkey||"") : o.crop;
+    const groups=new Map();
+    const touch=(k,crop,vk)=>{ if(!groups.has(k)) groups.set(k,{crop,vkey:vk,regPlan:{},plants:{}}); return groups.get(k); };
+    planF.filter(p=>rkeys.has(key(p.region))).forEach(p=>{ const g=touch(gk(p),p.crop,p.vkey); g.regPlan[key(p.region)]=(g.regPlan[key(p.region)]||0)+p.qty; });
+    stoF.filter(s=>pset.has(s.plant)).forEach(s=>{ const g=touch(gk(s),s.crop,s.vkey); const pp=g.plants[s.plant]||(g.plants[s.plant]={stock:0,indent:0,dispatch:0,pending:0,n:0});
+      pp.indent+=s.indent; pp.dispatch+=s.dispatch; pp.pending+=s.pending; pp.n++; });
+    stockRows.filter(s=>pset.has(s.plant)).forEach(s=>{ const g=touch(gk(s),s.crop,s.vkey); const pp=g.plants[s.plant]||(g.plants[s.plant]={stock:0,indent:0,dispatch:0,pending:0,n:0}); pp.stock+=s.qty; });
+    if (!groups.size) continue;
+    const keys=[...groups.keys()].sort();
+    for (const k of keys){
+      const g=groups.get(k);
+      const regRows = regs.map(r=>({...r, plan:g.regPlan[r.rk]??null}));
+      const plantRows = c.plants.filter(p=>g.plants[p.code]).map(p=>({...p,...g.plants[p.code], total:g.plants[p.code].stock+g.plants[p.code].dispatch}));
+      if (!regRows.some(r=>r.plan) && !plantRows.length) continue;
+      if (!regRows.length && !plantRows.length) continue;
+      const blk={crop:g.crop, variety:byVariety?(vName.get(g.vkey)||g.vkey||"—"):"", vkey:g.vkey, regRows, plantRows, shared: hiddenRegs>0 && plantRows.length>0,
+                 multiRegion: c.regions.length>1, sharedRegions:c.regions.map(r=>r.region)};
+      blk.plan = regRows.reduce((a,r)=>a+(r.plan||0),0);
+      ["stock","indent","dispatch","pending","total"].forEach(f=>blk[f]=plantRows.reduce((a,p)=>a+p[f],0));
+      blocks.push(blk);
+      tot.plan+=blk.plan; tot.stock+=blk.stock; tot.indent+=blk.indent; tot.dispatch+=blk.dispatch; tot.pending+=blk.pending;
+    }
+  }
+  tot.total=tot.stock+tot.dispatch;
+  return {blocks,tot};
+}
+
+/* ============================================================
+   8. RENDER
+   ============================================================ */
+function pctCell(a,b){ const p=fmtPct(a,b); if(p===null) return ""; const col=p>=100?"var(--disp)":p>=60?"var(--gold)":"var(--pend)";
+  return `<span class="pct">${p}%<span class="mini"><i style="width:${Math.min(p,100)}%;background:${col}"></i></span></span>`; }
+
+function q4(o){ return `<div class="q4"><div><span>Stock</span><b>${fmt(o.stock)}</b></div><div><span>Indent</span><b>${fmt(o.indent)}</b></div><div><span>Dispatch</span><b>${fmt(o.dispatch)}</b></div><div><span>Pending</span><b class="${o.pending>0?"neg":""}">${fmt(o.pending)}</b></div></div>`; }
+function renderCards(blocks,tot,byVariety){
+  const U=UNITS[unit].l;
+  let h="";
+  for (const b of blocks){
+    const regs=b.regRows, one=regs.length===1;
+    const title = regs.length ? regs.map(r=>r.region).join(" + ") : "No plan region";
+    const meta = [regs[0]?.division, b.crop, byVariety?b.variety:""].filter(Boolean).join(" · ");
+    h+=`<div class="card"><div class="ch"><div><div class="reg">${esc(title)}</div><div class="meta">${esc(meta)}</div></div>
+        <div class="planbox"><span>Plan (${U})</span><b>${b.plan?fmt(b.plan):"–"}</b></div></div>`;
+    if (!one) regs.forEach(r=>h+=`<div class="rl"><span>${esc(r.region)}</span><b>${r.plan?fmt(r.plan):"–"}</b></div>`);
+    b.plantRows.forEach(p=>{
+      h+=`<div class="pl plantc" data-p="${esc(p.code)}" data-c="${esc(b.crop)}" data-v="${esc(b.vkey||"")}"><div class="plh"><span class="pc">${esc(p.code)}</span><span class="nm">${esc(p.name)}</span>${p.unmapped?'<span class="tag">not in mapping</span>':""}</div>${q4(p)}</div>`;
+    });
+    if (!b.plantRows.length) h+=`<div class="pl"><div class="plh" style="color:var(--muted)">No stock or STO indent at C&amp;F</div></div>`;
+    if (b.plantRows.length>1 && b.plan) h+=`<div class="pl tot"><div class="plh">Region Total · ${esc(b.plantRows.map(p=>p.code).join(" + "))}</div>${q4(b)}</div>`;
+    h+=`</div>`;
+  }
+  h+=`<div class="card grand"><div class="ch"><div><div class="reg">Grand Total</div><div class="meta">${blocks.length} rows</div></div><div class="planbox"><span>Plan (${U})</span><b>${fmt(tot.plan)}</b></div></div><div class="pl">${q4(tot)}</div></div>`;
+  $("#cards").innerHTML=h; $("#tableWrap").innerHTML="";
+  $("#cards").querySelectorAll(".plantc").forEach(el=>el.onclick=()=>showIndents(el.dataset.p,el.dataset.c,el.dataset.v));
+}
+function stoCards(rows){
+  if (!rows.length) return `<div class="empty"><h2>No STO indents</h2></div>`;
+  let ti=0,td=0,tp=0;
+  let h=rows.map(s=>{ ti+=s.indent; td+=s.dispatch; tp+=s.pending;
+    return `<div class="card"><div class="ic"><div class="top"><b>${esc(s.no)}</b>${stoStatus(s)}</div>
+      <div class="sub2"><span class="pc">${esc(s.plant)}</span> ${esc(s.pname)} · ${esc(s.variety)} · ${esc(s.sku)} kg<br>Indent ${esc(s.date)}${s.ddate?` · Dispatched ${esc(s.ddate)}`:""}</div>
+      <div class="q3"><div><span>Indent</span><b>${fmt(s.indent)}</b></div><div><span>Dispatch</span><b>${fmt(s.dispatch)}</b></div><div><span>Pending</span><b class="${s.pending>0?"neg":""}">${fmt(s.pending)}</b></div></div></div></div>`; }).join("");
+  h+=`<div class="card grand"><div class="ic"><div class="top"><b>Total · ${rows.length} indent lines</b></div><div class="q3"><div><span>Indent</span><b>${fmt(ti)}</b></div><div><span>Dispatch</span><b>${fmt(td)}</b></div><div><span>Pending</span><b>${fmt(tp)}</b></div></div></div></div>`;
+  return h;
+}
+
+function renderGrid(byVariety){
+  const model=buildModel(); populateFilters(model);
+  const {blocks,tot}=computeView(model,byVariety);
+  renderKPIs(tot);
+  if (device==="phone" && blocks.length){ renderCards(blocks,tot,byVariety); return {blocks,tot}; }
+  $("#cards").innerHTML="";
+  if (!blocks.length){ $("#tableWrap").innerHTML=`<div class="empty"><h2>No rows for this selection</h2>Try clearing a filter.</div>`; return {blocks,tot}; }
+  const U=UNITS[unit].l;
+  let h=`<table><thead><tr>
+    <th class="grp-plan">Division</th><th class="grp-plan">Region</th><th class="grp-plan">Crop</th>${byVariety?'<th class="grp-plan">Variety Name</th>':''}
+    <th class="grp-plan n">Plan Qnty (${U})</th>
+    <th>Plant Code</th><th class="col-name">Plant/C&amp;F Name</th>
+    <th class="n">Stock</th><th class="n">Indent Qnty</th><th class="n">Dispatch Qnty</th><th class="n">Pending Qnty</th>
+  </tr></thead><tbody>`;
+  for (const b of blocks){
+    const nR=b.regRows.length, nP=b.plantRows.length, n=Math.max(nR,nP,1);
+    const planTotalForPct=b.plan;
+    for (let i=0;i<n;i++){
+      const r=b.regRows[i], p=b.plantRows[i];
+      h+=`<tr class="${i===0?"cl-start":""}">`;
+      // left side (region / plan)
+      if (nR===1 && n>1){ if(i===0) h+=leftCells(r,b,byVariety,n); }
+      else if (r) h+=leftCells(r,b,byVariety,1);
+      else h+=`<td class="blank"></td><td class="blank"></td><td class="blank"></td>${byVariety?'<td class="blank"></td>':''}<td class="blank"></td>`;
+      // right side (plant)
+      if (nP===1 && n>1){ if(i===0) h+=rightCells(p,b,n,planTotalForPct); }
+      else if (p) h+=rightCells(p,b,1, nP>1 ? null : planTotalForPct);
+      else h+=`<td class="blank"></td><td class="blank col-name"></td><td class="blank" colspan="4"></td>`;
+      h+=`</tr>`;
+    }
+    if (nP>1 && b.plan){ // several plants feed the same region(s): show combined coverage
+      h+=`<tr class="regtot"><td colspan="${byVariety?4:3}">${esc(b.regRows.map(r=>r.region).join(", "))} – Region Total</td><td class="n">${fmt(b.plan)}</td>
+        <td>${esc(b.plantRows.map(p=>p.code).join(" + "))}</td><td class="col-name"></td>
+        <td class="n">${fmt(b.stock)}</td><td class="n">${fmt(b.indent)}</td><td class="n">${fmt(b.dispatch)}</td><td class="n">${fmt(b.pending)}</td></tr>`;
+    }
+  }
+  h+=`</tbody><tfoot><tr><td colspan="${byVariety?4:3}">Grand Total</td><td class="n">${fmt(tot.plan)}</td><td></td><td class="col-name"></td>
+     <td class="n">${fmt(tot.stock)}</td><td class="n">${fmt(tot.indent)}</td><td class="n">${fmt(tot.dispatch)}</td><td class="n">${fmt(tot.pending)}</td></tr></tfoot></table>`;
+  $("#tableWrap").innerHTML=h;
+  $("#tableWrap").querySelectorAll("td.plant").forEach(td=>td.onclick=()=>showIndents(td.dataset.p, td.dataset.c, td.dataset.v));
+  return {blocks,tot};
+}
+function leftCells(r,b,byVariety,span){
+  const rs=span>1?` rowspan="${span}"`:"";
+  return `<td${rs} class="div">${esc(r.division)}</td><td${rs}>${esc(r.region)}</td><td${rs}>${esc(b.crop)}</td>${byVariety?`<td${rs}><b>${esc(b.variety)}</b></td>`:""}<td${rs} class="n">${r.plan?fmt(r.plan):'<span style="color:#aab">–</span>'}</td>`;
+}
+function rightCells(p,b,span,planForPct){
+  const rs=span>1?` rowspan="${span}"`:"";
+  const tag = b.multiRegion ? `<span class="tag" title="Supplies ${esc(b.sharedRegions.join(", "))}">${b.sharedRegions.length} regions</span>` : (p.unmapped?`<span class="tag">not in mapping</span>`:"");
+  return `<td${rs} class="plant" data-p="${esc(p.code)}" data-c="${esc(b.crop)}" data-v="${esc(b.vkey||"")}"><span class="pc">${esc(p.code)}</span>${tag}</td><td${rs} class="col-name">${esc(p.name)}</td>
+    <td${rs} class="n">${fmt(p.stock)}</td><td${rs} class="n">${fmt(p.indent)}</td><td${rs} class="n">${fmt(p.dispatch)}</td>
+    <td${rs} class="n ${p.pending>0?"neg":""}">${fmt(p.pending)}</td>`;
+}
+
+function renderKPIs(t){
+  const k=(l,v,c,s,bar)=>`<div class="kpi" style="--c:${c}"><div class="l">${l}</div><div class="v">${fmt(v)}</div><div class="s">${s||UNITS[unit].l}</div>${bar!==undefined?`<div class="bar"><i style="width:${Math.min(bar,100)}%"></i></div>`:""}</div>`;
+  const dp=fmtPct(t.dispatch,t.indent)??0, tp=fmtPct(t.total,t.plan);
+  $("#kpis").innerHTML = k("Plan",t.plan,"var(--plan)",STATE.plan.length?UNITS[unit].l:"Plan.xlsx not loaded")
+    + k("Stock at C&F",t.stock,"var(--stock)", STATE.stock.length?UNITS[unit].l:"Stock.csv not loaded")
+    + k("Indent (STO)",t.indent,"var(--indent)")
+    + k("Dispatched",t.dispatch,"var(--disp)",`${dp}% of indent`,dp)
+    + k("Pending",t.pending,"var(--pend)",`${t.indent?Math.round(t.pending/t.indent*100):0}% of indent`);
+}
+
+function stoStatus(s){ return s.pending<=0 ? '<span class="st-ok">Dispatched</span>' : s.dispatch>0 ? '<span class="st-pa">Partial</span>' : '<span class="st-pe">Pending</span>'; }
+function stoTable(rows,showRegion){
+  const model=buildModel();
+  const regOf=p=>PLANT_REGION_MAP.filter(m=>m[0]===p).map(m=>m[3]).join(", ")||"—";
+  let h=`<table><thead><tr><th>Indent No</th><th>Indent Date</th><th>Plant Code</th><th>Plant/C&amp;F Name</th>${showRegion?"<th>Region(s)</th>":""}<th>Crop</th><th>Variety Name</th><th>Material</th><th class="n">SKU</th><th class="n">Indent (${UNITS[unit].l})</th><th class="n">Dispatch</th><th class="n">Pending</th><th>Dispatch Date</th><th>Status</th></tr></thead><tbody>`;
+  let ti=0,td=0,tp=0;
+  rows.forEach(s=>{ ti+=s.indent; td+=s.dispatch; tp+=s.pending;
+    h+=`<tr><td>${esc(s.no)}</td><td>${esc(s.date)}</td><td class="pc">${esc(s.plant)}</td><td>${esc(s.pname)}</td>${showRegion?`<td>${esc(regOf(s.plant))}</td>`:""}<td>${esc(s.crop)}</td><td>${esc(s.variety)}</td><td>${esc(s.material)}</td><td class="n">${esc(s.sku)}</td>
+    <td class="n">${fmt(s.indent)}</td><td class="n">${fmt(s.dispatch)}</td><td class="n ${s.pending>0?"neg":""}">${fmt(s.pending)}</td><td>${esc(s.ddate)||'<span style="color:#aab">—</span>'}</td><td>${stoStatus(s)}</td></tr>`; });
+  h+=`</tbody><tfoot><tr><td colspan="${showRegion?9:8}">Total · ${rows.length} indent lines</td><td class="n">${fmt(ti)}</td><td class="n">${fmt(td)}</td><td class="n">${fmt(tp)}</td><td colspan="2"></td></tr></tfoot></table>`;
+  return h;
+}
+function filteredSto(){
+  const plantsInScope = new Set(PLANT_REGION_MAP.filter(m=>(!FILTER.div||m[2]===FILTER.div)&&(!FILTER.reg||m[3]===FILTER.reg)).map(m=>m[0]));
+  const q=FILTER.search.toLowerCase();
+  return STATE.sto.filter(s=>skuPass(s)&&(!FILTER.crop||s.crop===FILTER.crop)&&(!FILTER.vkey||s.vkey===FILTER.vkey)
+    &&((!FILTER.div&&!FILTER.reg)||plantsInScope.has(s.plant))
+    &&(!q||[s.no,s.plant,s.pname,s.variety,s.material].join(" ").toLowerCase().includes(q)));
+}
+function renderData(){
+  const model=buildModel(); populateFilters(model);
+  const rows=filteredSto();
+  const t={plan:0,stock:0,indent:0,dispatch:0,pending:0}; rows.forEach(s=>{t.indent+=s.indent;t.dispatch+=s.dispatch;t.pending+=s.pending;});
+  const v=computeView(model,true); t.plan=v.tot.plan; t.stock=v.tot.stock; t.total=t.stock+t.dispatch; renderKPIs(t);
+  if (device==="phone"){ $("#tableWrap").innerHTML=""; $("#cards").innerHTML=stoCards(rows); return; }
+  $("#cards").innerHTML="";
+  $("#tableWrap").innerHTML = rows.length ? stoTable(rows,true) : `<div class="empty"><h2>No STO indents for this selection</h2></div>`;
+}
+function showIndents(plant,crop,vkey){
+  const rows=STATE.sto.filter(s=>s.plant===plant&&s.crop===crop&&(!vkey||s.vkey===vkey)&&skuPass(s));
+  const pn=rows[0]?.pname||plant;
+  $("#mTitle").textContent=`${plant} · ${pn} — ${crop}${vkey?" · "+(rows[0]?.variety||vkey):""} (${rows.length} STO lines)`;
+  $("#mBody").innerHTML= device==="phone" ? `<div class="cards" style="display:flex">${stoCards(rows)}</div>` : stoTable(rows,false); $("#modal").classList.add("on");
+}
+
+function render(){
+  const v=STATE.view;
+  $("#wrapSearch").style.display = v==="data"?"":"none";
+  $("#wrapVar").style.display = v==="crop"?"none":"";
+  if (!STATE.clean){ renderEmpty(); return; }
+  if (v==="crop") renderGrid(false); else if (v==="product") renderGrid(true); else renderData();
+  renderNote();
+}
+function renderNote(){
+  $("#note").innerHTML = `Only <b>Indent Type = STO</b> lines are used. Quantities in ${UNITS[unit].l} (from the Kgs columns).
+   Plants that supply several regions (B004, B005, B009) are shown once across their regions; regions served by several plants (e.g. Maharashtra, Chhattisgarh, Odisha, Telangana-1) show plan once. Click a plant code to see its indent lines. Stock comes from Stock.csv (Qty read as MT), matched by Plant Code and variety. SKU filter applies to stock and indent/dispatch, not to plan.`;
+}
+function renderEmpty(){
+  $("#kpis").innerHTML=""; $("#cards").innerHTML="";
+  if (!window.showDirectoryPicker){
+    $("#tableWrap").innerHTML=`<div class="empty"><h2>No data loaded yet</h2>
+    <div class="drop">Tap <b>⟳ Refresh</b> and select <b>Dispatch.csv</b>, <b>Plan.xlsx</b> and <b>Stock.csv</b> together<br>(long-press the first file, then tap the others).<br><br>
+    The dashboard keeps the last files, so next time you only need to pick the ones that changed.</div></div>`;
+    return;
+  }
+  $("#tableWrap").innerHTML=`<div class="empty"><h2>No data loaded yet</h2>
+    <div class="drop" id="dropZone">Click <b>⟳ Refresh</b> and choose your <b>Portal_Files</b> folder once —<br>the dashboard remembers it and reads the latest <b>Dispatch*.csv</b>, <b>Plan*.xlsx</b> and <b>Stock*.csv</b> on every refresh.<br><br>
+    Or drop the files here / use <b>📂 Load files</b>.</div></div>`;
+  hookDrop();
+}
+
+/* ============================================================
+   9. FILE LOADING (remembered folder via File System Access API)
+   ============================================================ */
+const DB="rasi_sto_dash", STORE="h";
+function idb(){ return new Promise((res,rej)=>{ const r=indexedDB.open(DB,1); r.onupgradeneeded=()=>r.result.createObjectStore(STORE); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+async function idbGet(k){ try{ const db=await idb(); return await new Promise(res=>{ const q=db.transaction(STORE).objectStore(STORE).get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>res(null); }); }catch(e){ return null; } }
+async function idbSet(k,v){ try{ const db=await idb(); db.transaction(STORE,"readwrite").objectStore(STORE).put(v,k); }catch(e){} }
+
+async function refresh(fromClick){
+  if (!window.showDirectoryPicker){ $("#fileInput").click(); return; }
+  let dir=await idbGet("dir");
+  try{
+    if (dir){
+      let p=await dir.queryPermission({mode:"read"});
+      if (p!=="granted" && fromClick) p=await dir.requestPermission({mode:"read"});
+      if (p!=="granted"){ setStatus('<span class="pill warn">Click ⟳ Refresh to allow access to the Portal_Files folder</span>'); return; }
+    } else {
+      if (!fromClick) return;
+      dir=await window.showDirectoryPicker({id:"portalfiles",mode:"read"});
+      await idbSet("dir",dir);
+    }
+    const files=[]; for await (const e of dir.values()) if (e.kind==="file") files.push(await e.getFile());
+    await loadFiles(files, dir.name);
+  }catch(e){ if (e.name!=="AbortError") setStatus(`<span class="pill warn">${esc(e.message)}</span>`); }
+}
+function latest(files,re){ return files.filter(f=>re.test(f.name)&&!f.name.startsWith("~$")).sort((a,b)=>b.lastModified-a.lastModified)[0]; }
+async function readAoa(file){
+  if (/\.csv$/i.test(file.name)) return [{name:file.name,aoa:parseCSV(await file.text())}];
+  if (!window.XLSX) throw new Error("Excel reader could not load (needs internet once). Save the file as CSV or reconnect and refresh.");
+  const wb=XLSX.read(await file.arrayBuffer(),{type:"array"});
+  return wb.SheetNames.map(n=>({name:n,aoa:XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:""})}));
+}
+async function loadFiles(files, folder, fromCache){
+  let dF=latest(files,/^dispatch.*\.(csv|xlsx|xls)$/i) || latest(files,/^(?!stock|plan).*\.csv$/i);
+  let pF=latest(files,/^plan.*\.(xlsx|xls|csv)$/i);
+  let sF=latest(files,/^stock.*\.(csv|xlsx|xls)$/i);
+  if (!folder && !fromCache){            // picked by hand (phone / iPad): keep files not re-picked from last time
+    const last=await idbGet("lastFiles")||{};
+    dF=dF||last.d; pF=pF||last.p; sF=sF||last.s;
+    idbSet("lastFiles",{d:dF||null,p:pF||null,s:sF||null});
+  }
+  if (!dF){ setStatus('<span class="pill warn">No Dispatch*.csv found</span>'); return; }
+  try{
+    const d=await readAoa(dF);
+    STATE.clean=cleanDispatch(d[0].aoa); STATE.sto=stoRecords(STATE.clean);
+    STATE.plan=[]; STATE.stock=[];
+    if (pF){ const r=parsePlan(await readAoa(pF)); STATE.plan=r.plan; STATE.stock=r.stock; }
+    if (sF){ STATE.stock=parseStock((await readAoa(sF))[0].aoa); }   // Stock.csv overrides any stock column in Plan
+    STATE.files={folder, d:dF, p:pF, s:sF, at:new Date()};
+    showStatus(); render();
+  }catch(e){ setStatus(`<span class="pill warn">${esc(e.message)}</span>`); console.error(e); }
+}
+function setStatus(h){ $("#status").innerHTML=h; }
+function showStatus(){
+  const f=STATE.files, t=x=>new Date(x).toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+  setStatus(`${f.folder?`<span>📁 <b>${esc(f.folder)}</b></span>`:""}
+   <span>Dispatch: <b>${esc(f.d.name)}</b> (${t(f.d.lastModified)}) · ${STATE.sto.length} STO lines</span>
+   <span>Plan: ${f.p?`<b>${esc(f.p.name)}</b> · ${STATE.plan.length} plan rows${!f.s&&STATE.stock.length?` · ${STATE.stock.length} stock rows`:""}`:'<span class="pill warn">Plan.xlsx not found</span>'}</span>
+   <span>Stock: ${f.s?`<b>${esc(f.s.name)}</b> (${t(f.s.lastModified)}) · ${STATE.stock.length} rows`:'<span class="pill warn">Stock.csv not found</span>'}</span>
+   <span class="pill">Refreshed ${t(f.at)}</span>`);
+}
+function hookDrop(){
+  const z=$("#dropZone"); if(!z) return;
+  z.ondragover=e=>{e.preventDefault(); z.style.background="#eaf5ec";};
+  z.ondragleave=()=>z.style.background="";
+  z.ondrop=e=>{e.preventDefault(); loadFiles([...e.dataTransfer.files],"");};
+}
+
+/* ============================================================
+   10. EXPORT (current view → Excel)
+   ============================================================ */
+function exportView(){
+  if (!STATE.clean) return;
+  if (!window.XLSX){ alert("Excel export needs the SheetJS library (internet once)."); return; }
+  const wb=XLSX.utils.book_new(), d=UNITS[unit].d, q=v=>v==null||v===""?"":Math.round(v/d*100)/100;
+  const model=buildModel();
+  const grid=(byV)=>{
+    const {blocks,tot}=computeView(model,byV);
+    const head=["Division","Region","Crop",...(byV?["Variety Name"]:[]),`Plan Qnty (${UNITS[unit].l})`,"Plant Code","Plant/C&F Name","Stock","Indent Qnty","Dispatch Qnty","Pending Qnty"];
+    const out=[head];
+    blocks.forEach(b=>{ const n=Math.max(b.regRows.length,b.plantRows.length,1);
+      for(let i=0;i<n;i++){ const r=b.regRows[i], p=b.plantRows[i];
+        out.push([r?.division??"",r?.region??"",r?b.crop:"",...(byV?[r?b.variety:""]:[]),r?q(r.plan):"",p?.code??"",p?.name??"",p?q(p.stock):"",p?q(p.indent):"",p?q(p.dispatch):"",p?q(p.pending):""]); }
+      if (b.plantRows.length>1 && b.plan) out.push([b.regRows[0]?.division??"",b.regRows.map(r=>r.region).join(", ")+" – Region Total",b.crop,...(byV?[b.variety]:[]),q(b.plan),b.plantRows.map(p=>p.code).join(" + "),"",q(b.stock),q(b.indent),q(b.dispatch),q(b.pending)]); });
+    out.push(["Grand Total","","",...(byV?[""]:[]),q(tot.plan),"","",q(tot.stock),q(tot.indent),q(tot.dispatch),q(tot.pending)]);
+    return XLSX.utils.aoa_to_sheet(out);
+  };
+  XLSX.utils.book_append_sheet(wb,grid(false),"Crop View");
+  XLSX.utils.book_append_sheet(wb,grid(true),"Product View");
+  const ti=STATE.clean.headers.findIndex(h=>/indent type/i.test(h));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([STATE.clean.headers,...STATE.clean.rows.filter(r=>norm(r[ti]).toUpperCase()===STO_TYPE)]),"STO Data (cleaned)");
+  XLSX.writeFile(wb,`Rasi_STO_Dashboard_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+/* ============================================================
+   10b. DEVICE LAYOUT  (PC / Smartphone / iPad) — remembered per browser
+   ============================================================ */
+function detectDevice(){
+  const ua=navigator.userAgent, touch=navigator.maxTouchPoints>0||"ontouchstart" in window, w=Math.min(screen.width,screen.height);
+  if (/Android.+Mobile|iPhone|Pixel/i.test(ua) || (touch && w<600)) return "phone";
+  if (/iPad/i.test(ua) || (/Macintosh/i.test(ua)&&touch) || (/Android/i.test(ua)&&!/Mobile/i.test(ua)) || (touch && w<1100)) return "ipad";
+  return "pc";
+}
+let device = localStorage.getItem("rasi_sto_device") || detectDevice();
+function applyDevice(){
+  document.body.classList.remove("m-pc","m-phone","m-ipad"); document.body.classList.add("m-"+device);
+  document.querySelectorAll("#devSeg button").forEach(b=>b.classList.toggle("on",b.dataset.d===device));
+  $("#btnRefresh").innerHTML = device==="phone" ? "⟳" : "⟳ Refresh";
+  const hh=document.querySelector("header").offsetHeight; document.body.style.setProperty("--hh",hh+"px");
+}
+document.querySelectorAll("#devSeg button").forEach(b=>b.onclick=()=>{ device=b.dataset.d; localStorage.setItem("rasi_sto_device",device); applyDevice(); render(); });
+$("#btnFilt").onclick=()=>{ const t=document.querySelector(".toolbar"); t.classList.toggle("open"); $("#btnFilt").textContent=t.classList.contains("open")?"✕ Hide filters":"⚙ Filters"; };
+window.addEventListener("resize",()=>{ const hh=document.querySelector("header").offsetHeight; document.body.style.setProperty("--hh",hh+"px"); });
+applyDevice();
+
+/* ============================================================
+   11. EVENTS
+   ============================================================ */
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{ document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on")); t.classList.add("on"); STATE.view=t.dataset.v; render(); });
+$("#fDiv").onchange=e=>{FILTER.div=e.target.value; FILTER.reg=""; render();};
+$("#fReg").onchange=e=>{FILTER.reg=e.target.value; render();};
+$("#fCrop").onchange=e=>{FILTER.crop=e.target.value; FILTER.vkey=""; render();};
+$("#fVar").onchange=e=>{FILTER.vkey=e.target.value; render();};
+$("#fSearch").oninput=e=>{FILTER.search=e.target.value; render();};
+$("#msSkuBtn").onclick=e=>{e.stopPropagation(); $("#msSku").classList.toggle("open");};
+$("#msSkuPop").onclick=e=>e.stopPropagation();
+$("#msSkuPop").onchange=()=>{ const all=[...$("#msSkuPop").querySelectorAll("input")]; const on=all.filter(i=>i.checked).map(i=>i.value);
+  FILTER.skus = on.length===all.length ? null : new Set(on); render(); };
+document.addEventListener("click",()=>$("#msSku").classList.remove("open"));
+$("#btnReset").onclick=()=>{FILTER={div:"",reg:"",crop:"",vkey:"",skus:null,search:""}; $("#fSearch").value=""; render();};
+$("#btnExport").onclick=exportView;
+$("#btnRefresh").onclick=()=>refresh(true);
+$("#btnFiles").onclick=()=>$("#fileInput").click();
+$("#fileInput").onchange=e=>{ loadFiles([...e.target.files],""); e.target.value=""; };
+$("#mClose").onclick=()=>$("#modal").classList.remove("on");
+$("#modal").onclick=e=>{ if(e.target.id==="modal") $("#modal").classList.remove("on"); };
+document.querySelectorAll("#unitSeg button").forEach(b=>{ b.classList.toggle("on",b.dataset.u===unit);
+  b.onclick=()=>{ unit=b.dataset.u; localStorage.setItem("rasi_sto_unit",unit); document.querySelectorAll("#unitSeg button").forEach(x=>x.classList.toggle("on",x===b)); render(); }; });
+
+render();
+(async()=>{ if (window.showDirectoryPicker && await idbGet("dir")) return refresh(false);
+  const last=await idbGet("lastFiles"); if (last&&last.d) loadFiles([last.d,last.p,last.s].filter(Boolean),"",true); })();
+</script>
+</body>
+</html>

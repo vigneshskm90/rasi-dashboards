@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rasi Rewards Dashboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout idea: dark-green command header, sticky filter strip, tabbed work area of cards and dense tables. */
+:root{
+  --bg:#f2f4f1; --surface:#ffffff; --surface2:#f6f8f5; --line:#dde3de; --line2:#ebefeb;
+  --ink:#18231d; --ink2:#51605a; --muted:#84918a;
+  --accent:#1f5c43; --hd:#14442f; --gold:#e0a526; --base:#a9b9af;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300; --s7:#6250d6; --s8:#e34948;
+  --good:#0f7b3f; --goodbg:#e3f3e8; --warn:#8a5a00; --warnbg:#fbf0d9; --bad:#b42323; --badbg:#fbe4e2; --info:#1f5fae; --infobg:#e2edfa; --neutralbg:#eaeeea; --violet:#5a3fc0; --violetbg:#efe9fb;
+  --font:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121714; --surface:#1a211d; --surface2:#202924; --line:#2e3933; --line2:#262f2a;
+  --ink:#e7ede9; --ink2:#b4c0b9; --muted:#8b9790;
+  --accent:#6cc79b; --hd:#0e2d20; --gold:#e0a526; --base:#4c5b52;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#0ca30c; --s7:#9085e9; --s8:#e66767;
+  --good:#5fc58f; --goodbg:#17352a; --warn:#e5b454; --warnbg:#3a2f14; --bad:#ef8a76; --badbg:#3d1f1b; --info:#7fb2ee; --infobg:#1a2c44; --neutralbg:#28322d; --violet:#b3a5f2; --violetbg:#2a2545;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#121714; --surface:#1a211d; --surface2:#202924; --line:#2e3933; --line2:#262f2a;
+  --ink:#e7ede9; --ink2:#b4c0b9; --muted:#8b9790;
+  --accent:#6cc79b; --hd:#0e2d20; --gold:#e0a526; --base:#4c5b52;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#0ca30c; --s7:#9085e9; --s8:#e66767;
+  --good:#5fc58f; --goodbg:#17352a; --warn:#e5b454; --warnbg:#3a2f14; --bad:#ef8a76; --badbg:#3d1f1b; --info:#7fb2ee; --infobg:#1a2c44; --neutralbg:#28322d; --violet:#b3a5f2; --violetbg:#2a2545;
+  color-scheme:dark;}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);font-size:13.5px;line-height:1.4;font-variant-numeric:tabular-nums}
+header{background:var(--hd);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;border-bottom:4px solid var(--gold)}
+header h1{font-size:19px;margin:0;font-weight:600;letter-spacing:.2px}
+header .sub{font-size:12px;color:#cfe5d8}
+header .sp{flex:1}
+.btn{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12.5px}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible,select:focus-visible,input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+header .btn{background:transparent;color:#fff;border-color:rgba(255,255,255,.45)}
+header .btn.primary{background:var(--gold);color:#1b2a22;border-color:var(--gold);font-weight:600}
+header select{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.45)}
+header select option{color:#18231d;background:#fff}
+.loadinfo{font-size:12px;color:#cfe5d8}
+#exbar{display:none;background:var(--warnbg);color:var(--warn);padding:7px 20px;font-size:12.5px;font-weight:500;border-bottom:1px solid var(--line)}
+#sum{display:none;margin:12px 20px 0;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:6px;padding:9px 14px;font-size:14px;max-width:110ch}
+#filters{background:var(--surface);border-bottom:1px solid var(--line);padding:10px 20px;display:none;gap:10px 12px;flex-wrap:wrap;align-items:flex-end}
+#mini{position:fixed;top:0;left:0;right:0;z-index:20;display:none;align-items:center;gap:8px;background:var(--hd);color:#fff;padding:4px 12px;font-size:12.5px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+#mini.show{display:flex}
+#mini .ms{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e4efe8}
+#mini select{font:inherit;font-size:12.5px;min-width:0;max-width:150px;padding:3px 6px;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:5px}
+#mini select option{color:#18231d;background:#fff}
+#mini button{font:inherit;font-size:12.5px;background:var(--gold);color:#1b2a22;border:0;border-radius:5px;padding:4px 10px;font-weight:600;cursor:pointer;white-space:nowrap}
+body.touch #mini select,body.touch #mini button{min-height:32px}
+.f{display:flex;flex-direction:column;gap:3px;min-width:0}
+.f label{font-size:10.5px;color:var(--ink2);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+select,input[type=search]{font:inherit;border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12.5px;background:var(--surface);color:var(--ink);min-width:118px;max-width:210px}
+.f.per select{border-color:var(--accent)}
+#chips{display:none;padding:8px 20px 0;gap:8px;flex-wrap:wrap}
+nav{display:none;gap:4px;padding:12px 20px 0;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{font:inherit;flex:0 0 auto;white-space:nowrap;border:1px solid var(--line);border-bottom:0;background:var(--neutralbg);padding:8px 15px;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--ink2)}
+nav button.on{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:inset 0 3px 0 var(--accent)}
+main{background:var(--surface);margin:0 20px 24px;border:1px solid var(--line);border-radius:0 8px 8px 8px;padding:16px;min-height:60vh}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:10px;margin-bottom:14px}
+.tile{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surface)}
+.tile .k{font-size:10.5px;color:var(--ink2);text-transform:uppercase;letter-spacing:.3px;font-weight:600}
+.tile .v{font-size:21px;font-weight:600;margin-top:3px}
+.tile .d{font-size:11.5px;color:var(--ink2);margin-top:2px}
+.up{color:var(--good)} .dn{color:var(--bad)} .muted{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:1100px){.grid2{grid-template-columns:1fr}}
+.card{border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--surface);margin-bottom:14px;min-width:0}
+.card h3{margin:0 0 2px;font-size:14.5px;font-weight:600;color:var(--accent);text-wrap:balance}
+.note{font-size:11.5px;color:var(--ink2);margin-bottom:8px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{background:var(--surface2);text-align:right;padding:6px 8px;font-weight:600;color:var(--ink2);border-bottom:1px solid var(--line);position:sticky;top:0;white-space:nowrap;z-index:1}
+th.s{cursor:pointer}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+td{padding:5px 8px;border-bottom:1px solid var(--line2);text-align:right;white-space:nowrap}
+tr.l0 td{background:var(--surface2);font-weight:600}
+tr.l1 td:first-child{padding-left:20px} tr.l2 td:first-child{padding-left:36px} tr.l3 td:first-child{padding-left:54px;color:var(--ink2)}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--surface2)} tr.sel td{background:var(--infobg)!important}
+tr.tot td{font-weight:600;border-top:2px solid var(--line)}
+.scroll{max-height:calc(100vh - 90px);overflow:auto;border:1px solid var(--line2);border-radius:6px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.c-grow,.g-A{background:var(--goodbg);color:var(--good)} .c-stab,.c-dorm{background:var(--neutralbg);color:var(--ink2)}
+.c-decl,.g-C{background:var(--warnbg);color:var(--warn)} .c-lost,.g-D{background:var(--badbg);color:var(--bad)}
+.c-new,.g-B{background:var(--infobg);color:var(--info)} .c-react{background:var(--violetbg);color:var(--violet)}
+.fchip{background:var(--infobg);color:var(--info);border:0;font:inherit;font-size:12px;font-weight:600;border-radius:12px;padding:4px 10px;cursor:pointer}
+.ftag{font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;background:var(--goodbg);color:var(--good);letter-spacing:.3px}
+.dtag{font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;background:var(--badbg);color:var(--bad)}
+.crit td,.crit th{padding:4px 8px;position:static} .crit input{font:inherit;width:64px;border:1px solid var(--line);border-radius:4px;padding:3px 5px;text-align:right;font-size:12.5px;background:var(--surface);color:var(--ink)}
+.statusbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.stat{font:inherit;text-align:left;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--surface);cursor:pointer;min-width:128px}
+.stat.on{outline:2px solid var(--accent)}
+.stat .n{font-size:18px;font-weight:600;margin-top:3px}
+.stat .s{font-size:11px;color:var(--ink2)}
+.empty{text-align:center;padding:50px 20px;color:var(--ink2)}
+.empty h2{color:var(--ink);font-weight:600;margin:0 0 6px}
+.drop{border:2px dashed var(--base);border-radius:10px;padding:26px;max-width:640px;margin:18px auto;background:var(--surface2);text-align:left;line-height:1.55}
+#tip{position:fixed;pointer-events:none;background:#1c1c1a;color:#fff;padding:6px 9px;border-radius:6px;font-size:12px;display:none;z-index:50;line-height:1.45;max-width:280px}
+.legend{display:flex;gap:6px 14px;font-size:12px;color:var(--ink2);margin:4px 0 6px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.flags{display:flex;flex-direction:column;gap:6px}
+.flag{padding:6px 10px;border-radius:6px;font-size:12.5px;white-space:normal}
+.flag.bad{background:var(--badbg);color:var(--bad)} .flag.warn{background:var(--warnbg);color:var(--warn)} .flag.good{background:var(--goodbg);color:var(--good)} .flag.info{background:var(--infobg);color:var(--info)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.call{display:inline-flex;gap:8px;align-items:center}
+.call a{color:var(--info);font-weight:600;text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:2px 8px;background:var(--surface)}
+.call a.wa{color:var(--good)}
+.info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--infobg);color:var(--info);font-size:10px;font-weight:700;cursor:help;margin-left:4px;font-style:normal;text-transform:none}
+svg text{font-family:inherit}
+.cn{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cn small{color:var(--muted)}
+#status{background:var(--surface);border-bottom:1px solid var(--line);padding:10px 20px;display:none;font-size:12.5px}
+.pbar{height:8px;background:var(--neutralbg);border-radius:4px;overflow:hidden;margin:7px 0 2px}
+.pbar div{height:100%;width:0;background:var(--accent);border-radius:4px;transition:width .15s}
+#status.err .pbar div{background:var(--bad)}
+.modesw{display:inline-flex;border:1px solid rgba(255,255,255,.45);border-radius:6px;overflow:hidden}
+.modesw button{font:inherit;background:transparent;color:#fff;border:0;padding:6px 9px;font-size:12px;cursor:pointer;opacity:.8}
+.modesw button.on{background:#fff;color:#14442f;opacity:1;font-weight:600}
+#fltBtn{display:none}
+#guide{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;z-index:40;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+#guide .box{background:var(--surface);border-radius:10px;max-width:920px;width:100%;padding:18px 22px}
+#guide td{white-space:normal;text-align:left;vertical-align:top} #guide th{text-align:left;position:static}
+/* touch */
+body.touch .btn,body.touch select,body.touch input[type=search]{min-height:40px;font-size:14px}
+body.touch nav button{padding:10px 16px}
+body.touch td,body.touch th{padding:8px}
+body.touch .scroll td:first-child,body.touch .scroll th:first-child{position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:1px 0 0 var(--line2)}
+body.touch .scroll th:first-child{z-index:3;background:var(--surface2)}
+body.touch tr.l0 td:first-child{background:var(--surface2)}
+body.touch .card{overflow-x:auto}
+body.m-tab #filters{display:grid;grid-template-columns:repeat(6,1fr);gap:6px 10px;padding:8px 12px}
+body.m-tab #filters .f label{font-size:10px}
+body.touch #filters select{min-height:34px;font-size:13px;padding:4px 6px} body.m-tab #filters select{width:100%;max-width:none;min-width:0}
+body.m-tab main{margin:0 12px 16px} body.m-tab nav{padding:10px 12px 0}
+body.m-phone{font-size:14px}
+body.m-phone header{padding:10px 16px} body.m-phone header h1{font-size:17px} body.m-phone header .sp{display:none}
+body.m-phone .pc-only{display:none!important}
+body.m-phone #loadinfo{order:10;width:100%}
+body.m-phone #fltBtn{display:flex;width:calc(100% - 32px);margin:8px 16px 0;justify-content:space-between;text-align:left;font-size:13.5px}
+body.m-phone #filters{display:none!important;grid-template-columns:1fr 1fr;padding:10px 16px}
+body.m-phone #filters.open{display:grid!important}
+body.m-phone #filters select{width:100%;max-width:none;min-width:0}
+body.m-phone #sum{margin:10px 16px 0;font-size:13.5px} body.m-phone #chips{padding:8px 16px 0}
+body.m-phone nav{padding:10px 8px 0}
+body.m-phone main{margin:0 0 12px;border-radius:0;border-left:0;border-right:0;padding:12px 16px}
+body.m-phone .tiles{grid-template-columns:1fr 1fr;gap:8px} body.m-phone .tile .v{font-size:18px}
+body.m-phone .grid2{grid-template-columns:1fr;gap:0}
+body.m-phone .stat{min-width:0;flex:1 1 calc(50% - 6px)}
+body.m-phone .row input[type=search]{min-width:0!important;width:100%;max-width:none}
+body.m-phone .scroll{max-height:calc(100vh - 70px)}
+body.m-phone .scroll td:first-child{max-width:170px;white-space:normal}
+body.m-phone #guide{padding:0} body.m-phone #guide .box{border-radius:0;min-height:100%}
+@media (prefers-reduced-motion:reduce){.pbar div{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Rasi Rewards Dashboard</h1><div class="sub">Retailer intelligence · volume in kg by Kharif and Rabi season</div></div>
+  <div class="sp"></div>
+  <span class="loadinfo" id="loadinfo">No data loaded</span>
+  <select id="roleSel" title="Set the filters and opening tab for a role" style="display:none" aria-label="View as"></select>
+  <input type="file" id="file" accept=".csv,.xlsx,.xls,.xlsb,.xlsm" multiple hidden>
+  <button class="btn primary" id="loadBtn" type="button">Load data file</button>
+  <button class="btn" type="button" id="guideBtn">Guide</button>
+  <div class="modesw" id="modeSw" title="Layout"><button type="button" data-mode="pc">PC</button><button type="button" data-mode="phone">Phone</button><button type="button" data-mode="tab">iPad</button></div>
+  <button class="btn" type="button" id="themeBtn" title="Switch light / dark">Dark</button>
+</header>
+<div id="mini" role="region" aria-label="Current view"><select id="miniTab" aria-label="Tab"></select><span class="ms" id="miniSum"></span><button type="button" id="miniBtn">Filters ▲</button></div>
+<div id="exbar">Example data: these retailers and numbers are made up. Load your own file to replace them.</div>
+<div id="status"><b id="stTitle"></b> <span id="stDetail" class="muted"></span><div class="pbar"><div id="stBar"></div></div></div>
+<p id="sum"></p>
+<button class="btn" id="fltBtn" type="button"></button>
+<div id="filters">
+  <div class="f per"><label for="fKind">Compare by</label><select id="fKind"></select></div>
+  <div class="f per"><label for="fFocus">Period</label><select id="fFocus"></select></div>
+  <div class="f per"><label for="fComp">Compare with</label><select id="fComp"></select></div>
+  <div class="f"><label for="fDiv">Division</label><select id="fDiv"></select></div>
+  <div class="f"><label for="fReg">Region</label><select id="fReg"></select></div>
+  <div class="f"><label for="fTer">Territory</label><select id="fTer"></select></div>
+  <div class="f"><label for="fDis">District</label><select id="fDis"></select></div>
+  <div class="f"><label for="fCat">Retailer type</label><select id="fCat"></select></div>
+  <div class="f"><label for="fPc">Product category</label><select id="fPc"></select></div>
+  <div class="f" id="fFocW"><label for="fFoc">Focus</label><select id="fFoc"></select></div>
+  <div class="f"><label for="fProd">SKU</label><select id="fProd"></select></div>
+  <div class="f" id="fRstW"><label for="fRst">Registration</label><select id="fRst"></select></div>
+</div>
+<div id="chips"></div>
+<nav id="tabs">
+  <button type="button" data-t="ov" class="on">Overview</button>
+  <button type="button" data-t="geo">Geography</button>
+  <button type="button" data-t="hs">Retailer Health</button>
+  <button type="button" data-t="rt">Retailers</button>
+  <button type="button" data-t="r360">Retailer 360</button>
+  <button type="button" data-t="ty">Retailer Type</button>
+  <button type="button" data-t="pr">Products</button>
+  <button type="button" data-t="op">Opportunities</button>
+</nav>
+<main id="main">
+  <div class="empty">
+    <h2>Load the retailer file</h2>
+    <div class="drop">
+      Choose <b>Load data file</b>, or drop the file here. Excel (.xlsx) and CSV both work. CSV is faster for heavy files.<br><br>
+      <b>Columns needed:</b> Retailer Code, Product, Quantity In Kg, Season (KH25, RB25 …).<br>
+      <b>Also used when present:</b> Division, Region, Territory, District, Category, Retailer Mobile No, Retailer Shop Name, Retailer Name, Product Category, Supply Distributor Code and Name, Registration Status, Product Category2 (Focus).<br><br>
+      Several files chosen together are combined. Names are put in capitals after loading, so the same shop, product or area typed in different cases is counted as one. Loading again replaces the data. The file stays in this browser, and the dashboard remembers it for next time.<br><br>
+      <button class="btn" type="button" id="exBtn">Try it with example data</button>
+    </div>
+  </div>
+</main>
+<div id="tip"></div>
+<div id="guide"><div class="box" id="guideBox"></div></div>
+
+<script>
+"use strict";
+/* ===================== HELPERS ===================== */
+const $=id=>document.getElementById(id);
+const norm=s=>String(s??'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const inr=(v,d=0)=>(+v||0).toLocaleString('en-IN',{minimumFractionDigits:d,maximumFractionDigits:d});
+const MT=kg=>{const t=kg/1000;return inr(t,Math.abs(t)<100?2:1)};
+const KG=kg=>inr(kg,0);
+const big=kg=>Math.abs(kg)>=1000?MT(kg)+' MT':KG(kg)+' kg';
+const gr=(a,b)=>b>0?(a-b)/b*100:null;
+function grTxt(a,b){const g=gr(a,b);if(g==null)return a>0?'<span class="up">New</span>':'<span class="muted">–</span>';return `<span class="${g>=0?'up':'dn'}">${g>=0?'▲':'▼'} ${inr(Math.abs(g),1)}%</span>`}
+const pctTxt=(v,d=1)=>v==null?'<span class="muted">–</span>':inr(v,d)+'%';
+const dash='<span class="muted">–</span>';
+const tick=()=>new Promise(r=>setTimeout(r,0));
+
+/* ===================== STATE ===================== */
+let D=null;            // {S:[season codes], L:{div,reg,ter,dis,cat,pc,dst}, RT:[retailers], PR:[products], R:[rows], hasFoc, hasSt, src}
+// row = [season, div, reg, ter, dis, retailer, product, distributor, kg, transactions]
+const ST={kind:'',focus:-1,comp:-1,div:-1,reg:-1,ter:-1,dis:-1,cat:-1,pc:-1,foc:'',prod:-1,rst:'',dst:-1,
+  tab:'ov',rStatus:'',rq:'',sort:{k:'cur',d:-1},ret:-1,hsGrade:'',hsTer:-1,role:'head'};
+let SEA=[], PER=[], SP=[], C=null, RL=null;
+const OPEN=new Set(), HSOPEN=new Set(), TYOPEN=new Set();
+const xBtns=k=>`<span style="margin-left:auto;display:inline-flex;gap:6px"><button class="btn" type="button" data-xall="${k}" data-o="1">Expand all regions</button><button class="btn" type="button" data-xall="${k}" data-o="0">Collapse all</button></span>`;
+
+/* ===================== DEVICE MODE & THEME ===================== */
+function autoMode(){const w=Math.min(screen.width,screen.height),W=Math.max(screen.width,screen.height),touch=navigator.maxTouchPoints>0;if(w<=600)return'phone';if(touch&&W<=1400)return'tab';return'pc'}
+let MODE='pc';try{MODE=localStorage.getItem('r360_mode')||autoMode()}catch(e){MODE=autoMode()}
+function setMode(m,save){MODE=m;if(save){try{localStorage.setItem('r360_mode',m)}catch(e){}}
+  document.body.classList.toggle('m-phone',m==='phone');document.body.classList.toggle('m-tab',m==='tab');document.body.classList.toggle('touch',m!=='pc');
+  document.querySelectorAll('#modeSw button').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));if(D)render()}
+$('modeSw').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setMode(b.dataset.mode,true)});
+function isDark(){const t=document.documentElement.dataset.theme;return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches}
+$('themeBtn').addEventListener('click',()=>{const n=isDark()?'light':'dark';document.documentElement.dataset.theme=n;try{localStorage.setItem('r360_theme',n)}catch(e){}themeLbl()});
+function themeLbl(){$('themeBtn').textContent=isDark()?'Light':'Dark'}
+try{const t=localStorage.getItem('r360_theme');if(t)document.documentElement.dataset.theme=t}catch(e){}
+themeLbl();
+
+/* ===================== SEASONS & PERIODS ===================== */
+function parseSeason(code){const m=/^(KH|RB)[\s\-_]*(\d{2,4})$/.exec(String(code).trim().toUpperCase());if(!m)return null;const yy=+m[2]%100;
+  return {code:m[1]+String(yy).padStart(2,'0'),type:m[1],yy,ord:m[1]==='RB'?yy*2:yy*2-1,fy:m[1]==='RB'?yy:yy-1}}
+const KIND_NAME={KH:'Kharif seasons',RB:'Rabi seasons',FY:'Year (Rabi + next Kharif)'};
+const p2=x=>String(((x%100)+100)%100).padStart(2,'0');
+function buildPeriods(){
+  SEA=D.S.map(parseSeason);
+  if(ST.kind==='FY'){const fys=[...new Set(SEA.map(s=>s.fy))].sort((a,b)=>a-b);PER=fys.map(f=>'FY '+p2(f)+'-'+p2(f+1));SP=SEA.map(s=>fys.indexOf(s.fy))}
+  else{const ix=SEA.map((s,i)=>s.type===ST.kind?i:-1).filter(i=>i>=0);PER=ix.map(i=>SEA[i].code);SP=SEA.map((s,i)=>ix.indexOf(i))}
+}
+
+/* ===================== LOADING ===================== */
+const COLS={division:'div',region:'reg',territory:'ter',district:'dis',category:'cat',retailercode:'rc',retailermobileno:'mob',retailermobile:'mob',mobileno:'mob',
+  retailershopname:'shop',retailername:'rn',product:'prod',productcategory:'pc',quantityinkg:'kg',qtyinkg:'kg',qtyinkgs:'kg',quantity:'kg',season:'sea',seasoncode:'sea',
+  supplydistributorcode:'dc',supplydistributorname:'dn',registrationstatus:'st',productcategory2:'foc',focus:'foc',focusnonfocus:'foc'};
+const REQ={rc:'Retailer Code',prod:'Product',kg:'Quantity In Kg',sea:'Season'};
+function normFoc(v){const n=norm(v);if(!n)return'';if(n.includes('non'))return'Non Focus';if(n.includes('focus')||n==='yes'||n==='y')return'Focus';if(n==='no'||n==='n')return'Non Focus';return String(v).trim()}
+function num(v){if(typeof v==='number')return v;if(v==null||v==='')return NaN;return parseFloat(String(v).replace(/,/g,''))}
+let xlsxReady=null;
+function needXLSX(){if(window.XLSX)return Promise.resolve();if(xlsxReady)return xlsxReady;
+  xlsxReady=new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=res;
+    s.onerror=()=>{xlsxReady=null;rej(new Error('the Excel reader could not be downloaded. Check the internet connection, or save the file as CSV and load that.'))};document.head.appendChild(s)});return xlsxReady}
+async function streamRows(file,onHeader,onRow,prog){
+  let header=false,scanned=0,last=performance.now();
+  const handle=cells=>{if(!header){if(++scanned>30)return;if(onHeader(cells))header=true;return}onRow(cells)};
+  if(!/\.csv$/i.test(file.name)){
+    prog(0,'Opening the Excel workbook. Heavy Excel files can take a minute; CSV is faster.');await needXLSX();await tick();
+    const wb=XLSX.read(await file.arrayBuffer(),{type:'array',dense:true,cellDates:false,cellHTML:false,cellText:false});
+    for(const n of wb.SheetNames){const grid=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:'',blankrows:false});header=false;scanned=0;
+      for(let i=0;i<grid.length;i++){handle(grid[i]);if(performance.now()-last>80){prog(file.size*i/grid.length);await tick();last=performance.now()}}if(header)break}
+    return header}
+  const reader=file.stream().getReader(),dec=new TextDecoder('utf-8');let row=[],f='',q=false,cr=false,read=0,first=true;
+  const end=()=>{row.push(f);f='';handle(row);row=[]};
+  for(;;){const {done,value}=await reader.read();let t=done?dec.decode():dec.decode(value,{stream:true});if(value)read+=value.length;
+    if(first&&t){if(t.charCodeAt(0)===0xFEFF)t=t.slice(1);first=false}
+    for(let i=0;i<t.length;i++){const ch=t[i];
+      if(q){if(ch==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=ch;continue}
+      if(ch==='\r'){end();cr=true;continue}if(ch==='\n'){if(cr){cr=false;continue}end();continue}cr=false;
+      if(ch==='"')q=true;else if(ch===','){row.push(f);f=''}else f+=ch}
+    if(performance.now()-last>80||done){prog(read);await tick();last=performance.now()}if(done)break}
+  if(f!==''||row.length)end();return header}
+
+function newBuilder(){
+  const dict=()=>{const m=new Map(),v=[];return {m,v,id(k,val){let i=m.get(k);if(i==null){i=v.length;m.set(k,i);v.push(val===undefined?k:val)}return i}}};
+  const B={sea:new Map(),div:dict(),reg:dict(),ter:dict(),dis:dict(),cat:dict(),pc:dict(),dst:dict(),rt:dict(),pr:dict(),agg:new Map(),rtLast:[],rows:0,skipped:0,badSea:{},hasFoc:false,hasSt:false,
+   add(g,cnt=1){const st=v=>v==null?'':String(v).replace(/\s+/g,' ').trim().toUpperCase();
+    const sp=parseSeason(g.sea);const kg=num(g.kg);const rc=st(g.rc);
+    if(!sp){const k=st(g.sea)||'(BLANK)';B.badSea[k]=(B.badSea[k]||0)+1;B.skipped++;return}
+    if(!rc||!isFinite(kg)){B.skipped++;return}
+    B.sea.set(sp.code,sp.ord);
+    const div=st(g.div)||'(BLANK)',reg=st(g.reg)||'(BLANK)',ter=st(g.ter)||'(BLANK)',dis=st(g.dis)||'(BLANK)';
+    const di=B.div.id(div),gi=B.reg.id(reg),ti=B.ter.id(reg+'¦'+ter,[ter,gi]),dsi=B.dis.id(reg+'¦'+ter+'¦'+dis,[dis,ti]);
+    const ci=B.cat.id(st(g.cat)||'(BLANK)'),pci=B.pc.id(st(g.pc)||'(BLANK)');
+    const foc=g.foc===undefined?'':normFoc(g.foc);if(foc)B.hasFoc=true;
+    const prod=st(g.prod)||'(BLANK)';const pi=B.pr.id(prod,[prod,pci,foc]);if(foc&&!B.pr.v[pi][2])B.pr.v[pi][2]=foc;
+    const dn=st(g.dn),dc=st(g.dc);const xi=B.dst.id(dc||dn||'(BLANK)',[dc,dn||dc||'(BLANK)']);
+    const stt=st(g.st).toUpperCase();if(stt)B.hasSt=true;
+    let mob=st(g.mob).replace(/\.0+$/,'').replace(/\D/g,'');if(mob.length>10)mob=mob.slice(-10);
+    const ri=B.rt.id(rc,[rc,st(g.shop),st(g.rn),mob,stt,ci]);
+    if(!(B.rtLast[ri]>sp.ord)){B.rtLast[ri]=sp.ord;const o=B.rt.v[ri];if(st(g.shop))o[1]=st(g.shop);if(st(g.rn))o[2]=st(g.rn);if(mob)o[3]=mob;if(stt)o[4]=stt;o[5]=ci}
+    const key=sp.code+'|'+di+'|'+gi+'|'+ti+'|'+dsi+'|'+ri+'|'+pi+'|'+xi;
+    let z=B.agg.get(key);if(!z){z=[sp.code,di,gi,ti,dsi,ri,pi,xi,0,0];B.agg.set(key,z)}z[8]+=kg;z[9]+=cnt;B.rows+=cnt},
+   finish(src){const S=[...B.sea.entries()].sort((a,b)=>a[1]-b[1]).map(x=>x[0]),si=new Map(S.map((s,i)=>[s,i]));
+    const R=[...B.agg.values()];R.forEach(r=>{r[0]=si.get(r[0])});
+    return {v:2,S,L:{div:B.div.v,reg:B.reg.v,ter:B.ter.v,dis:B.dis.v,cat:B.cat.v,pc:B.pc.v,dst:B.dst.v},RT:B.rt.v,PR:B.pr.v,R,hasFoc:B.hasFoc,hasSt:B.hasSt,src}}};
+  return B}
+
+function stShow(title,detail,pct,err){const el=$('status');el.style.display='block';el.classList.toggle('err',!!err);$('stTitle').textContent=title;$('stDetail').textContent=detail||'';if(pct!=null)$('stBar').style.width=pct.toFixed(1)+'%'}
+async function loadFiles(files){
+  if(!files.length)return;$('loadBtn').disabled=true;const B=newBuilder(),tot=files.reduce((s,f)=>s+f.size,0)||1;let done=0;const t0=performance.now(),errs=[];
+  for(const [i,f] of files.entries()){let map=null;
+    try{const ok=await streamRows(f,cells=>{const m={};cells.forEach((h,ix)=>{const k=COLS[norm(h)];if(k&&m[k]==null)m[k]=ix});
+        if(m.foc==null){const ix=cells.findIndex(h=>/focus/.test(norm(h)));if(ix>=0)m.foc=ix}
+        if(m.rc==null&&m.sea==null)return false;const miss=Object.keys(REQ).filter(k=>m[k]==null);if(miss.length)throw new Error('these columns are missing: '+miss.map(k=>REQ[k]).join(', '));map=m;return true},
+      g=>{if(!g||g.length<2)return;const o={};for(const k in map)o[k]=g[map[k]];B.add(o)},
+      (b,msg)=>stShow(`Reading file ${i+1} of ${files.length}: ${f.name}`,msg||`${inr(B.rows)} rows so far`,(done+Math.min(b,f.size))/tot*100));
+      if(!ok)throw new Error('no header row with Retailer Code and Season was found')}
+    catch(e){errs.push(f.name+': '+(e.message||e))}
+    done+=f.size}
+  $('loadBtn').disabled=false;
+  if(!B.rows){stShow('Could not load the data',errs.join(' · ')||'No usable rows were found. Check that Season holds codes like KH25 or RB25.',100,true);return}
+  stShow('Building the dashboard…',inr(B.rows)+' rows',100);await tick();
+  const bad=Object.entries(B.badSea).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=>k+' ('+inr(v)+')').join(', ');
+  const src={name:files.map(f=>f.name).join(', '),rows:B.rows,when:new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}),example:false};
+  applyData(B.finish(src));
+  const saved=await idbSet(D);
+  stShow(errs.length?'Loaded, with problems':'Loaded',`${inr(B.rows)} rows in ${Math.round((performance.now()-t0)/1000)} s`+(B.skipped?` · skipped ${inr(B.skipped)} rows with a blank retailer code, a blank quantity or a season that is not KH or RB${bad?': '+bad:''}`:'')+(errs.length?' · '+errs.join(' · '):'')+(saved?'':' · this browser could not remember the file, so it must be loaded again next time'),100,errs.length>0);
+  if(!errs.length&&!B.skipped)setTimeout(()=>{$('status').style.display='none'},4000);
+}
+$('loadBtn').addEventListener('click',()=>$('file').click());
+$('file').addEventListener('change',e=>{loadFiles([...e.target.files]);e.target.value=''});
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length)loadFiles([...e.dataTransfer.files])});
+
+/* remember the data in this browser */
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open('rasi_retailer360',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function idbSet(v){try{const db=await idb();return await new Promise(res=>{const tx=db.transaction('kv','readwrite');tx.objectStore('kv').put(v,'data');tx.oncomplete=()=>res(true);tx.onerror=tx.onabort=()=>res(false)})}catch(e){return false}}
+async function idbGet(){try{const db=await idb();return await new Promise(res=>{const q=db.transaction('kv').objectStore('kv').get('data');q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)})}catch(e){return null}}
+
+/* data remembered by an older version: re-format names to capitals and merge names that differed only by case */
+function reformat(o){const B=newBuilder(),L=o.L;for(const r of o.R){const rt=o.RT[r[5]],pr=o.PR[r[6]],ds=L.dst[r[7]];
+  B.add({sea:o.S[r[0]],div:L.div[r[1]],reg:L.reg[r[2]],ter:L.ter[r[3]][0],dis:L.dis[r[4]][0],cat:L.cat[rt[5]],rc:rt[0],shop:rt[1],rn:rt[2],mob:rt[3],st:rt[4],prod:pr[0],pc:L.pc[pr[1]],foc:pr[2],dc:ds[0],dn:ds[1],kg:r[8]},r[9])}
+  return B.finish(o.src)}
+/* example data, clearly marked */
+function exampleData(){
+  const B=newBuilder();let seed=7;const rnd=()=>{seed=(seed*1103515245+12345)%2147483648;return seed/2147483648};const pick=a=>a[Math.floor(rnd()*a.length)];
+  const geo=[['ND2','BIHAR',[['BEGUSARAI',['SAMASTIPUR','BEGUSARAI']],['PURNEA',['PURNEA','KATIHAR']]]],['ND2','JHARKHAND',[['RANCHI',['RANCHI','GUMLA']]]],['SOUTH','KARNATAKA',[['DAVANGERE',['DAVANGERE','HAVERI']],['BELGAUM',['BELGAUM']]]],['CENTRAL','MAHARASTRA',[['JALGAON',['JALGAON','DHULE']]]]];
+  const prods=[['EX-101 TL 1KG','Hybrid Corn White','Focus'],['EX-101 TL 4KG','Hybrid Corn White','Focus'],['EX-220 4KG','Hybrid Corn Yellow','Focus'],['EX-305 4KG','Hybrid Corn Yellow','Non Focus'],['EX-410 3.5KG','Hybrid Corn Yellow','Non Focus'],['EX-77 1.5KG','Bajra','Non Focus'],['EX-9 6KG','Hy.Paddy','Non Focus']];
+  const seas=['RB23','KH24','RB24','KH25','RB25','KH26'];const fn=['SHREE','MAA','NEW','JAI','SRI','OM'],ln=['KRISHI KENDRA','BEEJ BHANDAR','AGRO AGENCIES','SEEDS','KHAD BHANDAR','TRADERS'],pn=['RAMESH','SURESH','ANIL','MAHESH','PRAKASH','VIJAY','SANJAY'];
+  let n=0;for(const [dv,rg,ters] of geo)for(const [ter,diss] of ters){const dists=[1,2].map(i=>[String(20000000+Math.floor(rnd()*9000)),ter+' DISTRIBUTOR '+i]);
+    for(let k=0;k<45;k++){n++;const rc='EX'+String(10000+n),shop='M/S '+pick(fn)+' '+pick(ln)+' (EXAMPLE)',rn=pick(pn),mob='90000'+String(10000+n),dis=pick(diss),cat=rnd()<.12?'DISTRIBUTOR RETAILER':'RETAILER',stt=rnd()<.1?'DELETED':'ACTIVE',ds=pick(dists);
+      const size=(cat==='RETAILER'?60:900)*(0.4+rnd()*5),my=prods.filter(()=>rnd()<.4);if(!my.length)my.push(pick(prods));const start=Math.floor(rnd()*3),stop=rnd()<.15?4+Math.floor(rnd()*2):6;
+      seas.forEach((s,si)=>{if(si<start||si>=stop||rnd()<.12)return;for(const p of my){if(rnd()<.25)continue;const t=1+Math.floor(rnd()*3);for(let j=0;j<t;j++)B.add({div:dv,reg:rg,ter,dis,cat,rc,mob,shop,rn,prod:p[0],pc:p[1],kg:Math.round(size*(0.5+rnd())*(1+si*.06)/t),sea:s,dc:ds[0],dn:ds[1],st:stt,foc:p[2]})}})}}
+  return B.finish({name:'Example data (made up)',rows:B.rows,when:'',example:true})}
+$('exBtn').addEventListener('click',()=>applyData(exampleData()));
+
+/* ===================== APPLY DATA / FILTER UI ===================== */
+const ROLES={head:['Business Head','ov'],division:['Divisional Manager','geo'],region:['Region Business Manager','geo'],territory:['Territory Manager','rt'],product:['Product Manager','pr']};
+function applyData(nd){
+  D=nd;const types=[...new Set(D.S.map(s=>s.slice(0,2)))];
+  $('fKind').innerHTML=['KH','RB'].filter(t=>types.includes(t)).map(t=>`<option value="${t}">${KIND_NAME[t]}</option>`).join('')+`<option value="FY">${KIND_NAME.FY}</option>`;
+  ST.kind=D.S[D.S.length-1].slice(0,2);$('fKind').value=ST.kind;
+  Object.assign(ST,{focus:-1,comp:-1,div:-1,reg:-1,ter:-1,dis:-1,cat:-1,pc:-1,foc:'',prod:-1,rst:'',dst:-1,ret:-1,rStatus:'',rq:'',hsGrade:'',hsTer:-1,role:'head',tab:'ov'});OPEN.clear();HSOPEN.clear();TYOPEN.clear();
+  $('filters').style.display=MODE==='pc'?'flex':'';$('filters').classList.remove('open');$('tabs').style.display='flex';$('sum').style.display='block';$('roleSel').style.display='';
+  $('roleSel').innerHTML=Object.entries(ROLES).map(([k,v])=>`<option value="${k}">View as: ${v[0]}</option>`).join('');
+  $('exbar').style.display=D.src.example?'block':'none';
+  $('loadinfo').textContent=`${D.src.name} · ${inr(D.src.rows)} rows · ${inr(D.RT.length)} retailers · ${D.S[0]} to ${D.S[D.S.length-1]}`+(D.src.when?' · loaded '+D.src.when:'');
+  fillFilters();setTab('ov');
+}
+function opt(el,items,cur,all){el.innerHTML=(all?`<option value="-1">${all}</option>`:'')+items.map(([v,t])=>`<option value="${v}"${v===cur?' selected':''}>${esc(t)}</option>`).join('');return items.some(([v])=>v===cur)?cur:(all?-1:(items.length?items[items.length-1][0]:-1))}
+function fillFilters(){
+  buildPeriods();const L=D.L;
+  ST.focus=opt($('fFocus'),PER.map((p,i)=>[i,p]),ST.focus<0?PER.length-1:ST.focus,null);
+  const prevs=PER.map((p,i)=>[i,p]).filter(([i])=>i<ST.focus);
+  if(prevs.length){ST.comp=opt($('fComp'),prevs,(ST.comp<0||ST.comp>=ST.focus)?ST.focus-1:ST.comp,null);$('fComp').disabled=false}else{$('fComp').innerHTML='<option value="-1">No earlier period</option>';ST.comp=-1;$('fComp').disabled=true}
+  const byName=(a,b)=>String(a[1]).localeCompare(String(b[1]));
+  const regs=new Set(),ters=new Set(),diss=new Set();
+  for(const r of D.R){if(ST.div>=0&&r[1]!==ST.div)continue;regs.add(r[2]);if(ST.reg>=0&&r[2]!==ST.reg)continue;ters.add(r[3]);if(ST.ter>=0&&r[3]!==ST.ter)continue;diss.add(r[4])}
+  ST.div=opt($('fDiv'),L.div.map((x,i)=>[i,x]).sort(byName),ST.div,'All divisions');
+  ST.reg=opt($('fReg'),[...regs].map(i=>[i,L.reg[i]]).sort(byName),ST.reg,'All regions');
+  ST.ter=opt($('fTer'),[...ters].map(i=>[i,L.ter[i][0]+(ST.reg<0?' ('+L.reg[L.ter[i][1]]+')':'')]).sort(byName),ST.ter,'All territories');
+  ST.dis=opt($('fDis'),[...diss].map(i=>[i,L.dis[i][0]+(ST.ter<0?' ('+L.ter[L.dis[i][1]][0]+')':'')]).sort(byName),ST.dis,'All districts');
+  ST.cat=opt($('fCat'),L.cat.map((x,i)=>[i,x]).sort(byName),ST.cat,'All types');
+  ST.pc=opt($('fPc'),L.pc.map((x,i)=>[i,x]).sort(byName),ST.pc,'All categories');
+  $('fFocW').style.display=D.hasFoc?'':'none';$('fRstW').style.display=D.hasSt?'':'none';
+  const focs=[...new Set(D.PR.map(p=>p[2]).filter(Boolean))].sort();$('fFoc').innerHTML='<option value="">Focus + Non Focus</option>'+focs.map(f=>`<option${f===ST.foc?' selected':''}>${esc(f)}</option>`).join('');
+  ST.prod=opt($('fProd'),D.PR.map((p,i)=>[i,p[0],p]).filter(x=>(ST.pc<0||x[2][1]===ST.pc)&&(!ST.foc||x[2][2]===ST.foc)).sort(byName),ST.prod,'All SKUs');
+  const sts=[...new Set(D.RT.map(r=>r[4]).filter(Boolean))].sort();$('fRst').innerHTML='<option value="">All</option>'+sts.map(f=>`<option${f===ST.rst?' selected':''}>${esc(f)}</option>`).join('');
+}
+const FMAP={fKind:'kind',fFocus:'focus',fComp:'comp',fDiv:'div',fReg:'reg',fTer:'ter',fDis:'dis',fCat:'cat',fPc:'pc',fFoc:'foc',fProd:'prod',fRst:'rst'};
+Object.keys(FMAP).forEach(id=>$(id).addEventListener('change',e=>{const k=FMAP[id],v=e.target.value;ST[k]=(k==='kind'||k==='foc'||k==='rst')?v:+v;
+  if(id==='fKind'){ST.focus=-1;ST.comp=-1}if(id==='fFocus')ST.comp=-1;if(id==='fDiv'){ST.reg=-1;ST.ter=-1;ST.dis=-1}if(id==='fReg'){ST.ter=-1;ST.dis=-1}if(id==='fTer')ST.dis=-1;if(id==='fPc'||id==='fFoc')ST.prod=-1;
+  ST.hsTer=-1;fillFilters();render()}));
+$('tabs').addEventListener('click',e=>{const t=e.target.dataset.t;if(t)setTab(t)});
+function setTab(t){ST.tab=t;[...$('tabs').children].forEach(b=>b.classList.toggle('on',b.dataset.t===t));render()}
+$('fltBtn').addEventListener('click',()=>{$('filters').classList.toggle('open');fltSummary()});
+function fltSummary(){const b=$('fltBtn');if(!D){b.style.display='none';return}const L=D.L;
+  const parts=[PER[ST.focus]+(ST.comp>=0?' vs '+PER[ST.comp]:''),ST.div>=0?L.div[ST.div]:'',ST.reg>=0?L.reg[ST.reg]:'',ST.ter>=0?L.ter[ST.ter][0]:'',ST.dis>=0?L.dis[ST.dis][0]:'',ST.cat>=0?L.cat[ST.cat]:'',ST.pc>=0?L.pc[ST.pc]:'',ST.foc,ST.prod>=0?D.PR[ST.prod][0]:'',ST.rst].filter(Boolean);
+  b.innerHTML=`<span><b>Filters:</b> ${esc(parts.join(' · '))}</span><span>${$('filters').classList.contains('open')?'▲':'▼'}</span>`;b.style.display='';
+  $('miniSum').textContent=parts.join(' · ');$('miniTab').innerHTML=[...$('tabs').children].map(t=>`<option value="${t.dataset.t}"${t.dataset.t===ST.tab?' selected':''}>${t.textContent}</option>`).join('')}
+$('miniTab').addEventListener('change',e=>{setTab(e.target.value);scrollTo(0,0)});
+$('miniBtn').addEventListener('click',()=>{if(MODE==='phone')$('filters').classList.add('open');scrollTo({top:0});fltSummary()});
+function miniCheck(){const t=$('tabs');if(!D||t.style.display==='none'){$('mini').classList.remove('show');return}$('mini').classList.toggle('show',t.getBoundingClientRect().bottom<0)}
+addEventListener('scroll',miniCheck,{passive:true});addEventListener('resize',miniCheck);
+function topOf(col){const m=new Map();for(const r of D.R)m.set(r[col],(m.get(r[col])||0)+r[8]);return [...m].sort((a,b)=>b[1]-a[1])[0][0]}
+$('roleSel').addEventListener('change',e=>{const k=e.target.value;ST.role=k;Object.assign(ST,{div:-1,reg:-1,ter:-1,dis:-1,pc:-1,prod:-1,dst:-1,rStatus:'',rq:'',hsTer:-1});
+  if(k==='division')ST.div=topOf(1);if(k==='region'){ST.reg=topOf(2)}if(k==='territory'){ST.ter=topOf(3);ST.reg=D.L.ter[ST.ter][1];ST.rStatus='lost';ST.sort={k:'prev',d:-1}}else ST.sort={k:'cur',d:-1};
+  if(k==='product')ST.pc=topOf2pc();fillFilters();setTab(ROLES[k][1])});
+function topOf2pc(){const m=new Map();for(const r of D.R){const p=D.PR[r[6]][1];m.set(p,(m.get(p)||0)+r[8])}return [...m].sort((a,b)=>b[1]-a[1])[0][0]}
+
+/* ===================== AGGREGATION ===================== */
+function filtered(){const PR=D.PR,RT=D.RT,s=ST;
+  return D.R.filter(r=>(s.div<0||r[1]===s.div)&&(s.reg<0||r[2]===s.reg)&&(s.ter<0||r[3]===s.ter)&&(s.dis<0||r[4]===s.dis)&&(s.prod<0||r[6]===s.prod)&&(s.dst<0||r[7]===s.dst)
+    &&(s.pc<0||PR[r[6]][1]===s.pc)&&(!s.foc||PR[r[6]][2]===s.foc)&&(s.cat<0||RT[r[5]][5]===s.cat)&&(!s.rst||RT[r[5]][4]===s.rst))}
+const isFoc=p=>D.PR[p][2]==='Focus';
+const brOf=m=>{let n=0;if(m)for(const v of m.values())if(v>0)n++;return n};
+function retList(){ if(RL)return RL;
+  const {F,fi,ci}=C,np=PER.length,ns=D.S.length,M=new Map();
+  for(const r of F){let o=M.get(r[5]);if(!o){o={k:r[5],v:new Array(np).fill(0),sv:new Array(ns).fill(0),fa:0,fb:0,pa:new Map(),pb:new Map(),n:0,ls:-1};M.set(r[5],o)}
+    o.sv[r[0]]+=r[8];if(r[0]>=o.ls){o.ls=r[0];o.d=r[1];o.g=r[2];o.t=r[3];o.di=r[4]}
+    const p=SP[r[0]];if(p<0)continue;o.v[p]+=r[8];
+    if(p===fi){if(isFoc(r[6]))o.fa+=r[8];o.pa.set(r[6],(o.pa.get(r[6])||0)+r[8]);o.n+=r[9]}else if(p===ci){if(isFoc(r[6]))o.fb+=r[8];o.pb.set(r[6],(o.pb.get(r[6])||0)+r[8])}}
+  const out=[];
+  for(const o of M.values()){const cur=Math.max(0,o.v[fi]),prev=ci>=0?Math.max(0,o.v[ci]):0;let earlier=false;for(let i=0;i<fi;i++)if(i!==ci&&o.v[i]>0){earlier=true;break}
+    let st;if(cur>0&&prev>0){const g=(cur-prev)/prev;st=g>=.1?'grow':g<=-.1?'decl':'stab'}else if(cur>0)st=earlier?'react':'new';else if(prev>0)st='lost';else if(earlier)st='dorm';else continue;
+    const rt=D.RT[o.k];o.cur=cur;o.prev=prev;o.st=st;o.g100=gr(cur,prev);o.br=brOf(o.pa);o.brp=brOf(o.pb);o.fp=D.hasFoc&&cur>0?Math.max(0,o.fa)/cur*100:null;
+    o.code=rt[0];o.name=rt[1]||rt[2]||rt[0];o.owner=rt[1]?rt[2]:'';o.mob=rt[3];o.reg=rt[4];o.h=health(o);o.tn=D.L.ter[o.t][0];o.dn=D.L.dis[o.di][0];o.gn=D.L.reg[o.g];out.push(o)}
+  return RL=out}
+
+/* ===================== HEALTH SCORE ===================== */
+const HC_DEFAULT={gCut:[20,10,0,-10],gPts:[35,26,18,9,0],gNew:18, fCut:[50,35,20,10],fPts:[40,30,20,10,0], bCut:[5,3,2,1],bPts:[25,18,10,4], grade:[80,60,40]};
+let HC=JSON.parse(JSON.stringify(HC_DEFAULT));try{const s=localStorage.getItem('r360_health_v1');if(s)HC=Object.assign(HC,JSON.parse(s))}catch(e){}
+const saveHC=()=>{try{localStorage.setItem('r360_health_v1',JSON.stringify(HC))}catch(e){}};
+const maxScore=()=>Math.max(HC.gNew,...HC.gPts)+(D.hasFoc?Math.max(...HC.fPts):0)+Math.max(...HC.bPts);
+function health(o){if(!(o.cur>0))return null;const g=o.g100,fs=o.fp,br=o.br;
+  let gp;if(g==null)gp=HC.gNew;else{const i=HC.gCut.findIndex(c=>g>=c);gp=HC.gPts[i<0?HC.gCut.length:i]}
+  const bi=HC.bCut.findIndex(c=>br>=c),bp=bi<0?0:HC.bPts[bi];let fpP=0;if(fs!=null){const i=HC.fCut.findIndex(c=>fs>=c);fpP=HC.fPts[i<0?HC.fCut.length:i]}
+  const raw=gp+fpP+bp,s=Math.round(raw/maxScore()*100),gi=HC.grade.findIndex(c=>s>=c);return {s,raw,g,fs,br,gp,fpP,bp,grade:gi<0?'D':'ABC'[gi]}}
+const GRADE_TXT={A:'Healthy',B:'Good',C:'Watch',D:'At risk'};
+const gradeChip=h=>h?`<span class="chip g-${h.grade}" data-tip="Growth ${h.gp} + Focus ${h.fpP} + Breadth ${h.bp} = ${h.raw}">${h.grade} · ${h.s}</span>`:dash;
+
+/* ===================== GUIDE ===================== */
+const GUIDE=[
+ ['Volume','Sum of Quantity In Kg. Shown in MT (1 MT = 1,000 kg) for totals and in kg for a single retailer.'],
+ ['Periods','Kharif seasons compare KH with KH, Rabi seasons compare RB with RB. Year joins a Rabi season with the Kharif that follows it (RB25 + KH26 = FY 25-26). Pick any earlier period under Compare with.'],
+ ['Growth %','(Period − compare period) ÷ compare period × 100.'],
+ ['Retailer status','Growing or Declining = change of 10% or more. Stable = within 10%. New = first purchase ever. Reactivated = bought earlier, skipped the compare period. Lost = bought in the compare period, not now. Dormant = bought earlier, inactive in both.'],
+ ['Retention %','Retailers who bought in both periods ÷ retailers who bought in the compare period.'],
+ ['SKU breadth','Number of different SKUs (Product, including pack size) a retailer bought in the period. For an area it is the average across its active retailers.'],
+ ['Focus share %','Kg of SKUs marked Focus in the Product Category2 column ÷ total kg.'],
+ ['Retailer Health Score','Growth (max 35) + Focus share (max 40) + SKU breadth (max 25) = 100. Grade A from 80, B from 60, C from 40, D below 40. All bands can be changed in the Retailer Health tab.'],
+ ['Sales bridge','Starts at the compare period volume, adds volume from new and reactivated retailers and from growing ones, takes away volume lost from declining and lost retailers, and ends at the period volume.'],
+ ['Transactions','Number of rows in the file. Identical rows are all counted.'],
+ ['Retailer type','From the Category column. Distributor Retailer = retails and gets stock directly from the company. Retailer = retail only, gets stock from distributors. Volume slabs use larger bands for Distributor Retailers.'],
+ ['Capitals','All names are put in capitals and extra spaces removed when the file loads, so the same name typed in different cases is counted once.'],
+ ['Opportunities','Follow-up lists built from the current filters: retailers with no Focus SKU, large lost retailers, large declining retailers, and retailers whose registration is not ACTIVE but who still buy.']];
+$('guideBtn').addEventListener('click',()=>{$('guideBox').innerHTML=`<div class="row"><h3 style="margin:0;font-size:17px">How each measure is calculated</h3><span style="flex:1"></span><button class="btn" type="button" id="gClose">Close</button></div><table><tr><th>Measure</th><th>Calculation</th></tr>${GUIDE.map(g=>`<tr><td><b>${g[0]}</b></td><td>${g[1]}</td></tr>`).join('')}</table>`;$('guide').style.display='flex';$('gClose').onclick=()=>$('guide').style.display='none'});
+$('guide').addEventListener('click',e=>{if(e.target===$('guide'))$('guide').style.display='none'});
+
+/* ===================== CHART PIECES ===================== */
+const tip=$('tip');
+function showTip(e,html){tip.innerHTML=html;tip.style.display='block';const w=Math.min(280,innerWidth-16);const x=Math.max(8,Math.min(e.clientX+14,innerWidth-w-8));tip.style.left=x+'px';const y=e.clientY+14;tip.style.top=(y+tip.offsetHeight>innerHeight-8?Math.max(8,e.clientY-tip.offsetHeight-10):y)+'px'}
+document.addEventListener('mousemove',e=>{if(MODE!=='pc')return;const t=e.target.closest&&e.target.closest('[data-tip]');if(t)showTip(e,t.dataset.tip);else tip.style.display='none'});
+document.addEventListener('click',e=>{if(MODE==='pc')return;const t=e.target.closest&&e.target.closest('[data-tip]');if(t)showTip(e,t.dataset.tip);else tip.style.display='none'},true);
+function axis(dmin,dmax){const raw=((dmax-dmin)||1)/4,mag=Math.pow(10,Math.floor(Math.log10(raw))),step=[1,2,2.5,5,10].map(x=>x*mag).find(x=>x>=raw);return {min:Math.floor(dmin/step)*step,max:Math.ceil(dmax/step)*step||step,step}}
+const axFmt=v=>{const t=v/1000;return inr(t,Math.abs(t)<10&&t%1?1:0)};
+// stacked or simple vertical bars. items:[{label,segs:[{v,color,name}],base}]
+function vbars(items,{h=230,float=false}={}){
+  if(!items.length)return '<div class="muted">No data</div>';
+  const W=Math.max(420,items.length*64),pad={l:50,r:8,t:14,b:30},iw=W-pad.l-pad.r,ih=h-pad.t-pad.b;
+  const tops=items.map(it=>(it.base||0)+it.segs.reduce((s,x)=>s+Math.max(0,x.v),0)),lows=items.map(it=>Math.min(0,it.base||0,(it.base||0)+it.segs.reduce((s,x)=>s+Math.min(0,x.v),0)));
+  const ax=axis(Math.min(0,...lows),Math.max(0,...tops)),span=ax.max-ax.min,y=v=>pad.t+(ax.max-v)/span*ih,slot=iw/items.length,bw=Math.min(36,slot*.62);
+  let s=`<svg viewBox="0 0 ${W} ${h}" width="100%" style="max-height:${h+20}px" role="img">`;
+  for(let v=ax.min;v<=ax.max+ax.step/2;v+=ax.step){const yy=y(v);s+=`<line x1="${pad.l}" x2="${W-pad.r}" y1="${yy}" y2="${yy}" style="stroke:var(--line2)"/><text x="${pad.l-6}" y="${yy+4}" text-anchor="end" font-size="10.5" style="fill:var(--muted)">${axFmt(v)}</text>`}
+  items.forEach((it,i)=>{const cx=pad.l+(i+.5)*slot;let acc=it.base||0;const segs=it.segs.filter(x=>x.v);
+    segs.forEach((sg,j)=>{const y0=y(acc),y1=y(acc+sg.v);acc+=sg.v;const top=Math.min(y0,y1),hh=Math.max(1,Math.abs(y1-y0)-(segs.length>1?2:0)),last=j===segs.length-1||float,r=last?Math.min(4,hh/2):0;
+      const x0=cx-bw/2,x1=cx+bw/2;const d=sg.v>=0||float?`M${x0},${top+hh} V${top+r} Q${x0},${top} ${x0+r},${top} H${x1-r} Q${x1},${top} ${x1},${top+r} V${top+hh} Z`:`M${x0},${top} V${top+hh-r} Q${x0},${top+hh} ${x0+r},${top+hh} H${x1-r} Q${x1},${top+hh} ${x1},${top+hh-r} V${top} Z`;
+      s+=`<path d="${d}" style="fill:${sg.color}" data-tip="${esc('<b>'+esc(it.label)+'</b><br>'+(sg.name?esc(sg.name)+': ':'')+(sg.tip||big(sg.v)))}"/>`});
+    if(it.top)s+=`<text x="${cx}" y="${y(Math.max(it.base||0,acc))-5}" text-anchor="middle" font-size="10.5" font-weight="600" style="fill:var(--ink2)">${it.top}</text>`;
+    s+=`<text x="${cx}" y="${h-pad.b+16}" text-anchor="middle" font-size="11" style="fill:var(--ink2)">${esc(it.label)}</text>`});
+  return s+`<line x1="${pad.l}" x2="${W-pad.r}" y1="${y(0)}" y2="${y(0)}" style="stroke:var(--base)"/></svg>`}
+function hbars(items){if(!items.length)return '<div class="muted">No data</div>';const max=Math.max(...items.map(i=>Math.abs(i.value)))||1;
+  return '<div>'+items.map(it=>`<div data-tip="${esc(it.tip)}" style="display:grid;grid-template-columns:minmax(110px,40%) 1fr 74px;gap:8px;align-items:center;padding:3px 0;${it.click?'cursor:pointer':''}" ${it.click?`data-ret="${it.click}"`:''}>
+    <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(it.label)}</div><div style="background:var(--neutralbg);border-radius:3px;height:12px"><div style="width:${Math.max(1,Math.abs(it.value)/max*100)}%;height:12px;background:var(--s1);border-radius:0 4px 4px 0"></div></div><div style="text-align:right">${it.txt}</div></div>`).join('')+'</div>'}
+function spark(v,c){const mx=Math.max(...v),mn=Math.min(...v);if(mx<=0||v.length<2)return'';const st=56/(v.length-1);const p=v.map((y,i)=>[3+i*st,mx===mn?12:22-(y-mn)/(mx-mn)*18]);const e=p[p.length-1];
+  return `<polyline points="${p.map(t=>t.join(',')).join(' ')}" fill="none" style="stroke:${c}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${e[0]}" cy="${e[1]}" r="2.5" style="fill:${c}"/>`}
+function sparkCell(sv){const kh=[],rb=[],kl=[],rl=[];SEA.forEach((s,i)=>{if(s.type==='KH'){kh.push(sv[i]);kl.push(s.code)}else{rb.push(sv[i]);rl.push(s.code)}});
+  const t=`<b style="color:#eda100">Kharif</b> ${kh.map((v,i)=>kl[i]+': '+KG(v)).join(' · ')||'–'}<br><b style="color:#6fa8ec">Rabi</b> ${rb.map((v,i)=>rl[i]+': '+KG(v)).join(' · ')||'–'} (kg)`;
+  return `<svg width="62" height="26" viewBox="0 0 62 26" data-tip="${esc(t)}" style="flex:0 0 auto">${spark(kh.slice(-4),'var(--s2)')}${spark(rb.slice(-4),'var(--s1)')}</svg>`}
+function callCell(m){if(!m||m.length!==10)return dash;return `<span class="call"><a href="tel:+91${m}" data-stop="1">Call ${m}</a><a class="wa" href="https://wa.me/91${m}" target="_blank" rel="noopener" data-stop="1">WhatsApp</a></span>`}
+const STATUS={grow:['Growing','c-grow','▲'],stab:['Stable','c-stab','●'],decl:['Declining','c-decl','▼'],new:['New','c-new','★'],react:['Reactivated','c-react','↺'],lost:['Lost','c-lost','✕'],dorm:['Dormant','c-dorm','…']};
+const chip=k=>`<span class="chip ${STATUS[k][1]}">${STATUS[k][2]} ${STATUS[k][0]}</span>`;
+const regTag=s=>!s?'':s==='ACTIVE'?'':` <span class="dtag">${esc(s)}</span>`;
+const fTag=p=>isFoc(p)?' <span class="ftag">FOCUS</span>':'';
+const PCCOL=['var(--s1)','var(--s2)','var(--s3)','var(--s4)','var(--s5)','var(--s6)','var(--s7)'];
+const pcColor=i=>i<7?PCCOL[i]:'var(--base)';
+
+/* ===================== RENDER ===================== */
+function render(){ if(!D)return; RL=null;
+  C={F:filtered(),fi:ST.focus,ci:ST.comp,a:PER[ST.focus],b:ST.comp>=0?PER[ST.comp]:null};
+  fltSummary();$('fltBtn').style.display=MODE==='phone'?'':'none';if(MODE!=='phone')$('filters').style.display=MODE==='pc'?'flex':'grid';else $('filters').style.display='';
+  const ch=$('chips');if(ST.dst>=0){ch.style.display='flex';ch.innerHTML=`<button class="fchip" type="button" id="dstX">Distributor: ${esc(D.L.dst[ST.dst][1])} ✕</button>`;$('dstX').onclick=()=>{ST.dst=-1;render()}}else ch.style.display='none';
+  summary();
+  ({ov:renderOverview,geo:renderGeo,hs:renderHealth,rt:renderRetailers,r360:render360,ty:renderType,pr:renderProducts,op:renderOpp})[ST.tab]($('main'));
+}
+function totals(){const {F,fi,ci}=C;const A={kg:0,n:0,f:0,act:0},B={kg:0,n:0,f:0};
+  for(const r of F){const p=SP[r[0]];if(p===fi){A.kg+=r[8];A.n+=r[9];if(isFoc(r[6]))A.f+=r[8];if(D.RT[r[5]][4]==='ACTIVE')A.act+=r[8]}else if(p===ci&&ci>=0){B.kg+=r[8];B.n+=r[9];if(isFoc(r[6]))B.f+=r[8]}}
+  const L=retList();A.ret=L.filter(o=>o.cur>0).length;B.ret=L.filter(o=>o.prev>0).length;A.kept=L.filter(o=>o.cur>0&&o.prev>0).length;
+  A.br=A.ret?L.reduce((s,o)=>s+(o.cur>0?o.br:0),0)/A.ret:0;B.br=B.ret?L.reduce((s,o)=>s+(o.prev>0?o.brp:0),0)/B.ret:0;return {A,B}}
+function summary(){const {A,B}=totals(),{a,b}=C;let s=`${a} volume is ${MT(A.kg)} MT from ${inr(A.ret)} retailers`;
+  if(b){const g=gr(A.kg,B.kg);s+=g==null?`. There was no volume in ${b}.`:`, ${g>=0?'up':'down'} ${inr(Math.abs(g),1)}% against ${b} (${MT(B.kg)} MT).`;
+    const m=new Map();for(const r of C.F){const p=SP[r[0]];if(p!==C.fi&&p!==C.ci)continue;const k=ST.reg>=0?(ST.ter>=0?'d'+r[4]:'t'+r[3]):'g'+r[2];m.set(k,(m.get(k)||0)+(p===C.fi?r[8]:-r[8]))}
+    const nm=k=>k[0]==='g'?D.L.reg[+k.slice(1)]:k[0]==='t'?D.L.ter[+k.slice(1)][0]:D.L.dis[+k.slice(1)][0],lvl=ST.reg>=0?(ST.ter>=0?'district':'territory'):'region',mv=[...m].sort((x,y)=>x[1]-y[1]);
+    if(mv.length>1){if(mv[0][1]<0)s+=` Biggest drop by ${lvl}: ${nm(mv[0][0])} (−${MT(-mv[0][1])} MT).`;const hi=mv[mv.length-1];if(hi[1]>0)s+=` Biggest gain: ${nm(hi[0])} (+${MT(hi[1])} MT).`}}else s+='.';
+  $('sum').textContent=s}
+
+/* ---------- OVERVIEW ---------- */
+function renderOverview(m){const {A,B}=totals(),{a,b,F,fi}=C,L=retList();const d=(x,y)=>b?grTxt(x,y)+' vs '+b:'';
+  const avgA=A.ret?A.kg/A.ret:0,avgB=B.ret?B.kg/B.ret:0;
+  let h=`<div class="tiles">
+   <div class="tile"><div class="k">Volume · ${a}</div><div class="v">${MT(A.kg)} MT</div><div class="d">${d(A.kg,B.kg)}</div></div>
+   <div class="tile"><div class="k">Active retailers</div><div class="v">${inr(A.ret)}</div><div class="d">${d(A.ret,B.ret)}</div></div>
+   <div class="tile"><div class="k">Avg kg per retailer</div><div class="v">${KG(avgA)}</div><div class="d">${d(avgA,avgB)}</div></div>
+   <div class="tile"><div class="k">Retention</div><div class="v">${B.ret?inr(A.kept/B.ret*100,0)+'%':'–'}</div><div class="d">${b?`${inr(A.kept)} of ${inr(B.ret)} ${b} retailers bought again`:''}</div></div>
+   ${D.hasFoc?`<div class="tile"><div class="k">Focus share</div><div class="v">${A.kg>0?inr(A.f/A.kg*100,1)+'%':'–'}</div><div class="d">${b&&B.kg>0?inr(B.f/B.kg*100,1)+'% in '+b:''}</div></div>`:''}
+   <div class="tile"><div class="k">Avg SKU breadth</div><div class="v">${inr(A.br,1)}</div><div class="d">SKUs per active retailer${b?' · '+inr(B.br,1)+' in '+b:''}</div></div>
+   <div class="tile"><div class="k">Transactions</div><div class="v">${inr(A.n)}</div><div class="d">${d(A.n,B.n)}</div></div>
+   ${D.hasSt?`<div class="tile"><div class="k">From ACTIVE registrations</div><div class="v">${A.kg>0?inr(A.act/A.kg*100,1)+'%':'–'}</div><div class="d">of ${a} volume</div></div>`:''}
+  </div>`;
+  // season trend stacked by product category (colour fixed per category)
+  const pcs=D.L.pc.map((n,i)=>i),bySP=new Map();for(const r of F){const k=r[0]*1000+D.PR[r[6]][1];bySP.set(k,(bySP.get(k)||0)+r[8])}
+  const used=pcs.filter(p=>D.S.some((_,s)=>bySP.get(s*1000+p)));
+  const sItems=D.S.map((code,s)=>({label:code,segs:used.map(p=>({v:Math.max(0,bySP.get(s*1000+p)||0),color:pcColor(p),name:D.L.pc[p]}))}));
+  // bridge
+  const sumIf=(f,g)=>L.reduce((s,o)=>s+(f(o)?g(o):0),0);
+  const nw=sumIf(o=>o.st==='new'||o.st==='react',o=>o.cur),gw=sumIf(o=>o.st==='grow',o=>o.cur-o.prev),sb=sumIf(o=>o.st==='stab',o=>o.cur-o.prev),dc=sumIf(o=>o.st==='decl',o=>o.prev-o.cur),ls=sumIf(o=>o.st==='lost',o=>o.prev);
+  const P0=sumIf(()=>true,o=>o.prev),P1=sumIf(()=>true,o=>o.cur);let acc=P0;const st=(label,v,color)=>{const it={label,base:v>=0?acc:acc+v,segs:[{v:Math.abs(v),color,tip:(v>=0?'+':'−')+big(Math.abs(v))}],top:(v>=0?'+':'−')+MT(Math.abs(v))};acc+=v;return it};
+  const bridge=b?[{label:b,segs:[{v:P0,color:'var(--base)'}],top:MT(P0)},st('New',nw,'var(--good)'),st('Growing',gw,'var(--good)'),st('Stable',sb,'var(--base)'),st('Declining',-dc,'var(--bad)'),st('Lost',-ls,'var(--bad)'),{label:a,segs:[{v:P1,color:'var(--accent)'}],top:MT(P1)}]:[];
+  h+=`<div class="grid2"><div class="card"><h3>Volume by season</h3><div class="note">MT, stacked by product category, current filters applied</div><div class="legend">${used.map(p=>`<span><i style="background:${pcColor(p)}"></i>${esc(D.L.pc[p])}</span>`).join('')}</div>${vbars(sItems)}</div>
+   <div class="card"><h3>Sales bridge${b?': '+b+' to '+a:''}</h3><div class="note">MT. What moved the volume between the two periods. New includes reactivated retailers.</div>${b?vbars(bridge,{float:true}):'<div class="muted">Needs an earlier period to compare with.</div>'}</div></div>`;
+  // top retailers + slabs
+  const top=L.filter(o=>o.cur>0).sort((x,y)=>y.cur-x.cur).slice(0,10).map(o=>({label:o.name,value:o.cur,txt:KG(o.cur),click:o.k,tip:`<b>${esc(o.name)}</b><br>${esc(o.tn)} · ${esc(o.code)}<br>${KG(o.cur)} kg`}));
+  h+=`<div class="grid2"><div class="card"><h3>Top 10 retailers · ${a}</h3><div class="note">kg. Select a retailer to open Retailer 360.</div>${hbars(top)}</div>
+   <div class="card"><h3>Retailer type · ${a}</h3><div class="note">Distributor Retailer gets stock directly from the company. Retailer gets stock from distributors. More in the Retailer Type tab.</div>${typeTable(L,false)}</div></div>`;
+  m.innerHTML=h;m.querySelectorAll('[data-ret]').forEach(el=>el.onclick=()=>open360(+el.dataset.ret))}
+function slabs(L,wrap){const SL={r:[50,100,250,500,1000,2500,5000],d:[250,500,1000,2500,5000,10000,20000]},{a,b}=C;const types=[...new Set(L.map(o=>D.RT[o.k][5]))].sort();
+  return types.map(t=>{const nm=D.L.cat[t],E=/distrib/i.test(nm)?SL.d:SL.r,n=E.length+1,LB=['Up to '+inr(E[0]),...E.slice(1).map((e,i)=>inr(E[i]+1)+'–'+inr(e)),'Above '+inr(E[E.length-1])];
+    const ca=Array(n).fill(0),cb=Array(n).fill(0),va=Array(n).fill(0),si=v=>{const i=E.findIndex(e=>v<=e);return i<0?E.length:i};
+    L.forEach(o=>{if(D.RT[o.k][5]!==t)return;if(o.cur>0){const i=si(o.cur);ca[i]++;va[i]+=o.cur}if(o.prev>0)cb[si(o.prev)]++});const TA=ca.reduce((s,v)=>s+v,0),TV=va.reduce((s,v)=>s+v,0);if(!TA&&!cb.some(Boolean))return'';
+    return `${wrap?'<div>':''}<b style="font-size:12.5px">${esc(nm)}</b><div style="overflow-x:auto;margin:4px 0 10px"><table><tr><th class="l">Slab (kg)</th><th>${a}</th>${b?`<th>${b}</th><th>Change</th>`:''}<th>% of retailers</th><th>% of volume</th></tr>${LB.map((l,i)=>{const dd=ca[i]-cb[i];return `<tr><td>${l}</td><td>${inr(ca[i])}</td>${b?`<td>${inr(cb[i])}</td><td class="${dd>=0?'up':'dn'}">${dd>0?'+':dd<0?'−':''}${Math.abs(dd)}</td>`:''}<td>${TA?inr(ca[i]/TA*100,1):'0.0'}%</td><td>${TV?inr(va[i]/TV*100,1):'0.0'}%</td></tr>`}).join('')}</table></div>${wrap?'</div>':''}`}).join('')||'<div class="muted">No data</div>'}
+
+/* ---------- GEOGRAPHY ---------- */
+function renderGeo(m){const {F,fi,ci,a,b}=C,NP=D.PR.length,N=new Map();
+  const nd=k=>{let o=N.get(k);if(!o){o={a:0,b:0,fa:0,ra:new Set(),rb:new Set(),pr:new Set()};N.set(k,o)}return o};
+  for(const r of F){const p=SP[r[0]];if(p!==fi&&p!==ci)continue;const ks=['T',r[1]+'',r[1]+'¦'+r[2],r[1]+'¦'+r[2]+'¦'+r[3]];if(OPEN.has(ks[3]))ks.push(ks[3]+'¦'+r[4]);
+    for(const k of ks){const o=nd(k);if(p===fi){o.a+=r[8];if(r[8]>0){o.ra.add(r[5]);o.pr.add(r[5]*NP+r[6])}if(isFoc(r[6]))o.fa+=r[8]}else{o.b+=r[8];if(r[8]>0)o.rb.add(r[5])}}}
+  const line=(cls,label,k,click)=>{const o=N.get(k);let kept=0;o.ra.forEach(x=>{if(o.rb.has(x))kept++});
+    return `<tr class="${cls}${click?' click':''}" ${click?`data-k="${esc(k)}"`:''}><td>${label}</td>${b?`<td>${MT(o.b)}</td>`:''}<td>${MT(o.a)}</td><td>${b?grTxt(o.a,o.b):''}</td><td>${inr(o.ra.size)}</td><td>${b&&o.rb.size?inr(kept/o.rb.size*100,0)+'%':'–'}</td><td>${b?inr(o.rb.size-kept):'–'}</td>${D.hasFoc?`<td>${o.a>0?inr(o.fa/o.a*100,1)+'%':'–'}</td>`:''}<td>${o.ra.size?inr(o.pr.size/o.ra.size,1):'–'}</td></tr>`};
+  const kids=(pre,depth)=>[...N.keys()].filter(k=>k!=='T'&&k.split('¦').length===depth&&(pre==null||k.startsWith(pre+'¦'))).sort((x,y)=>N.get(y).a-N.get(x).a);
+  let rows='';
+  for(const dk of kids(null,1)){rows+=line('l0',esc(D.L.div[+dk]),dk);
+    for(const gk of kids(dk,2)){const og=OPEN.has(gk);rows+=line('l1',(og?'▾ ':'▸ ')+esc(D.L.reg[+gk.split('¦')[1]]),gk,true);
+      if(og)for(const tk of kids(gk,3)){const ot=OPEN.has(tk);rows+=line('l2',(ot?'▾ ':'▸ ')+esc(D.L.ter[+tk.split('¦')[2]][0]),tk,true);
+        if(ot)for(const xk of kids(tk,4))rows+=line('l3',esc(D.L.dis[+xk.split('¦')[3]][0]),xk)}}}
+  if(N.has('T'))rows+=line('tot','Total','T');
+  m.innerHTML=`<div class="card"><h3>Division › Region › Territory › District</h3><div class="row" style="margin:0 0 8px"><span class="note" style="margin:0">MT. Select a region to see its territories, then a territory to see its districts. Sorted by ${a} volume.</span>${xBtns('geo')}</div>
+   <div class="scroll" ><table><tr><th class="l">Area</th>${b?`<th>${b}</th>`:''}<th>${a}</th><th>Growth</th><th>Retailers</th><th>Retention</th><th>Lost</th>${D.hasFoc?'<th>Focus %</th>':''}<th>Avg SKUs</th></tr>${rows||'<tr><td colspan="9" class="l muted">No data for these filters</td></tr>'}</table></div></div>`;
+  m.querySelectorAll('tr.click').forEach(tr=>tr.onclick=()=>{const k=tr.dataset.k;OPEN.has(k)?OPEN.delete(k):OPEN.add(k);render()});bindX(m,[...N.keys()].filter(k=>k.split('¦').length===2))}
+
+/* ---------- RETAILERS ---------- */
+function renderRetailers(m){const L=retList(),{a,b}=C,cnt={};L.forEach(o=>cnt[o.st]=(cnt[o.st]||0)+1);
+  m.innerHTML=`<div class="note">Status of each retailer in <b>${a}</b> against <b>${b||'no earlier period'}</b>. Select a retailer to open Retailer 360.</div>
+   <div class="statusbar">${['','grow','stab','decl','new','react','lost','dorm'].map(k=>`<button type="button" class="stat ${ST.rStatus===k?'on':''}" data-st="${k}"><div class="s">${k?chip(k):'<b>All retailers</b>'}</div><div class="n">${inr(k?cnt[k]||0:L.length)}</div></button>`).join('')}</div>
+   <div class="row"><input type="search" id="rq" placeholder="Search shop, owner, code, territory or district" value="${esc(ST.rq)}" style="min-width:300px;max-width:100%"><button class="btn" type="button" id="rExp">Export CSV</button><span class="muted" id="rCount"></span></div>
+   <div class="scroll"  id="rTbl"></div>`;
+  m.querySelectorAll('.stat').forEach(s=>s.onclick=()=>{ST.rStatus=s.dataset.st;render()});
+  $('rq').addEventListener('input',e=>{ST.rq=e.target.value;drawRet()});$('rExp').onclick=exportRet;drawRet()}
+let RVIEW=[];
+function drawRet(){const L=retList(),{a,b,fi,ci}=C,q=ST.rq.trim().toLowerCase();
+  let rows=L.filter(o=>(!ST.rStatus||o.st===ST.rStatus)&&(!q||(o.name+' '+o.owner+' '+o.code+' '+o.tn+' '+o.dn+' '+o.gn).toLowerCase().includes(q)));
+  const k=ST.sort.k,d=ST.sort.d,key=o=>k==='name'?o.name:k==='ter'?o.tn:k==='st'?o.st:k==='g'?(o.g100??-1e9):k==='br'?o.br:k==='fp'?(o.fp??-1):k==='hs'?(o.h?o.h.s:-1):k==='prev'?o.prev:k==='reg'?o.reg:o.cur;
+  rows.sort((x,y)=>{const p=key(x),z=key(y);return (p>z?1:p<z?-1:0)*d});RVIEW=rows;
+  const th=(k,l,c='')=>`<th class="s ${c}" data-k="${k}">${l}${ST.sort.k===k?(ST.sort.d>0?' ▲':' ▼'):''}</th>`,lim=MODE==='phone'?200:800;
+  $('rTbl').innerHTML=`<table><tr>${th('name','Retailer','l')}${th('ter','Territory / District','l')}${b?th('prev',b+' kg'):''}${th('cur',a+' kg')}${th('g','Growth')}${th('st','Status','l')}${th('br','SKUs')}${D.hasFoc?th('fp','Focus %'):''}${th('hs','Health','l')}<th class="l">Contact</th></tr>
+   ${rows.slice(0,lim).map(o=>`<tr class="click" data-ret="${o.k}"><td><div class="cn"><span>${esc(o.name)}${regTag(o.reg)}<br><small>${esc(o.owner?o.owner+' · ':'')}${esc(o.code)}</small></span>${sparkCell(o.sv)}</div></td><td class="l">${esc(o.tn)}<br><small class="muted">${esc(o.dn)}</small></td>${b?`<td>${o.prev?KG(o.prev):dash}</td>`:''}<td>${o.cur?KG(o.cur):dash}</td><td>${grTxt(o.cur,o.prev)}</td><td class="l">${chip(o.st)}</td><td>${o.br||dash}</td>${D.hasFoc?`<td>${pctTxt(o.fp)}</td>`:''}<td class="l">${gradeChip(o.h)}</td><td class="l">${callCell(o.mob)}</td></tr>`).join('')}</table>`;
+  $('rCount').textContent=`${inr(rows.length)} retailers${rows.length>lim?` (first ${lim} shown; search or export to see the rest)`:''}`;
+  $('rTbl').querySelectorAll('th.s').forEach(h=>h.onclick=()=>{const k=h.dataset.k;ST.sort=ST.sort.k===k?{k,d:-ST.sort.d}:{k,d:(k==='name'||k==='ter'||k==='st')?1:-1};drawRet()});
+  bindRows($('rTbl'))}
+function bindRows(el){el.querySelectorAll('tr[data-ret]').forEach(tr=>tr.onclick=e=>{if(e.target.closest('[data-stop]'))return;open360(+tr.dataset.ret)})}
+const csvq=s=>'"'+String(s??'').replace(/"/g,'""')+'"';
+function retCsv(list){const {a,b}=C;const lines=[['Retailer Code','Shop','Owner','Mobile','Registration','Division','Region','Territory','District',(b||'Compare')+' kg',a+' kg','Growth %','Status','SKU breadth','Focus %','Health score','Grade'].join(',')];
+  for(const o of list)lines.push([o.code,csvq(o.name),csvq(o.owner),o.mob,o.reg,csvq(D.L.div[o.d]),csvq(o.gn),csvq(o.tn),csvq(o.dn),Math.round(o.prev),Math.round(o.cur),o.g100==null?'':o.g100.toFixed(1),STATUS[o.st][0],o.br,o.fp==null?'':o.fp.toFixed(1),o.h?o.h.s:'',o.h?o.h.grade:''].join(','));return lines.join('\n')}
+function exportRet(){saveFile(`Retailers_${C.a}_${ST.rStatus||'all'}.csv`,retCsv(RVIEW))}
+let DL=null;if(window.claude&&typeof window.claude.use==='function')window.claude.use('downloads').then(d=>{DL=d}).catch(()=>{});
+async function saveFile(name,text){name=name.replace(/[^\w.\-]+/g,'_');
+  if(DL){try{await DL.save({filename:name,data:'﻿'+text})}catch(e){}return}
+  try{const el=document.createElement('a');el.href=URL.createObjectURL(new Blob(['﻿'+text],{type:'text/csv'}));el.download=name;document.body.appendChild(el);el.click();el.remove()}catch(e){}}
+
+/* ---------- RETAILER 360 ---------- */
+function open360(k){ST.ret=k;setTab('r360');scrollTo(0,0)}
+function render360(m){
+  m.innerHTML=`<div class="row"><b>Retailer</b><input type="search" id="rs360" placeholder="Type a shop name, owner or code" style="min-width:320px;max-width:100%"><span class="muted">Shows the retailer's full history. The area and product filters are not applied here.</span></div><div id="rs360r"></div><div id="b360"></div>`;
+  $('rs360').addEventListener('input',e=>{const q=e.target.value.trim().toLowerCase();if(q.length<2){$('rs360r').innerHTML='';return}
+    const hits=[];for(let i=0;i<D.RT.length&&hits.length<12;i++){const r=D.RT[i];if((r[0]+' '+r[1]+' '+r[2]).toLowerCase().includes(q))hits.push(i)}
+    $('rs360r').innerHTML=`<div class="row">${hits.map(i=>`<button class="btn" type="button" data-pick="${i}">${esc(D.RT[i][1]||D.RT[i][2])} · ${esc(D.RT[i][0])}</button>`).join('')||'<span class="muted">No match</span>'}</div>`;
+    $('rs360r').querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ST.ret=+b.dataset.pick;$('rs360r').innerHTML='';$('rs360').value='';draw360()})});
+  draw360()}
+function draw360(){const el=$('b360'),k=ST.ret;if(k<0||!D.RT[k]){el.innerHTML='<div class="empty">Search for a retailer above, or select one in the Retailers, Health or Opportunities tab.</div>';return}
+  const rt=D.RT[k],R=D.R.filter(r=>r[5]===k),{fi,ci,a,b}=C,ns=D.S.length;let last=R[0];for(const r of R)if(r[0]>=last[0])last=r;
+  const sv=new Array(ns).fill(0),byP=new Map(),byD=new Map();let cur=0,prev=0,fa=0,fb=0,life=0;const pa=new Map(),pb=new Map();
+  for(const r of R){sv[r[0]]+=r[8];life+=r[8];let o=byP.get(r[6]);if(!o){o=new Array(ns).fill(0);byP.set(r[6],o)}o[r[0]]+=r[8];
+    let dd=byD.get(r[7]);if(!dd){dd={kg:0,a:0,ls:-1};byD.set(r[7],dd)}dd.kg+=r[8];if(r[0]>dd.ls)dd.ls=r[0];
+    const p=SP[r[0]];if(p===fi){cur+=r[8];if(isFoc(r[6]))fa+=r[8];pa.set(r[6],(pa.get(r[6])||0)+r[8]);dd.a+=r[8]}else if(p===ci&&ci>=0){prev+=r[8];if(isFoc(r[6]))fb+=r[8];pb.set(r[6],(pb.get(r[6])||0)+r[8])}}
+  cur=Math.max(0,cur);prev=Math.max(0,prev);const o={cur,prev,g100:gr(cur,prev),br:brOf(pa),fp:D.hasFoc&&cur>0?fa/cur*100:null};const hs=health(o);
+  const firstS=sv.findIndex(v=>v>0),lastS=sv.length-1-[...sv].reverse().findIndex(v=>v>0),act=sv.filter(v=>v>0).length;
+  const flags=[];
+  if(rt[4]&&rt[4]!=='ACTIVE')flags.push(['bad',`Registration status is ${esc(rt[4])}`]);
+  if(prev>0&&cur<=0)flags.push(['bad',`No purchase in ${a} after ${KG(prev)} kg in ${b}. Lost retailer.`]);
+  else if(prev>0&&cur<prev*.9)flags.push(['warn',`Down ${inr((1-cur/prev)*100,1)}% in ${a} against ${b}`]);
+  else if(prev>0&&cur>=prev*1.1)flags.push(['good',`Up ${inr((cur/prev-1)*100,1)}% in ${a} against ${b}`]);
+  else if(cur>0&&prev<=0&&b)flags.push(['info',`Bought in ${a} but not in ${b}`]);
+  if(b){const dropped=[...pb.keys()].filter(p=>pb.get(p)>0&&!(pa.get(p)>0)),df=dropped.filter(isFoc),added=[...pa.keys()].filter(p=>pa.get(p)>0&&!(pb.get(p)>0));
+    if(df.length)flags.push(['bad',`Stopped buying Focus SKU in ${a}: ${df.slice(0,5).map(p=>esc(D.PR[p][0])).join(', ')}`]);
+    const dn=dropped.filter(p=>!isFoc(p));if(dn.length&&cur>0)flags.push(['warn',`Stopped buying in ${a}: ${dn.slice(0,5).map(p=>esc(D.PR[p][0])).join(', ')}${dn.length>5?' …':''}`]);
+    if(added.length)flags.push(['info',`New SKUs in ${a}: ${added.slice(0,5).map(p=>esc(D.PR[p][0])).join(', ')}${added.length>5?' …':''}`])}
+  if(D.hasFoc&&cur>0&&fa<=0)flags.push(['warn',`No Focus SKU bought in ${a}`]);
+  if(!flags.length)flags.push(['good','No alerts']);
+  const cols=D.S.map((c,i)=>i).slice(-6),pRows=[...byP.entries()].sort((x,y)=>y[1][cols[cols.length-1]]-x[1][cols[cols.length-1]]||y[1].reduce((s,v)=>s+v,0)-x[1].reduce((s,v)=>s+v,0));
+  const sCol=t=>t==='KH'?'var(--s2)':'var(--s1)';
+  el.innerHTML=`<div class="row" style="align-items:flex-start;gap:8px 24px"><div><h2 style="margin:0;font-size:20px">${esc(rt[1]||rt[2]||rt[0])}${regTag(rt[4])}</h2>
+     <div class="muted">${esc(rt[2])}${rt[2]?' · ':''}${esc(rt[0])} · ${esc(D.L.cat[rt[5]])}${rt[4]?' · Registration '+esc(rt[4]):''}</div>
+     <div class="muted">${esc(D.L.div[last[1]])} › ${esc(D.L.reg[last[2]])} › ${esc(D.L.ter[last[3]][0])} › ${esc(D.L.dis[last[4]][0])}</div></div><div style="padding-top:4px">${callCell(rt[3])}</div></div>
+   <div class="tiles">
+    <div class="tile"><div class="k">${a}</div><div class="v">${KG(cur)} kg</div><div class="d">${b?grTxt(cur,prev)+' vs '+b:''}</div></div>
+    <div class="tile"><div class="k">All seasons in the file</div><div class="v">${big(life)}</div><div class="d">active in ${act} of ${ns} seasons</div></div>
+    <div class="tile"><div class="k">First / last season</div><div class="v" style="font-size:17px">${firstS>=0?D.S[firstS]+' / '+D.S[lastS]:'–'}</div></div>
+    <div class="tile"><div class="k">SKU breadth · ${a}</div><div class="v">${o.br}</div><div class="d">${b?brOf(pb)+' in '+b+' · ':''}${byP.size} across all seasons</div></div>
+    ${D.hasFoc?`<div class="tile"><div class="k">Focus share · ${a}</div><div class="v">${pctTxt(o.fp)}</div><div class="d">${b&&prev>0?inr(fb/prev*100,1)+'% in '+b:''}</div></div>`:''}
+    <div class="tile"><div class="k">Health · ${a}</div><div class="v">${hs?`<span class="chip g-${hs.grade}" style="font-size:14px">${hs.grade} · ${hs.s} / 100</span>`:'–'}</div><div class="d">${hs?`Growth ${hs.gp} + Focus ${hs.fpP} + Breadth ${hs.bp}`:'Not scored: no purchase in '+a}</div></div>
+   </div>
+   <div class="grid2"><div class="card"><h3>Season history</h3><div class="note">kg by season</div><div class="legend"><span><i style="background:var(--s2)"></i>Kharif</span><span><i style="background:var(--s1)"></i>Rabi</span></div>${vbars(D.S.map((c,i)=>({label:c,segs:[{v:Math.max(0,sv[i]),color:sCol(SEA[i].type),tip:KG(sv[i])+' kg'}]})),{h:200})}</div>
+    <div class="card"><h3>Alerts</h3><div class="note">${a}${b?' against '+b:''}</div><div class="flags">${flags.map(([c,t])=>`<div class="flag ${c}">${t}</div>`).join('')}</div></div></div>
+   <div class="card"><h3>SKU mix by season</h3><div class="note">kg</div><div class="scroll" style="max-height:340px"><table><tr><th class="l">SKU</th><th class="l">Category</th>${cols.map(i=>`<th>${D.S[i]}</th>`).join('')}</tr>
+     ${pRows.map(([p,v])=>`<tr><td>${esc(D.PR[p][0])}${fTag(p)}</td><td class="l">${esc(D.L.pc[D.PR[p][1]])}</td>${cols.map(i=>`<td>${v[i]?KG(v[i]):dash}</td>`).join('')}</tr>`).join('')}
+     <tr class="tot"><td>Total</td><td></td>${cols.map(i=>`<td>${KG(sv[i])}</td>`).join('')}</tr></table></div></div>
+   <div class="card"><h3>Supplied by</h3><div class="note">Distributors this retailer bought through</div><div style="overflow-x:auto"><table><tr><th class="l">Distributor</th><th class="l">Code</th><th>${a} kg</th><th>All seasons kg</th><th>Last season</th></tr>
+     ${[...byD.entries()].sort((x,y)=>y[1].kg-x[1].kg).map(([d,v])=>`<tr><td>${esc(D.L.dst[d][1])}</td><td class="l">${esc(D.L.dst[d][0])}</td><td>${v.a?KG(v.a):dash}</td><td>${KG(v.kg)}</td><td>${D.S[v.ls]}</td></tr>`).join('')}</table></div></div>`}
+
+/* ---------- HEALTH ---------- */
+function ci_(path){const [k,i]=path.split('.');const v=i==null?HC[k]:HC[k][+i];return `<input type="number" step="any" value="${v}" data-p="${path}" id="hc-${path.replace('.','-')}" aria-label="${path}">`}
+function criteriaHTML(){const {a,b}=C,gc=HC.gCut,fc=HC.fCut,bc=HC.bCut;
+  const band=(lab,cuts,key,unit,tail)=>cuts.map((x,i)=>`<tr><td class="l">${lab} ≥ ${ci_(key+'Cut.'+i)}${unit}${i>0?` <span class="muted">and below ${cuts[i-1]}${unit}</span>`:''}</td><td>${ci_(key+'Pts.'+i)}</td></tr>`).join('')+(tail?`<tr><td class="l">${lab} below ${cuts[cuts.length-1]}${unit}</td><td>${ci_(key+'Pts.'+cuts.length)}</td></tr>`:'');
+  return `<div class="card"><h3>Criteria applied</h3><div class="note">Score = Growth + Focus share + SKU breadth points (maximum ${maxScore()}${maxScore()!==100?', shown out of 100':''}). Every retailer who bought in <b>${a}</b> is scored against <b>${b||'no earlier period'}</b>, with the filters above.${D.hasFoc?'':' <b>This file has no Focus column, so Focus share is left out and the score is rescaled to 100.</b>'} Change any number; this browser remembers it.</div>
+   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr));gap:16px 26px">
+    <div><b>1 · Growth %</b><table class="crit"><tr><th class="l">Band</th><th>Points</th></tr>${band('Growth',gc,'g','%',true)}<tr><td class="l">New (nothing bought in the compare period)</td><td>${ci_('gNew')}</td></tr></table></div>
+    <div><b>2 · Focus share %</b><table class="crit"><tr><th class="l">Band</th><th>Points</th></tr>${band('Focus share',fc,'f','%',true)}</table></div>
+    <div><b>3 · SKU breadth</b><table class="crit"><tr><th class="l">Band</th><th>Points</th></tr>${band('SKUs bought',bc,'b','',false)}</table></div>
+    <div><b>Grade</b><table class="crit"><tr><th class="l">Grade</th><th>Minimum score</th></tr>${['A','B','C'].map((g,i)=>`<tr><td class="l"><span class="chip g-${g}">${g} · ${GRADE_TXT[g]}</span></td><td>${ci_('grade.'+i)}</td></tr>`).join('')}<tr><td class="l"><span class="chip g-D">D · At risk</span></td><td class="muted">below ${HC.grade[2]}</td></tr></table>
+     <button class="btn" type="button" id="hcReset" style="margin-top:8px">Reset to default</button></div></div></div>`}
+let HSVIEW=[];
+function renderHealth(m){const L=retList(),{a,b}=C,scored=L.filter(o=>o.h),totV=scored.reduce((s,o)=>s+o.cur,0),G={A:[],B:[],C:[],D:[]};scored.forEach(o=>G[o.h.grade].push(o));
+  let h=`<div class="statusbar">${['','A','B','C','D'].map(g=>{const X=g?G[g]:scored,v=X.reduce((s,o)=>s+o.cur,0);return `<button type="button" class="stat ${ST.hsGrade===g?'on':''}" data-g="${g}" style="min-width:150px"><div class="s">${g?`<span class="chip g-${g}">${g} · ${GRADE_TXT[g]}</span>`:'<b>All scored retailers</b>'}</div><div class="n">${inr(X.length)}</div><div class="s">${totV?inr(v/totV*100,1):0}% of ${a} volume</div></button>`}).join('')}</div>`+criteriaHTML();
+  const mix=()=>({A:0,B:0,C:0,D:0,n:0,s:0}),addM=(M,k,o)=>{let x=M.get(k);if(!x){x=mix();M.set(k,x)}x[o.h.grade]++;x.n++;x.s+=o.h.s},byR=new Map(),byT=new Map();
+  scored.forEach(o=>{addM(byR,o.g,o);addM(byT,o.t,o)});const gcol={A:'var(--good)',B:'var(--s1)',C:'var(--s4)',D:'var(--bad)'};
+  const mrow=(cls,label,x,attr)=>`<tr class="${cls}" ${attr}><td>${label}</td><td>${x.n}</td>${['A','B','C','D'].map(g=>`<td>${x[g]||'<span class="muted">0</span>'}</td>`).join('')}<td style="min-width:120px"><div style="display:flex;height:12px;gap:2px" data-tip="${['A','B','C','D'].map(g=>g+': '+x[g]+' ('+inr(x[g]/x.n*100,0)+'%)').join('<br>')}">${['A','B','C','D'].filter(g=>x[g]).map(g=>`<div style="flex:${x[g]};background:${gcol[g]};border-radius:2px"></div>`).join('')}</div></td><td><b>${inr(x.s/x.n,0)}</b></td></tr>`;
+  let rr='';for(const [g,x] of [...byR].sort((p,q)=>q[1].s/q[1].n-p[1].s/p[1].n)){const op=HSOPEN.has(g);rr+=mrow('l0 click',(op?'▾ ':'▸ ')+esc(D.L.reg[g]),x,`data-hr="${g}"`);
+    if(op)for(const [t,y] of [...byT].filter(([t])=>D.L.ter[t][1]===g).sort((p,q)=>q[1].s/q[1].n-p[1].s/p[1].n))rr+=mrow('l1 click'+(ST.hsTer===t?' sel':''),esc(D.L.ter[t][0]),y,`data-ht="${t}"`)}
+  h+=`<div class="card"><h3>Grade mix by region · ${a}</h3><div class="row" style="margin:0 0 8px"><span class="note" style="margin:0">Sorted by average score. Select a region to see its territories, then a territory to list its retailers below.</span>${xBtns('hs')}</div><div class="legend">${['A','B','C','D'].map(g=>`<span><i style="background:${gcol[g]}"></i>${g} · ${GRADE_TXT[g]}</span>`).join('')}</div>
+   <div class="scroll" style="max-height:440px"><table><tr><th class="l">Region › Territory</th><th>Retailers</th><th>A</th><th>B</th><th>C</th><th>D</th><th class="l">Mix</th><th>Avg score</th></tr>${rr}</table></div></div>`;
+  const base=ST.hsTer>=0?scored.filter(o=>o.t===ST.hsTer):scored,list=(ST.hsGrade?base.filter(o=>o.h.grade===ST.hsGrade):base).slice().sort((x,y)=>y.h.s-x.h.s||y.cur-x.cur);HSVIEW=list;
+  h+=`<div class="card" id="hsCard"><h3>Retailer scorecard · ${a}${ST.hsTer>=0?' · '+esc(D.L.ter[ST.hsTer][0]):''}${ST.hsGrade?' · Grade '+ST.hsGrade:''}</h3>
+   <div class="row"><span class="note" style="margin:0">${inr(list.length)} retailers · kg</span>${ST.hsTer>=0?'<button class="btn" type="button" id="hsAllT">Show all territories</button>':''}<button class="btn" type="button" id="hsExp">Export CSV</button></div>
+   <div class="scroll"  id="hsTbl"><table><tr><th class="l">Retailer</th><th class="l">Territory</th>${b?`<th>${b}</th>`:''}<th>${a}</th><th>Growth</th><th>Pts</th>${D.hasFoc?'<th>Focus %</th><th>Pts</th>':''}<th>SKUs</th><th>Pts</th><th>Score</th><th class="l">Grade</th></tr>
+   ${list.slice(0,MODE==='phone'?200:800).map(o=>`<tr class="click" data-ret="${o.k}"><td>${esc(o.name)} <small class="muted">${esc(o.code)}</small></td><td class="l">${esc(o.tn)}</td>${b?`<td>${o.prev?KG(o.prev):dash}</td>`:''}<td>${KG(o.cur)}</td><td>${grTxt(o.cur,o.prev)}</td><td class="muted">${o.h.gp}</td>${D.hasFoc?`<td>${pctTxt(o.h.fs)}</td><td class="muted">${o.h.fpP}</td>`:''}<td>${o.br}</td><td class="muted">${o.h.bp}</td><td><b>${o.h.s}</b></td><td class="l"><span class="chip g-${o.h.grade}">${o.h.grade} · ${GRADE_TXT[o.h.grade]}</span></td></tr>`).join('')}</table></div></div>`;
+  m.innerHTML=h;
+  m.querySelectorAll('.stat').forEach(s=>s.onclick=()=>{ST.hsGrade=s.dataset.g;render()});
+  m.querySelectorAll('[data-hr]').forEach(t=>t.onclick=()=>{const g=+t.dataset.hr;HSOPEN.has(g)?HSOPEN.delete(g):HSOPEN.add(g);render()});
+  m.querySelectorAll('[data-ht]').forEach(t=>t.onclick=()=>{const v=+t.dataset.ht;ST.hsTer=ST.hsTer===v?-1:v;render();if(ST.hsTer>=0)$('hsCard').scrollIntoView({block:'start'})});
+  m.querySelectorAll('.crit input').forEach(inp=>inp.addEventListener('change',e=>{const [k,i]=e.target.dataset.p.split('.'),v=parseFloat(e.target.value);if(isNaN(v))return;if(i==null)HC[k]=v;else HC[k][+i]=v;saveHC();render()}));
+  $('hcReset').onclick=()=>{HC=JSON.parse(JSON.stringify(HC_DEFAULT));saveHC();render()};if($('hsAllT'))$('hsAllT').onclick=()=>{ST.hsTer=-1;render()};
+  bindX(m,[...byR.keys()]);$('hsExp').onclick=()=>saveFile(`Retailer_Health_${a}_${ST.hsGrade||'all'}.csv`,retCsv(HSVIEW));bindRows($('hsTbl'))}
+
+/* ---------- RETAILER TYPE ---------- */
+const TYPE_NOTE=n=>/DISTRIB/.test(n)?'Retails, and gets stock directly from the company':/^RETAILER$/.test(n)?'Retail only; gets stock from distributors':'';
+function typeStats(L){const M=new Map();for(const o of L){const t=D.RT[o.k][5];let x=M.get(t);if(!x){x={t,a:0,b:0,fa:0,ra:0,rb:0,kept:0,nw:0,lost:0,br:0,A:0,B:0,C:0,D:0,hs:0};M.set(t,x)}
+    x.a+=o.cur;x.b+=o.prev;if(o.cur>0){x.ra++;x.fa+=Math.max(0,o.fa);x.br+=o.br;if(o.prev>0)x.kept++;else x.nw++;if(o.h){x[o.h.grade]++;x.hs+=o.h.s}}if(o.prev>0){x.rb++;if(!(o.cur>0))x.lost++}}
+  return [...M.values()].sort((p,q)=>D.L.cat[p.t].localeCompare(D.L.cat[q.t]))}
+function typeTable(L,click){const {a,b}=C,T=typeStats(L),TA=T.reduce((s,x)=>s+x.a,0),TR=T.reduce((s,x)=>s+x.ra,0);
+  const tot=T.reduce((s,x)=>{for(const k in x)if(k!=='t')s[k]=(s[k]||0)+x[k];return s},{});
+  const row=(cls,lab,x,attr)=>`<tr class="${cls}" ${attr||''}><td>${lab}</td>${b?`<td>${MT(x.b)}</td>`:''}<td>${MT(x.a)}</td><td>${b?grTxt(x.a,x.b):''}</td><td>${TA?inr(x.a/TA*100,1):0}%</td><td>${inr(x.ra)}</td><td>${TR?inr(x.ra/TR*100,1):0}%</td><td>${x.ra?KG(x.a/x.ra):'–'}</td>${b?`<td>${x.rb?inr(x.kept/x.rb*100,0)+'%':'–'}</td><td class="up">${inr(x.nw)}</td><td class="dn">${inr(x.lost)}</td>`:''}${D.hasFoc?`<td>${x.a>0?inr(x.fa/x.a*100,1)+'%':'–'}</td>`:''}<td>${x.ra?inr(x.br/x.ra,1):'–'}</td><td>${x.ra?inr(x.hs/x.ra,0):'–'}</td></tr>`;
+  return `<div style="overflow-x:auto"><table><tr><th class="l">Retailer type</th>${b?`<th>${b} MT</th>`:''}<th>${a} MT</th><th>Growth</th><th>% of volume</th><th>Retailers</th><th>% of retailers</th><th>Avg kg / retailer</th>${b?'<th>Retention</th><th>New</th><th>Lost</th>':''}${D.hasFoc?'<th>Focus %</th>':''}<th>Avg SKUs</th><th>Avg health</th></tr>
+   ${T.map(x=>row(click?'click':'',`<i style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;background:${pcColor(x.t)}"></i>${esc(D.L.cat[x.t])}${TYPE_NOTE(D.L.cat[x.t])?`<br><small class="muted">${TYPE_NOTE(D.L.cat[x.t])}</small>`:''}`,x,click?`data-ty="${x.t}"`:'')).join('')}${T.length>1?row('tot','Total',tot):''}</table></div>`}
+function renderType(m){const L=retList(),{F,fi,ci,a,b}=C,T=typeStats(L),gcol={A:'var(--good)',B:'var(--s1)',C:'var(--s4)',D:'var(--bad)'};
+  const byST=new Map(),byG=new Map();for(const r of F){const t=D.RT[r[5]][5];byST.set(r[0]*100+t,(byST.get(r[0]*100+t)||0)+r[8]);if(SP[r[0]]===fi){for(const gk of TYOPEN.has(r[2])?[r[2],'t'+r[3]]:[r[2]]){let g=byG.get(gk);if(!g){g={tot:0,m:new Map(),rs:new Map()};byG.set(gk,g)}g.tot+=r[8];g.m.set(t,(g.m.get(t)||0)+r[8]);if(r[8]>0){let rs=g.rs.get(t);if(!rs){rs=new Set();g.rs.set(t,rs)}rs.add(r[5])}}}}
+  const types=T.map(x=>x.t),sItems=D.S.map((code,s)=>({label:code,segs:types.map(t=>({v:Math.max(0,byST.get(s*100+t)||0),color:pcColor(t),name:D.L.cat[t]}))}));
+  const regs=[...byG].filter(([k])=>typeof k==='number').sort((p,q)=>q[1].tot-p[1].tot);
+  const tyCells=x=>`<td>${MT(x.tot)}</td>${types.map(t=>`<td>${x.m.get(t)?MT(x.m.get(t)):dash}</td><td>${x.tot>0?inr((x.m.get(t)||0)/x.tot*100,1)+'%':'–'}</td><td>${x.rs.get(t)?inr(x.rs.get(t).size):dash}</td>`).join('')}`;
+  const tyRows=regs.map(([g,x])=>{const op=TYOPEN.has(g);let h=`<tr class="l0 click" data-tyr="${g}"><td>${op?'▾ ':'▸ '}${esc(D.L.reg[g])}</td>${tyCells(x)}</tr>`;
+    if(op)h+=[...byG].filter(([k])=>typeof k==='string'&&D.L.ter[+k.slice(1)][1]===g).sort((p,q)=>q[1].tot-p[1].tot).map(([k,y])=>`<tr class="l1"><td>${esc(D.L.ter[+k.slice(1)][0])}</td>${tyCells(y)}</tr>`).join('');return h}).join('');
+  let h=`<div class="note"><b>Distributor Retailer</b>: retails, and gets stock directly from the company. <b>Retailer</b>: retail only, gets stock from distributors. The type comes from the Category column.</div>
+   <div class="card"><h3>Retailer type compared · ${a}${b?' against '+b:''}</h3><div class="note">Select a type to list its retailers.</div>${typeTable(L,true)}</div>
+   <div class="grid2"><div class="card"><h3>Volume by season and retailer type</h3><div class="note">MT</div><div class="legend">${types.map(t=>`<span><i style="background:${pcColor(t)}"></i>${esc(D.L.cat[t])}</span>`).join('')}</div>${vbars(sItems)}</div>
+    <div class="card"><h3>Health grade mix by retailer type · ${a}</h3><div class="note">Share of scored retailers in each grade</div><div class="legend">${['A','B','C','D'].map(g=>`<span><i style="background:${gcol[g]}"></i>${g} · ${GRADE_TXT[g]}</span>`).join('')}</div>
+     <table><tr><th class="l">Retailer type</th><th>A</th><th>B</th><th>C</th><th>D</th><th class="l">Mix</th></tr>${T.map(x=>{const n=x.A+x.B+x.C+x.D;return `<tr><td>${esc(D.L.cat[x.t])}</td>${['A','B','C','D'].map(g=>`<td>${x[g]}</td>`).join('')}<td style="min-width:140px">${n?`<div style="display:flex;height:12px;gap:2px" data-tip="${['A','B','C','D'].map(g=>g+': '+x[g]+' ('+inr(x[g]/n*100,0)+'%)').join('<br>')}">${['A','B','C','D'].filter(g=>x[g]).map(g=>`<div style="flex:${x[g]};background:${gcol[g]};border-radius:2px"></div>`).join('')}</div>`:''}</td></tr>`}).join('')}</table></div></div>
+   <div class="card"><h3>Retailer type by region · ${a}</h3><div class="row" style="margin:0 0 8px"><span class="note" style="margin:0">MT and number of retailers. Shows where volume comes direct from the company and where it moves through distributors. Select a region to see its territories.</span>${xBtns('ty')}</div><div class="scroll" style="max-height:420px"><table><tr><th class="l">Region › Territory</th><th>Total MT</th>${types.map(t=>`<th>${esc(D.L.cat[t])} MT</th><th>% of volume</th><th>Retailers</th>`).join('')}</tr>
+     ${tyRows}</table></div></div>
+   <div class="card"><h3>Retailers by volume slab · ${a}</h3><div class="note">Each retailer is placed by total kg in the period. Slabs differ by retailer type.</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:0 20px">${slabs(L,true)}</div></div>
+   <div class="grid2">${T.map(x=>{const top=L.filter(o=>o.cur>0&&D.RT[o.k][5]===x.t).sort((p,q)=>q.cur-p.cur).slice(0,10).map(o=>({label:o.name,value:o.cur,txt:KG(o.cur),click:o.k,tip:`<b>${esc(o.name)}</b><br>${esc(o.tn)} · ${esc(o.code)}<br>${KG(o.cur)} kg`}));
+     return `<div class="card"><h3>Top 10 · ${esc(D.L.cat[x.t])} · ${a}</h3><div class="note">kg. Select one to open Retailer 360.</div>${hbars(top)}</div>`}).join('')}</div>`;
+  m.innerHTML=h;m.querySelectorAll('[data-ret]').forEach(el=>el.onclick=()=>open360(+el.dataset.ret));
+  m.querySelectorAll('tr[data-ty]').forEach(tr=>tr.onclick=()=>{ST.cat=+tr.dataset.ty;ST.rStatus='';fillFilters();setTab('rt');scrollTo(0,0)});
+  m.querySelectorAll('tr[data-tyr]').forEach(tr=>tr.onclick=()=>{const g=+tr.dataset.tyr;TYOPEN.has(g)?TYOPEN.delete(g):TYOPEN.add(g);render()});bindX(m,regs.map(x=>x[0]))}
+
+function bindX(m,regIds){m.querySelectorAll('[data-xall]').forEach(bt=>bt.onclick=()=>{const k=bt.dataset.xall,o=bt.dataset.o==='1',S=k==='ty'?TYOPEN:k==='hs'?HSOPEN:OPEN;
+  if(k==='geo'){[...OPEN].forEach(x=>{if(x.split('¦').length===2)OPEN.delete(x)});if(o)regIds.forEach(x=>OPEN.add(x));else OPEN.clear()}else{S.clear();if(o)regIds.forEach(x=>S.add(x))}render()})}
+/* ---------- PRODUCTS ---------- */
+function renderProducts(m){const {F,fi,ci,a,b}=C;let TA=0;
+  const grp=keyFn=>{const M=new Map();for(const r of F){const p=SP[r[0]];if(p!==fi&&p!==ci)continue;const k=keyFn(r);let o=M.get(k);if(!o){o={k,a:0,b:0,ra:new Set(),rb:new Set()};M.set(k,o)}if(p===fi){o.a+=r[8];if(r[8]>0)o.ra.add(r[5])}else{o.b+=r[8];if(r[8]>0)o.rb.add(r[5])}}return [...M.values()].sort((x,y)=>y.a-x.a||y.b-x.b)};
+  for(const r of F)if(SP[r[0]]===fi)TA+=r[8];
+  const tbl=(rows,head,lab)=>`<div class="scroll"><table><tr>${head}${b?`<th>${b}</th>`:''}<th>${a}</th><th>Growth</th><th>Share</th><th>Retailers ${a}</th>${b?`<th>Retailers ${b}</th>`:''}<th>Avg kg / retailer</th></tr>
+    ${rows.map(o=>`<tr>${lab(o)}${b?`<td>${o.b?MT(o.b):dash}</td>`:''}<td>${o.a?MT(o.a):dash}</td><td>${b?grTxt(o.a,o.b):''}</td><td>${TA?inr(o.a/TA*100,1):0}%</td><td>${inr(o.ra.size)}</td>${b?`<td>${inr(o.rb.size)}</td>`:''}<td>${o.ra.size?KG(o.a/o.ra.size):'–'}</td></tr>`).join('')}</table></div>`;
+  m.innerHTML=(D.hasFoc?`<div class="card"><h3>Focus against Non Focus</h3><div class="note">MT, from the Product Category2 column</div>${tbl(grp(r=>D.PR[r[6]][2]||'(BLANK)'),'<th class="l">Group</th>',o=>`<td>${esc(o.k)}</td>`)}</div>`:'')
+   +`<div class="card"><h3>Product category</h3><div class="note">MT. Retailer counts show reach: how many retailers bought it.</div>${tbl(grp(r=>D.PR[r[6]][1]),'<th class="l">Category</th>',o=>`<td>${esc(D.L.pc[o.k])}</td>`)}</div>
+   <div class="card"><h3>SKU performance</h3><div class="note">MT, sorted by ${a}</div>${tbl(grp(r=>r[6]),'<th class="l">SKU</th><th class="l">Category</th>',o=>`<td>${esc(D.PR[o.k][0])}${fTag(o.k)}</td><td class="l">${esc(D.L.pc[D.PR[o.k][1]])}</td>`)}</div>`}
+
+/* ---------- OPPORTUNITIES ---------- */
+function renderOpp(m){const L=retList(),{a,b,F,fi}=C;
+  const tf=new Map();L.forEach(o=>{if(o.cur<=0)return;let x=tf.get(o.t);if(!x){x={n:0,f:0};tf.set(o.t,x)}x.n++;if(o.fa>0)x.f++});
+  const tp=new Map();for(const r of F){if(SP[r[0]]!==fi||!isFoc(r[6]))continue;let x=tp.get(r[3]);if(!x){x=new Map();tp.set(r[3],x)}x.set(r[6],(x.get(r[6])||0)+r[8])}
+  const topF=t=>{const x=tp.get(t);if(!x)return'';const e=[...x].sort((p,q)=>q[1]-p[1])[0];return D.PR[e[0]][0]};
+  const sec=(id,title,note,list,cols,cells)=>`<div class="card"><h3>${title} <span class="chip c-stab">${inr(list.length)}</span></h3><div class="note">${note}</div>${list.length?`<div class="row"><button class="btn" type="button" data-x="${id}">Export CSV</button></div><div class="scroll" style="max-height:380px" data-tb="1"><table><tr><th class="l">Retailer</th><th class="l">Territory / District</th>${cols}<th class="l">Contact</th></tr>
+    ${list.slice(0,100).map(o=>`<tr class="click" data-ret="${o.k}"><td>${esc(o.name)}${regTag(o.reg)}<br><small class="muted">${esc(o.owner?o.owner+' · ':'')}${esc(o.code)}</small></td><td class="l">${esc(o.tn)}<br><small class="muted">${esc(o.dn)}</small></td>${cells(o)}<td class="l">${callCell(o.mob)}</td></tr>`).join('')}</table></div>${list.length>100?'<div class="note" style="margin-top:6px">First 100 shown. Export for the full list.</div>':''}`:'<div class="muted">None for these filters.</div>'}</div>`;
+  const X={};
+  X.gap=D.hasFoc?L.filter(o=>o.cur>0&&o.fa<=0&&tf.get(o.t)&&tf.get(o.t).f>0).sort((x,y)=>y.cur-x.cur):[];
+  X.lost=L.filter(o=>o.st==='lost').sort((x,y)=>y.prev-x.prev);
+  X.decl=L.filter(o=>o.st==='decl').sort((x,y)=>(y.prev-y.cur)-(x.prev-x.cur));
+  X.reg=D.hasSt?L.filter(o=>o.cur>0&&o.reg&&o.reg!=='ACTIVE').sort((x,y)=>y.cur-x.cur):[];
+  m.innerHTML=`<div class="note">Follow-up lists for ${a}${b?' against '+b:''}, built from the filters above. Largest first.</div>`
+   +(D.hasFoc?sec('gap','Buying, but no Focus SKU',`Retailers who bought in ${a} without any Focus SKU, in territories where other retailers do carry one.`,X.gap,`<th>${a} kg</th><th>SKUs</th><th>Territory retailers with Focus</th><th class="l">Top Focus SKU in territory</th>`,o=>{const x=tf.get(o.t);return `<td>${KG(o.cur)}</td><td>${o.br}</td><td>${inr(x.f/x.n*100,0)}%</td><td class="l">${esc(topF(o.t))}</td>`}):'')
+   +(b?sec('lost','Lost retailers to win back',`Bought in ${b}, nothing in ${a}.`,X.lost,`<th>${b} kg</th><th>SKUs in ${b}</th>`,o=>`<td>${KG(o.prev)}</td><td>${o.brp}</td>`):'')
+   +(b?sec('decl','Declining retailers',`Down 10% or more against ${b}, sorted by kg lost.`,X.decl,`<th>${b} kg</th><th>${a} kg</th><th>Change</th><th>kg lost</th>`,o=>`<td>${KG(o.prev)}</td><td>${KG(o.cur)}</td><td>${grTxt(o.cur,o.prev)}</td><td class="dn">−${KG(o.prev-o.cur)}</td>`):'')
+   +(D.hasSt?sec('reg','Registration not ACTIVE, still buying',`Retailers with volume in ${a} whose registration status is not ACTIVE.`,X.reg,`<th class="l">Registration</th><th>${a} kg</th>`,o=>`<td class="l">${esc(o.reg)}</td><td>${KG(o.cur)}</td>`):'');
+  m.querySelectorAll('[data-x]').forEach(bt=>bt.onclick=()=>saveFile(`Opportunity_${bt.dataset.x}_${a}.csv`,retCsv(X[bt.dataset.x])));
+  m.querySelectorAll('[data-tb]').forEach(bindRows)}
+
+/* ===================== START ===================== */
+setMode(MODE,false);
+addEventListener('orientationchange',()=>setTimeout(()=>{if(D)render()},300));
+idbGet().then(v=>{if(v&&v.R&&v.S&&!D){if(v.v!==2){v=reformat(v);idbSet(v)}applyData(v)}});
+</script>
+</body>
+</html>
