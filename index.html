@@ -2,6 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>/* Rasi shared theme: Auto / Light / Dark — one setting for all Rasi dashboards */
+(function(){var K='rasi_theme',p=null;try{p=localStorage.getItem(K);if(!p){var l=localStorage.getItem('r360_theme')||localStorage.getItem('rtc_theme');if(l)p=String(l).replace(/"/g,'')}}catch(e){}
+if(p!=='light'&&p!=='dark')p='auto';var mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
+function ap(){var d=p==='dark'||(p==='auto'&&!!(mq&&mq.matches)),h=document.documentElement;h.setAttribute('data-theme',d?'dark':'light');h.setAttribute('data-theme-pref',p);
+var mt=document.querySelector('meta[name="theme-color"]');if(mt){if(!mt.getAttribute('data-light'))mt.setAttribute('data-light',mt.content);mt.content=d?'#0c120e':mt.getAttribute('data-light')}
+var b=document.getElementById('rasiThemeBtn');if(b){b.textContent={auto:'🌓',light:'☀️',dark:'🌙'}[p];b.title='Theme: '+{auto:'Auto (follows device)',light:'Light',dark:'Dark'}[p]+' · tap to change';b.setAttribute('aria-label',b.title)}}
+function fire(){try{window.dispatchEvent(new Event('rasi-theme'))}catch(e){}}
+window.rasiTheme={cycle:function(){p={auto:'light',light:'dark',dark:'auto'}[p];try{localStorage.setItem(K,p)}catch(e){}ap();fire()},apply:ap,pref:function(){return p},isDark:function(){return document.documentElement.getAttribute('data-theme')==='dark'}};
+ap();if(mq){var f=function(){if(p==='auto'){ap();fire()}};mq.addEventListener?mq.addEventListener('change',f):mq.addListener&&mq.addListener(f)}
+document.addEventListener('DOMContentLoaded',ap);
+window.addEventListener('storage',function(e){if(e.key===K){p=e.newValue||'auto';ap();fire()}})})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1f6f3a">
 <title>Rasi Dashboards</title>
@@ -15,11 +27,10 @@
     --shadow-hi:0 2px 4px rgba(16,24,16,.05),0 16px 36px rgba(16,24,16,.12);
     --r:20px;
   }
-  @media (prefers-color-scheme: dark){
-    :root{ --bg:#0d110d; --card:#161c16; --ink:#e8eee5; --muted:#9aa594; --line:#252e24;
+  :root[data-theme=dark]{ color-scheme:dark;
+    --bg:#0d110d; --card:#161c16; --ink:#e8eee5; --muted:#9aa594; --line:#252e24;
       --brand:#5cbf7a; --brand2:#3f9d5e; --brand-soft:#1a2b1e;
       --shadow:0 1px 2px rgba(0,0,0,.35); --shadow-hi:0 10px 30px rgba(0,0,0,.5); }
-  }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0}
   body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);
@@ -80,14 +91,12 @@
   .c-pog   {--accent:#7c3aed;--accent-soft:#f0e9fd}
   .c-disp  {--accent:#0f766e;--accent-soft:#e1f3f1}
   .c-rew   {--accent:#b45309;--accent-soft:#fcf1dc}
-  @media (prefers-color-scheme: dark){
-    .c-bu    {--accent:#5cbf7a;--accent-soft:#1a2b1e}
-    .c-target{--accent:#fb923c;--accent-soft:#2e1d12}
-    .c-cust  {--accent:#7aa5ff;--accent-soft:#16203a}
-    .c-pog   {--accent:#b08cff;--accent-soft:#241a38}
-    .c-disp  {--accent:#4fd1c5;--accent-soft:#12292a}
-    .c-rew   {--accent:#f2b45a;--accent-soft:#2d2313}
-  }
+  :root[data-theme=dark] .c-bu    {--accent:#5cbf7a;--accent-soft:#1a2b1e}
+  :root[data-theme=dark] .c-target{--accent:#fb923c;--accent-soft:#2e1d12}
+  :root[data-theme=dark] .c-cust  {--accent:#7aa5ff;--accent-soft:#16203a}
+  :root[data-theme=dark] .c-pog   {--accent:#b08cff;--accent-soft:#241a38}
+  :root[data-theme=dark] .c-disp  {--accent:#4fd1c5;--accent-soft:#12292a}
+  :root[data-theme=dark] .c-rew   {--accent:#f2b45a;--accent-soft:#2d2313}
 
   /* Note */
   .note{margin-top:18px;display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px dashed var(--line);
@@ -124,11 +133,21 @@
     .card{min-height:220px}
   }
   @media (prefers-reduced-motion: reduce){ .card,.go{transition:none} }
+
+/* ===== Rasi theme button ===== */
+.rasi-thbtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.12);color:#fff;font-size:16px;line-height:1;cursor:pointer;flex:none;font-family:inherit}
+.rasi-thbtn:hover{background:rgba(255,255,255,.24)}
+body.touch .rasi-thbtn,body.m-phone .rasi-thbtn,body.m-tab .rasi-thbtn,body.m-ipad .rasi-thbtn,body.dev-phone .rasi-thbtn,body.dev-ipad .rasi-thbtn{width:42px;height:42px;font-size:18px}
+
+  .hero-in .rasi-thbtn{position:absolute;top:0;right:0;width:42px;height:42px;font-size:18px}
+  :root[data-theme=dark] .hero{background:radial-gradient(900px 320px at 85% -10%,rgba(255,255,255,.08),transparent 60%),linear-gradient(135deg,#071a0e 0%,#0e3420 45%,#17502e 100%)}
+
 </style>
 </head>
 <body>
   <header class="hero">
     <div class="hero-in">
+      <button type="button" class="rasi-thbtn" id="rasiThemeBtn" onclick="rasiTheme.cycle()" title="Theme" aria-label="Theme">🌓</button>
       <div class="brand">
         <div class="logo">R</div>
         <div>

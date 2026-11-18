@@ -2,7 +2,20 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>/* Rasi shared theme: Auto / Light / Dark — one setting for all Rasi dashboards */
+(function(){var K='rasi_theme',p=null;try{p=localStorage.getItem(K);if(!p){var l=localStorage.getItem('r360_theme')||localStorage.getItem('rtc_theme');if(l)p=String(l).replace(/"/g,'')}}catch(e){}
+if(p!=='light'&&p!=='dark')p='auto';var mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
+function ap(){var d=p==='dark'||(p==='auto'&&!!(mq&&mq.matches)),h=document.documentElement;h.setAttribute('data-theme',d?'dark':'light');h.setAttribute('data-theme-pref',p);
+var mt=document.querySelector('meta[name="theme-color"]');if(mt){if(!mt.getAttribute('data-light'))mt.setAttribute('data-light',mt.content);mt.content=d?'#0c120e':mt.getAttribute('data-light')}
+var b=document.getElementById('rasiThemeBtn');if(b){b.textContent={auto:'🌓',light:'☀️',dark:'🌙'}[p];b.title='Theme: '+{auto:'Auto (follows device)',light:'Light',dark:'Dark'}[p]+' · tap to change';b.setAttribute('aria-label',b.title)}}
+function fire(){try{window.dispatchEvent(new Event('rasi-theme'))}catch(e){}}
+window.rasiTheme={cycle:function(){p={auto:'light',light:'dark',dark:'auto'}[p];try{localStorage.setItem(K,p)}catch(e){}ap();fire()},apply:ap,pref:function(){return p},isDark:function(){return document.documentElement.getAttribute('data-theme')==='dark'}};
+ap();if(mq){var f=function(){if(p==='auto'){ap();fire()}};mq.addEventListener?mq.addEventListener('change',f):mq.addListener&&mq.addListener(f)}
+document.addEventListener('DOMContentLoaded',ap);
+window.addEventListener('storage',function(e){if(e.key===K){p=e.newValue||'auto';ap();fire()}})})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f6b3a">
 <title>Rasi Dispatch Dashboard – STO</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
@@ -184,6 +197,51 @@
   .ic .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
   .ic .top b{font-size:14px}
   .ic .sub2{font-size:12.5px;color:var(--muted);margin-bottom:8px}
+
+/* ===== Rasi theme button ===== */
+.rasi-thbtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.12);color:#fff;font-size:16px;line-height:1;cursor:pointer;flex:none;font-family:inherit}
+.rasi-thbtn:hover{background:rgba(255,255,255,.24)}
+body.touch .rasi-thbtn,body.m-phone .rasi-thbtn,body.m-tab .rasi-thbtn,body.m-ipad .rasi-thbtn,body.dev-phone .rasi-thbtn,body.dev-ipad .rasi-thbtn{width:42px;height:42px;font-size:18px}
+
+/* ===== Dark theme ===== */
+:root[data-theme=dark]{--bg:#0f1411;--card:#161d19;--ink:#e6ece8;--muted:#8d9a92;--line:#2a352e;--brand:#6fd59c;--brand2:#2f8f55;--brandSoft:#17352a;--gold:#e5b454;--plan:#7fa6d6;--stock:#b493d6;--indent:#6fd59c;--disp:#4fd1c5;--pend:#ef7a8a;--tot:#8fb3c4;color-scheme:dark}
+:root[data-theme=dark] header{background:linear-gradient(120deg,#0a2214,#123d24 55%,#1b5a33);box-shadow:0 2px 12px rgba(0,0,0,.45)}
+:root[data-theme=dark] .btn-w{background:#e8f0ea;color:#123d24}
+:root[data-theme=dark] .seg button.on{background:#e8f0ea;color:#123d24}
+:root[data-theme=dark] .warn{background:#3a2f14;color:#ecc16a}
+:root[data-theme=dark] .bar,:root[data-theme=dark] .pct .mini{background:#26302a}
+:root[data-theme=dark] .toolbar{background:#131a16}
+:root[data-theme=dark] .tab.on{border-color:#2f4a37}
+:root[data-theme=dark] select,:root[data-theme=dark] input[type=search],:root[data-theme=dark] .ms-btn{background:#1b231f;color:var(--ink);border-color:#34403a}
+:root[data-theme=dark] .ms-pop{background:#1a221d;border-color:var(--line);box-shadow:0 6px 20px rgba(0,0,0,.55)}
+:root[data-theme=dark] .ms-pop label:hover{background:#222d27}
+:root[data-theme=dark] .btn-s{background:#1d2621;color:var(--ink);border-color:var(--line)}
+:root[data-theme=dark] th,:root[data-theme=dark] th.grp-plant{background:#123d24}
+:root[data-theme=dark] th.grp-plan{background:#22344d}
+:root[data-theme=dark] td.blank{background:#131a16}
+:root[data-theme=dark] tr.cl-start td{border-top-color:#34403a}
+:root[data-theme=dark] tbody tr:hover td{background:#1c2520}
+:root[data-theme=dark] tr.regtot td{background:#1a2636;color:#9cc0ec;border-bottom-color:#26364d}
+:root[data-theme=dark] .tag{background:#3a2f14;color:#ecc16a}
+:root[data-theme=dark] tfoot td{background:#1a2b20;border-top-color:#2f4a37}
+:root[data-theme=dark] .drop{background:#161d19;border-color:#2f4a37}
+:root[data-theme=dark] .modal{background:#161d19;color:var(--ink)}
+:root[data-theme=dark] .modal-bg{background:rgba(0,0,0,.6)}
+:root[data-theme=dark] .x{background:#222b26;color:var(--ink)}
+:root[data-theme=dark] .note{background:#131a16}
+:root[data-theme=dark] body.m-phone .tabs{background:#1a221d}
+:root[data-theme=dark] body.m-phone .filt-toggle .btn{background:#1a221d;color:var(--ink)}
+:root[data-theme=dark] .card{background:#1a221d}
+:root[data-theme=dark] .card .ch{background:#1a2430}
+:root[data-theme=dark] .card .reg{color:#9cc0ec}
+:root[data-theme=dark] .q4 div,:root[data-theme=dark] .q3 div{background:#202924}
+:root[data-theme=dark] .card .pl.tot{background:#1a2636}
+:root[data-theme=dark] .card .pl.tot .plh{color:#9cc0ec}
+:root[data-theme=dark] .card .pl.tot .q4 div{background:#161d19}
+:root[data-theme=dark] .card.grand{border-color:#2f4a37}
+:root[data-theme=dark] .card.grand .ch{background:#1a2b20}
+:root[data-theme=dark] [style*="color:#aab"]{color:#6d7a72 !important}
+:root[data-theme=dark] [style*="color:#888"]{color:#8d9a92 !important}
 </style>
 </head>
 <body>
@@ -195,6 +253,7 @@
   </div>
   <div class="spacer"></div>
   <div class="hdr-row">
+    <button type="button" class="rasi-thbtn" id="rasiThemeBtn" onclick="rasiTheme.cycle()" title="Theme" aria-label="Theme">🌓</button>
     <div class="seg dev" id="devSeg" title="Layout">
       <button data-d="pc">🖥<span class="lbl">PC</span></button><button data-d="phone">📱<span class="lbl">Smartphone</span></button><button data-d="ipad">📲<span class="lbl">iPad</span></button>
     </div>

@@ -2,6 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>/* Rasi shared theme: Auto / Light / Dark — one setting for all Rasi dashboards */
+(function(){var K='rasi_theme',p=null;try{p=localStorage.getItem(K);if(!p){var l=localStorage.getItem('r360_theme')||localStorage.getItem('rtc_theme');if(l)p=String(l).replace(/"/g,'')}}catch(e){}
+if(p!=='light'&&p!=='dark')p='auto';var mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
+function ap(){var d=p==='dark'||(p==='auto'&&!!(mq&&mq.matches)),h=document.documentElement;h.setAttribute('data-theme',d?'dark':'light');h.setAttribute('data-theme-pref',p);
+var mt=document.querySelector('meta[name="theme-color"]');if(mt){if(!mt.getAttribute('data-light'))mt.setAttribute('data-light',mt.content);mt.content=d?'#0c120e':mt.getAttribute('data-light')}
+var b=document.getElementById('rasiThemeBtn');if(b){b.textContent={auto:'🌓',light:'☀️',dark:'🌙'}[p];b.title='Theme: '+{auto:'Auto (follows device)',light:'Light',dark:'Dark'}[p]+' · tap to change';b.setAttribute('aria-label',b.title)}}
+function fire(){try{window.dispatchEvent(new Event('rasi-theme'))}catch(e){}}
+window.rasiTheme={cycle:function(){p={auto:'light',light:'dark',dark:'auto'}[p];try{localStorage.setItem(K,p)}catch(e){}ap();fire()},apply:ap,pref:function(){return p},isDark:function(){return document.documentElement.getAttribute('data-theme')==='dark'}};
+ap();if(mq){var f=function(){if(p==='auto'){ap();fire()}};mq.addEventListener?mq.addEventListener('change',f):mq.addListener&&mq.addListener(f)}
+document.addEventListener('DOMContentLoaded',ap);
+window.addEventListener('storage',function(e){if(e.key===K){p=e.newValue||'auto';ap();fire()}})})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#123d24">
 <meta name="mobile-web-app-capable" content="yes">
@@ -186,6 +198,103 @@ body.m-phone .legend{gap:10px}
 .spin{display:inline-block;width:12px;height:12px;border:2px solid #cfe3d5;border-top-color:#1f6b3a;border-radius:50%;animation:sp 0.8s linear infinite;vertical-align:-2px}
 @keyframes sp{to{transform:rotate(360deg)}}
 .linkbtn{background:none;border:0;color:#1f5fae;cursor:pointer;font-size:12px;padding:0}
+
+/* ===== Rasi theme button ===== */
+.rasi-thbtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.12);color:#fff;font-size:16px;line-height:1;cursor:pointer;flex:none;font-family:inherit}
+.rasi-thbtn:hover{background:rgba(255,255,255,.24)}
+body.touch .rasi-thbtn,body.m-phone .rasi-thbtn,body.m-tab .rasi-thbtn,body.m-ipad .rasi-thbtn,body.dev-phone .rasi-thbtn,body.dev-ipad .rasi-thbtn{width:42px;height:42px;font-size:18px}
+
+/* ===== Dark theme ===== */
+:root[data-theme=dark]{--bg:#0f1411;--surface:#161d19;--line:#2b352f;--line2:#222b26;--text:#e6ece8;--text2:#aeb9b2;--muted:#7f8b84;--s1:#4a90e8;--s2:#f07a48;--s3:#2cc28c;--s4:#f0b020;--good:#5fc58f;--goodbg:#17352a;--warn:#e5b454;--warnbg:#3a2f14;--bad:#ef8a76;--badbg:#3d1f1b;--info:#7fb2ee;--infobg:#1a2c44;--neutralbg:#28322d;--accent:#6cc79b;--brand:#7fd3a0;--brand2:#2f8f55;color-scheme:dark}
+:root[data-theme=dark] body{background:var(--bg)}
+:root[data-theme=dark] header{background:linear-gradient(115deg,#07170e 0%,#0e3420 50%,#16502e 100%);box-shadow:0 2px 14px rgba(0,0,0,.4)}
+:root[data-theme=dark] .btn{background:#1d2621;color:var(--text);border-color:var(--line)}
+:root[data-theme=dark] .btn:hover{border-color:#4a564f}
+:root[data-theme=dark] .btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
+:root[data-theme=dark] select,:root[data-theme=dark] input[type=search],:root[data-theme=dark] .crit input,:root[data-theme=dark] .tggrid .crit input,:root[data-theme=dark] #tgCrit .note input{background:#1b231f;color:var(--text);border-color:#34403a}
+:root[data-theme=dark] .seg{border-color:var(--line)}
+:root[data-theme=dark] .seg button{background:#1b231f;color:var(--text2)}
+:root[data-theme=dark] .seg button.on{background:#2f8f55;color:#fff}
+:root[data-theme=dark] #filters{background:#131a16;box-shadow:0 1px 0 var(--line)}
+:root[data-theme=dark] nav button{background:#1a221d;border-color:var(--line);color:var(--text2)}
+:root[data-theme=dark] nav button:hover{background:#212b25}
+:root[data-theme=dark] nav button.on{background:var(--surface);color:#8fe0ad}
+:root[data-theme=dark] main{background:var(--surface);border-color:var(--line);box-shadow:none}
+:root[data-theme=dark] .tile,:root[data-theme=dark] .card,:root[data-theme=dark] .stat,:root[data-theme=dark] .yrc{background:#1a221d;border-color:var(--line);box-shadow:none}
+:root[data-theme=dark] .card:hover,:root[data-theme=dark] .tile:hover{box-shadow:0 4px 14px rgba(0,0,0,.35)}
+:root[data-theme=dark] .card h3,:root[data-theme=dark] .tile .v{color:var(--text)}
+:root[data-theme=dark] .tile .k{color:var(--text2)}
+:root[data-theme=dark] th{background:#1f2823;color:var(--text2);border-bottom-color:var(--line)}
+:root[data-theme=dark] table tr:nth-child(even) td{background-color:#18201b}
+:root[data-theme=dark] tr.zone td{background:#1e2722}
+:root[data-theme=dark] tr.click:hover td{background:#1f2b24 !important}
+:root[data-theme=dark] tr.sel td{background:#1a2c44 !important}
+:root[data-theme=dark] tr.tot td{background:#1c2a21 !important;color:var(--text)}
+:root[data-theme=dark] .chip{border-color:rgba(255,255,255,.06)}
+:root[data-theme=dark] .c-react{background:#2a2545;color:#b3a5f2}
+:root[data-theme=dark] .ftag{background:#1d3324;color:#8fe0ad}
+:root[data-theme=dark] .g-A{background:#17352a;color:#6fd59c}
+:root[data-theme=dark] .g-B{background:#1a2c44;color:#8bbcf3}
+:root[data-theme=dark] .g-C{background:#3a2f14;color:#ecc16a}
+:root[data-theme=dark] .g-D{background:#3d1f1b;color:#f29a88}
+:root[data-theme=dark] .drop{background:#161d19;border-color:#3a463f}
+:root[data-theme=dark] .pngbtn,:root[data-theme=dark] .shotview{background:#1d2621;color:var(--text2);border-color:var(--line)}
+:root[data-theme=dark] .pngbtn:hover{border-color:#6fd59c;color:#6fd59c}
+:root[data-theme=dark] #shareMenu{background:#1a221d;border-color:var(--line);box-shadow:0 8px 28px rgba(0,0,0,.6)}
+:root[data-theme=dark] #shareMenu button{color:var(--text)}
+:root[data-theme=dark] #shareMenu button:hover{background:#222d27}
+:root[data-theme=dark] #guide .box{background:#161d19;color:var(--text)}
+:root[data-theme=dark] #status{background:#131a16}
+:root[data-theme=dark] .pbar{background:#26302a}
+:root[data-theme=dark] .info{background:#1a2c44;color:#8bbcf3}
+:root[data-theme=dark] #seasonWarn{border-color:#5a4720}
+:root[data-theme=dark] #seasonWarn b{color:#f3cf7e}
+:root[data-theme=dark] .crumbs button{background:#1b2a20;border-color:#2f4a37;color:#8fe0ad}
+:root[data-theme=dark] .crumbs button:hover{background:#21352a}
+:root[data-theme=dark] .crumbs b{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--text);-webkit-text-fill-color:var(--text)}
+:root[data-theme=dark] table.cmp th.chd{background:#1f2823}
+:root[data-theme=dark] table.cmp th.chd:hover{background:#26322b}
+:root[data-theme=dark] table.cmp td.cl{background:#1a221d}
+:root[data-theme=dark] table.cmp tr.csec td{background:#123d24;color:#e6ece8}
+:root[data-theme=dark] table.cmp tr.csec td:first-child{background:#123d24}
+:root[data-theme=dark] table.cmp .ctot{background:#1c2520}
+:root[data-theme=dark] table.cmp td.cbest,:root[data-theme=dark] .cbest{background:#17352a}
+:root[data-theme=dark] table.cmp td.cworst,:root[data-theme=dark] .cworst{background:#3d1f1b}
+:root[data-theme=dark] table.cmp th.cy{background:#1b2c21}
+:root[data-theme=dark] table.cmp td.cy{background:#16211a}
+:root[data-theme=dark] td.gd,:root[data-theme=dark] span.gd,:root[data-theme=dark] .gd{background:#17352a !important}
+:root[data-theme=dark] td.bd,:root[data-theme=dark] span.bd,:root[data-theme=dark] .bd{background:#3d1f1b !important}
+:root[data-theme=dark] .cbar{background:#26302a}
+:root[data-theme=dark] .cmark{color:#6fd59c}
+:root[data-theme=dark] table.rv tr.grp th{background:#202924;border-left-color:#161d19}
+:root[data-theme=dark] table.rv tr.grp th.g-business{background:#1a2636}
+:root[data-theme=dark] table.rv tr.grp th.g-quality{background:#2d2619}
+:root[data-theme=dark] table.rv tr.grp th.g-customers{background:#1a2b20}
+:root[data-theme=dark] table.rv tr.grp th.g-health{background:#251f33}
+:root[data-theme=dark] table.rv tr.grp th.g-grade{background:#2e2715}
+:root[data-theme=dark] .drill{color:#7fd3a0}
+:root[data-theme=dark] .yrc.cur{border-color:#2f8f55;box-shadow:0 0 0 2px #1d3a27}
+:root[data-theme=dark] body.touch .scroll td:first-child{background:#1a221d}
+:root[data-theme=dark] body.touch .scroll th:first-child{background:#1f2823}
+:root[data-theme=dark] body.touch tr.zone td:first-child{background:#1e2722}
+:root[data-theme=dark] body.m-phone #fltBtn{background:#1a221d;color:var(--text)}
+:root[data-theme=dark] .linkbtn{color:#8bbcf3}
+:root[data-theme=dark] .spin{border-color:#2d4a37;border-top-color:#6fd59c}
+:root[data-theme=dark] .empty h2{color:var(--text)}
+:root[data-theme=dark] svg text[fill="#52514e"]{fill:#aeb9b2}
+:root[data-theme=dark] svg text[fill="#8a8984"]{fill:#86938b}
+:root[data-theme=dark] svg [fill="#0b0b0b"]{fill:#e6ece8}
+:root[data-theme=dark] svg line[stroke="#eceae4"]{stroke:#2b352f}
+:root[data-theme=dark] svg [stroke="#b9b7ae"]{stroke:#4a564f}
+:root[data-theme=dark] svg [stroke="#8a8984"]{stroke:#5d6862}
+:root[data-theme=dark] svg rect[fill="#e3f3e8"]{fill:#17352a}
+:root[data-theme=dark] svg rect[fill="#fbe4e2"]{fill:#3d1f1b}
+:root[data-theme=dark] svg [stroke="#fff"]{stroke:#161d19}
+:root[data-theme=dark] [style*="background:#f1f0eb"]{background:#26302a !important}
+:root[data-theme=dark] [style*="background:#d6d4cd"]{background:#4a544e !important}
+:root[data-theme=dark] [style*="background:#fff7e0"]{background:#3a2f14 !important}
+
+:root[data-theme=dark] .btn.primary{background:#e8f0ea;color:#123d24;border-color:#e8f0ea}
 </style>
 </head>
 <body>
@@ -199,6 +308,7 @@ body.m-phone .legend{gap:10px}
   <input type="file" id="file" accept=".csv,.xlsx,.xls,.xlsb" multiple hidden>
   <button class="btn primary" id="loadBtn" onclick="document.getElementById('file').click()" title="Select one or more CSV files (Ctrl / Shift + click to pick several). Files are added to what is already loaded.">📂 Load CSV<span class="pc-only"> File(s)</span></button>
   <button class="btn ghost" onclick="openGuide()" title="How each measure is calculated and where it is shown">❓<span class="pc-only"> Guide</span></button>
+  <button type="button" class="rasi-thbtn" id="rasiThemeBtn" onclick="rasiTheme.cycle()" title="Theme" aria-label="Theme">🌓</button>
   <div class="modesw" id="modeSw" title="Layout: PC, Smartphone (Pixel) or iPad"><button data-mode="pc">🖥 PC</button><button data-mode="phone">📱 Phone</button><button data-mode="tab">iPad</button></div>
   <button class="btn ghost" id="clearBtn" onclick="clearData()" style="display:none" title="Clear loaded data">🗑<span class="pc-only"> Clear</span></button>
 </header>
@@ -987,6 +1097,12 @@ function snapClone(el,rowLimit){
 }
 const snapHead = title => `<div class="snaphead"><div><div class="t">Rasi Customer 360 · ${esc(title)}</div><div class="s">${esc(filtText())}</div></div><div class="s">${stamp()}</div></div>`;
 async function snapBlob(el,title,rowLimit){
+  const _rt=document.documentElement.getAttribute('data-theme'); let _ov=null;
+  if(_rt==='dark'){ _ov=document.createElement('div'); _ov.style.cssText='position:fixed;inset:0;z-index:99999;background:#0f1411;color:#e6ece8;display:flex;align-items:center;justify-content:center;font:600 15px system-ui,sans-serif'; _ov.textContent='Preparing image…'; document.body.appendChild(_ov); document.documentElement.setAttribute('data-theme','light'); }
+  try{ return await _snapBlob(el,title,rowLimit); }
+  finally{ if(_ov){ document.documentElement.setAttribute('data-theme',_rt); _ov.remove(); } }
+}
+async function _snapBlob(el,title,rowLimit){
   const clone=snapClone(el,rowLimit);
   const tables=[...el.querySelectorAll('table')].map(t=>t.scrollWidth+48);
   const W=Math.round(Math.min(1800,Math.max(el.getBoundingClientRect().width,...tables,MODE==='phone'?760:600)));
@@ -1283,5 +1399,6 @@ function renderReturns(m){
 setMode(MODE,false);
 addEventListener('orientationchange',()=>setTimeout(()=>{ if(ROWS.length) render(); },300));
 </script>
+<script>window.addEventListener('rasi-theme',function(){try{if(typeof render==='function')render()}catch(e){}});</script>
 </body>
 </html>

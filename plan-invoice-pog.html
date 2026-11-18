@@ -2,6 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>/* Rasi shared theme: Auto / Light / Dark — one setting for all Rasi dashboards */
+(function(){var K='rasi_theme',p=null;try{p=localStorage.getItem(K);if(!p){var l=localStorage.getItem('r360_theme')||localStorage.getItem('rtc_theme');if(l)p=String(l).replace(/"/g,'')}}catch(e){}
+if(p!=='light'&&p!=='dark')p='auto';var mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
+function ap(){var d=p==='dark'||(p==='auto'&&!!(mq&&mq.matches)),h=document.documentElement;h.setAttribute('data-theme',d?'dark':'light');h.setAttribute('data-theme-pref',p);
+var mt=document.querySelector('meta[name="theme-color"]');if(mt){if(!mt.getAttribute('data-light'))mt.setAttribute('data-light',mt.content);mt.content=d?'#0c120e':mt.getAttribute('data-light')}
+var b=document.getElementById('rasiThemeBtn');if(b){b.textContent={auto:'🌓',light:'☀️',dark:'🌙'}[p];b.title='Theme: '+{auto:'Auto (follows device)',light:'Light',dark:'Dark'}[p]+' · tap to change';b.setAttribute('aria-label',b.title)}}
+function fire(){try{window.dispatchEvent(new Event('rasi-theme'))}catch(e){}}
+window.rasiTheme={cycle:function(){p={auto:'light',light:'dark',dark:'auto'}[p];try{localStorage.setItem(K,p)}catch(e){}ap();fire()},apply:ap,pref:function(){return p},isDark:function(){return document.documentElement.getAttribute('data-theme')==='dark'}};
+ap();if(mq){var f=function(){if(p==='auto'){ap();fire()}};mq.addEventListener?mq.addEventListener('change',f):mq.addListener&&mq.addListener(f)}
+document.addEventListener('DOMContentLoaded',ap);
+window.addEventListener('storage',function(e){if(e.key===K){p=e.newValue||'auto';ap();fire()}})})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#17432c">
 <meta name="mobile-web-app-capable" content="yes">
@@ -147,6 +159,38 @@ body.dev-phone tr.tot td:first-child{background:#f2f6f1}
 body.dev-phone .tog{width:20px;font-size:14px}
 body.dev-phone .warn{font-size:11.5px}
 body.dev-phone .drop{padding:18px}
+
+/* ===== Rasi theme button ===== */
+.rasi-thbtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.12);color:#fff;font-size:16px;line-height:1;cursor:pointer;flex:none;font-family:inherit}
+.rasi-thbtn:hover{background:rgba(255,255,255,.24)}
+body.touch .rasi-thbtn,body.m-phone .rasi-thbtn,body.m-tab .rasi-thbtn,body.m-ipad .rasi-thbtn,body.dev-phone .rasi-thbtn,body.dev-ipad .rasi-thbtn{width:42px;height:42px;font-size:18px}
+
+/* ===== Dark theme ===== */
+:root[data-theme=dark]{--bg:#0f1411;--card:#161d19;--ink:#e6ece8;--muted:#8d9a92;--line:#2a352e;--green:#6fd59c;--green2:#17352a;--amber:#e5b454;--amber2:#3a2f14;--blue:#7fb2ee;--blue2:#1a2c44;--red:#ef8a76;--red2:#3d1f1b;--head:#123d24;color-scheme:dark}
+:root[data-theme=dark] header{background:linear-gradient(120deg,#0a2214,#17432c)}
+:root[data-theme=dark] .f select,:root[data-theme=dark] .f input,:root[data-theme=dark] .ms .msbtn{background:#1b231f;color:var(--ink);border-color:#34403a}
+:root[data-theme=dark] .ms .menu{background:#1a221d;border-color:var(--line);box-shadow:0 8px 24px rgba(0,0,0,.55)}
+:root[data-theme=dark] .ms .menu label:hover{background:#222d27}
+:root[data-theme=dark] th{background:#1f2823;color:#cfe0d5;border-bottom-color:var(--line)}
+:root[data-theme=dark] th.gD{background:#3b2c22;color:#f0d9c8}
+:root[data-theme=dark] th.gI{background:#26334d;color:#dfe8fb}
+:root[data-theme=dark] th.gP{background:#3a3117;color:#f3e3b0}
+:root[data-theme=dark] td{border-bottom-color:#222b26}
+:root[data-theme=dark] tr:hover td{background:#1c2520}
+:root[data-theme=dark] tr.tot td{background:#1c2a21}
+:root[data-theme=dark] tr.lv1 td,:root[data-theme=dark] .grp{background:#1a221d}
+:root[data-theme=dark] tr.lv2 td{background:var(--card)}
+:root[data-theme=dark] tr.lv3 td,:root[data-theme=dark] tr.sku td{background:#131a16;color:#b7c4bc}
+:root[data-theme=dark] .bar .t{background:#26302a}
+:root[data-theme=dark] .drop{background:#161d19;border-color:#3a463f}
+:root[data-theme=dark] .warn{border-color:#5a4720;color:#ecc16a}
+:root[data-theme=dark] .pill.a{color:#ecc16a}
+:root[data-theme=dark] .btn.sm{background:var(--green2);color:var(--green)}
+:root[data-theme=dark] body.dev-phone .fbtn{background:#1a221d;color:var(--ink)}
+:root[data-theme=dark] body.dev-phone td:first-child{background:var(--card)}
+:root[data-theme=dark] body.dev-phone tr.lv1 td:first-child{background:#1a221d}
+:root[data-theme=dark] body.dev-phone tr.lv3 td:first-child{background:#131a16}
+:root[data-theme=dark] body.dev-phone tr.tot td:first-child{background:#1c2a21}
 </style>
 </head>
 <body>
@@ -156,6 +200,7 @@ body.dev-phone .drop{padding:18px}
     <div class="sub">Plan.xlsx · Invoice.csv · POG file (optional) — from the Portal_Files folder</div>
   </div>
   <div class="sp"></div>
+  <button type="button" class="rasi-thbtn" id="rasiThemeBtn" onclick="rasiTheme.cycle()" title="Theme" aria-label="Theme">🌓</button>
   <div class="seg" id="devSeg" title="Screen layout"><button data-d="pc">🖥 PC</button><button data-d="phone">📱 Phone</button><button data-d="ipad">▭ iPad</button></div>
   <div class="seg" id="viewSeg"><button data-v="business" class="on">Business View</button><button data-v="crop">Crop View</button><button data-v="product">Product View</button></div>
   <div class="seg" id="unitSeg"><button data-u="kg" class="on">Kg</button><button data-u="mt">MT</button></div>

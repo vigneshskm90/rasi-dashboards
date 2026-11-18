@@ -2,6 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>/* Rasi shared theme: Auto / Light / Dark — one setting for all Rasi dashboards */
+(function(){var K='rasi_theme',p=null;try{p=localStorage.getItem(K);if(!p){var l=localStorage.getItem('r360_theme')||localStorage.getItem('rtc_theme');if(l)p=String(l).replace(/"/g,'')}}catch(e){}
+if(p!=='light'&&p!=='dark')p='auto';var mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
+function ap(){var d=p==='dark'||(p==='auto'&&!!(mq&&mq.matches)),h=document.documentElement;h.setAttribute('data-theme',d?'dark':'light');h.setAttribute('data-theme-pref',p);
+var mt=document.querySelector('meta[name="theme-color"]');if(mt){if(!mt.getAttribute('data-light'))mt.setAttribute('data-light',mt.content);mt.content=d?'#0c120e':mt.getAttribute('data-light')}
+var b=document.getElementById('rasiThemeBtn');if(b){b.textContent={auto:'🌓',light:'☀️',dark:'🌙'}[p];b.title='Theme: '+{auto:'Auto (follows device)',light:'Light',dark:'Dark'}[p]+' · tap to change';b.setAttribute('aria-label',b.title)}}
+function fire(){try{window.dispatchEvent(new Event('rasi-theme'))}catch(e){}}
+window.rasiTheme={cycle:function(){p={auto:'light',light:'dark',dark:'auto'}[p];try{localStorage.setItem(K,p)}catch(e){}ap();fire()},apply:ap,pref:function(){return p},isDark:function(){return document.documentElement.getAttribute('data-theme')==='dark'}};
+ap();if(mq){var f=function(){if(p==='auto'){ap();fire()}};mq.addEventListener?mq.addEventListener('change',f):mq.addListener&&mq.addListener(f)}
+document.addEventListener('DOMContentLoaded',ap);
+window.addEventListener('storage',function(e){if(e.key===K){p=e.newValue||'auto';ap();fire()}})})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rasi Rewards Dashboard</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -176,6 +188,12 @@ body.m-phone .scroll{max-height:calc(100vh - 70px)}
 body.m-phone .scroll td:first-child{max-width:170px;white-space:normal}
 body.m-phone #guide{padding:0} body.m-phone #guide .box{border-radius:0;min-height:100%}
 @media (prefers-reduced-motion:reduce){.pbar div{transition:none}}
+
+/* ===== Rasi theme button ===== */
+.rasi-thbtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.12);color:#fff;font-size:16px;line-height:1;cursor:pointer;flex:none;font-family:inherit}
+.rasi-thbtn:hover{background:rgba(255,255,255,.24)}
+body.touch .rasi-thbtn,body.m-phone .rasi-thbtn,body.m-tab .rasi-thbtn,body.m-ipad .rasi-thbtn,body.dev-phone .rasi-thbtn,body.dev-ipad .rasi-thbtn{width:42px;height:42px;font-size:18px}
+
 </style>
 </head>
 <body>
@@ -188,7 +206,7 @@ body.m-phone #guide{padding:0} body.m-phone #guide .box{border-radius:0;min-heig
   <button class="btn primary" id="loadBtn" type="button">Load data file</button>
   <button class="btn" type="button" id="guideBtn">Guide</button>
   <div class="modesw" id="modeSw" title="Layout"><button type="button" data-mode="pc">PC</button><button type="button" data-mode="phone">Phone</button><button type="button" data-mode="tab">iPad</button></div>
-  <button class="btn" type="button" id="themeBtn" title="Switch light / dark">Dark</button>
+  <button type="button" class="rasi-thbtn" id="rasiThemeBtn" onclick="rasiTheme.cycle()" title="Theme" aria-label="Theme">🌓</button>
 </header>
 <div id="mini" role="region" aria-label="Current view"><select id="miniTab" aria-label="Tab"></select><span class="ms" id="miniSum"></span><button type="button" id="miniShare" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.45)">Share</button><button type="button" id="miniBtn">Filters ▲</button></div>
 <div id="exbar">Example data: these retailers and numbers are made up. Load your own file to replace them.</div>
@@ -273,9 +291,9 @@ function setMode(m,save){MODE=m;if(save){try{localStorage.setItem('r360_mode',m)
   document.querySelectorAll('#modeSw button').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));if(D)render()}
 $('modeSw').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setMode(b.dataset.mode,true)});
 function isDark(){const t=document.documentElement.dataset.theme;return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches}
-$('themeBtn').addEventListener('click',()=>{const n=isDark()?'light':'dark';document.documentElement.dataset.theme=n;try{localStorage.setItem('r360_theme',n)}catch(e){}themeLbl()});
-function themeLbl(){$('themeBtn').textContent=isDark()?'Light':'Dark'}
-try{const t=localStorage.getItem('r360_theme');if(t)document.documentElement.dataset.theme=t}catch(e){}
+window.addEventListener('rasi-theme',()=>{try{if(D)render()}catch(e){}});
+function themeLbl(){rasiTheme.apply()}
+
 themeLbl();
 
 /* ===================== SEASONS & PERIODS ===================== */
