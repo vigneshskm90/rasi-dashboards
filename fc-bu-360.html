@@ -227,7 +227,8 @@ header::after{content:"";position:absolute;right:-60px;top:-80px;width:260px;hei
 header h1{font-size:20px;letter-spacing:.3px} header h1 .fc{color:#ffd166}
 header .sub{opacity:.85}
 .btn.primary{background:#ffd166;border-color:#ffd166;color:#0d2e1b} .btn.primary:hover{background:#ffdd85}
-#filters{background:rgba(255,255,255,.92);backdrop-filter:blur(6px);box-shadow:0 1px 0 var(--line)}
+/* solid background - the blur effect on the sticky filter bar made scrolling slow on phones */
+#filters{background:#fff;box-shadow:0 1px 0 var(--line)}
 .f label{color:var(--brand)}
 select,input[type=search]{border-color:#cfd9cc;border-radius:8px}
 select:focus,input:focus{outline:2px solid #9fd0ae;outline-offset:0}
@@ -283,6 +284,24 @@ body.m-tab table.cmp th.chd{min-width:100px}
 body.m-phone table.cmp td > div{flex-wrap:wrap;justify-content:flex-end !important;gap:3px !important}
 body.m-phone table.cmp td div[style*="min-width:90px"]{min-width:64px !important;width:100%}
 body.m-phone table.cmp td{white-space:normal}
+/* ===== 3-year trend ===== */
+.yrpick{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
+.yrpick select{min-width:170px}
+.yrstrip{display:grid;gap:10px;margin-bottom:14px}
+.yrc{border:1px solid var(--line);border-radius:12px;background:#fff;padding:12px 14px;position:relative;box-shadow:0 1px 3px rgba(20,83,45,.06)}
+.yrc.cur{border-color:#1f6b3a;box-shadow:0 0 0 2px #cfe3d5}
+.yrc .p{font-size:12px;font-weight:700;color:var(--text2);letter-spacing:.3px}
+.yrc .gr{display:flex;align-items:baseline;gap:8px;margin:6px 0 4px}
+.yrc .gl{font-size:32px;font-weight:800;line-height:1}
+.yrc .sc{font-size:13px;color:var(--text2)}
+.yrc .mv{position:absolute;top:12px;right:14px;font-size:12px;font-weight:600}
+.yrc .d{font-size:12px;color:var(--text2);margin-top:2px}
+table.cmp th.cy{background:linear-gradient(180deg,#eef7f0,#dcefe1)} table.cmp td.cy{background:#f6fbf7}
+.gstack{display:flex;height:22px;border-radius:5px;overflow:hidden;gap:2px}
+.gstack div{display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;min-width:0;overflow:hidden;white-space:nowrap}
+body.m-phone .yrstrip{gap:6px} body.m-phone .yrc{padding:8px 9px} body.m-phone .yrc .gl{font-size:22px}
+body.m-phone .yrc .mv{position:static;display:block;margin-top:2px} body.m-phone .yrc .sc{font-size:11px} body.m-phone .yrc .d{font-size:11px}
+body.m-phone .yrpick .f{flex:1 1 100%} body.m-phone .yrpick select{min-width:0;width:100%}
 </style>
 </head>
 <body>
@@ -326,6 +345,7 @@ body.m-phone table.cmp td{white-space:normal}
 
 <nav id="tabs" style="display:none">
   <button data-t="rv" class="on">🧭 Review</button>
+  <button data-t="yr">📅 3-Year Trend</button>
   <button data-t="cmp">⚖️ Division Compare</button>
   <button data-t="lg">🏆 League Table</button>
   <button data-t="gr">🅰️ Grades</button>
@@ -585,6 +605,7 @@ async function loadFiles(files){
             crop:String(get('crop')).trim()||'(blank)', hyb:String(get('hyb')).trim()||'(blank)', sku:String(get('sku')).trim(),
             kg:sg*Math.abs(num(get('kg'))), net:sg*Math.abs(num(get('net'))), base:sg*Math.abs(num(get('base'))), disc:sg*Math.abs(num(get('disc'))),
             foc: map.foc!=null ? (normFoc(get('foc'))||'(blank)') : '' };
+          r.st=seasonType(r.s); r.fy=seasonFY(r.s);
           if(map.foc!=null) HAS_FOC=true;
           if(!HYB_INFO.has(r.hyb) || (r.foc && r.foc!=='(blank)')) HYB_INFO.set(r.hyb,{crop:r.crop,foc:r.foc});
           const key=r.inv+'|'+r.sku+'|'+String(get('lot')).trim()+'|'+r.ty+'|'+r.kg+'|'+r.net;
@@ -662,7 +683,7 @@ const HC_DEFAULT = {
 const HC_KEY='rasi360_health_v2';
 let HC = JSON.parse(JSON.stringify(HC_DEFAULT));
 try{ const s=localStorage.getItem(HC_KEY); if(s) HC=Object.assign(HC,JSON.parse(s)); }catch(e){}
-function saveHC(){ try{ localStorage.setItem(HC_KEY,JSON.stringify(HC)); }catch(e){} }
+function saveHC(){ MEMO.clear(); try{ localStorage.setItem(HC_KEY,JSON.stringify(HC)); }catch(e){} }
 function health(curA, prevV){
   const cv=val(curA); if(!(cv>0)) return null;
   const g=gr(cv,prevV), rp=retPct(curA)||0, br=breadth(curA), fs=HAS_FOC?(focPct(curA)||0):null;
@@ -703,6 +724,19 @@ function normSeason(v){
   else if(D.length===2) yy=D; else if(D.length===1) yy='0'+D; else yy = D.startsWith('20') ? D.slice(2,4) : D.slice(0,2);  // 202425 -> 24
   const code=L+yy; if(raw!==code) SEAS_RAW.set(raw,code); return code;
 }
+// Financial year from the SEASON CODE (not the invoice date):
+//   FY yyyy-yy = Rabi of the first year + Summer, Zaid and Kharif of the second year
+//   e.g. FY 2023-24 = RB23 + SU24 + KH24 (+ ZR24). Rows with a blank / unreadable season code are left out of the FY view.
+const FYS={};
+function seasonFY(code){
+  if(!code) return ''; if(FYS[code]!==undefined) return FYS[code];
+  const m=String(code).match(/^([A-Z]+)(\d{2})$/); let out='';
+  if(m){ const y=2000+(+m[2]), start = m[1]==='RB' ? y : (m[1]==='KH'||m[1]==='SU'||m[1]==='ZR') ? y-1 : null;
+    if(start!=null) out='FY '+start+'-'+String((start+1)%100).padStart(2,'0'); }
+  return FYS[code]=out;
+}
+const FYC={}; // shared FY labels, worked out once per row while loading
+function fyStr(d){ const y=d.getMonth()>=3?d.getFullYear():d.getFullYear()-1; return FYC[y]||(FYC[y]='FY'+String(y).slice(2)+'-'+String(y+1).slice(2)); }
 function seasonType(code){ const m=String(code).match(/^[A-Z]+/); return m?m[0]:''; }
 function fyOf(t){ const d=new Date(t); const y=d.getMonth()>=3?d.getFullYear():d.getFullYear()-1; return 'FY'+String(y).slice(2)+'-'+String(y+1).slice(2); }
 function buildSeasons(){
@@ -714,9 +748,12 @@ function buildSeasons(){
   // tie-break by season year number if starts are messy
   SEASONS.sort((a,b)=>yr(a.code)-yr(b.code)||a.min-b.min);
 }
-function periodKey(r){ return ST.stype==='FY' ? fyOf(r.d) : (seasonType(r.s)===ST.stype ? r.s : null); }
-function periodList(){
-  if(ST.stype==='FY'){ return [...new Set(ROWS.map(r=>fyOf(r.d)))].sort(); }
+function periodKey(r){ return ST.stype==='FY' ? (r.fy||null) : ((r.st!==undefined?r.st:seasonType(r.s))===ST.stype ? r.s : null); }
+// period list is remembered - it used to be rebuilt from every row for every unit (main cause of lag in the FY view)
+let PLC={k:'',v:[]};
+function periodList(){ const k=CV+'|'+ST.stype; if(PLC.k===k) return PLC.v; const v=periodListRaw(); PLC={k,v}; return v; }
+function periodListRaw(){
+  if(ST.stype==='FY'){ return [...new Set(ROWS.map(r=>r.fy).filter(Boolean))].sort(); }
   const have=SEASONS.filter(s=>s.type===ST.stype); if(!have.length) return [];
   const ys=have.map(s=>+s.code.slice(ST.stype.length)).filter(n=>!isNaN(n)); const lo=Math.min(...ys), hi=Math.max(...ys);
   const out=[]; for(let y=lo;y<=hi;y++) out.push(ST.stype+String(y).padStart(2,'0'));   // every year, even if missing in the data
@@ -735,10 +772,11 @@ const perTh = p => isMissing(p) ? `<span title="No ${p} rows in the loaded files
 /* ===================== FILTER UI ===================== */
 function afterLoad(){
   if(!ROWS.length){ $('loadinfo').textContent='No usable rows found'; return; }
+  CV++; MEMO.clear(); buildGeo();
   buildSeasons();
   const types=[...new Set(SEASONS.map(s=>s.type))];
   let latest=ROWS[0]; for(const r of ROWS) if(r.d>latest.d) latest=r;
-  $('fStype').innerHTML=types.map(t=>`<option value="${t}">${STYPE_NAME[t]||t} seasons (${t})</option>`).join('')+'<option value="FY">Financial year (Apr–Mar)</option>';
+  $('fStype').innerHTML=types.map(t=>`<option value="${t}">${STYPE_NAME[t]||t} seasons (${t})</option>`).join('')+'<option value="FY">Financial year (Rabi + Summer + Kharif)</option>';
   ST.stype=ST.stype||seasonType(latest.s)||'FY'; $('fStype').value=ST.stype;
   $('filters').style.display='flex'; $('tabs').style.display='flex'; $('clearBtn').style.display='';
   afterLoadInfo(); seasonCheck(); fillFilters(); render();
@@ -754,6 +792,7 @@ function seasonCheck(){
       <div style="margin-top:4px;color:var(--text2)">Seasons found (rows): ${found}</div>`; }
   // also list in the status panel
   STS.seasonInfo=`Seasons found (rows): ${found}`+(fixed.length?` · Season codes cleaned: ${fixed.slice(0,8).map(([a,b])=>`“${a}” → ${b}`).join(', ')}${fixed.length>8?'…':''}`:'')+(miss.length?` · Missing: ${miss.join(', ')}`:'');
+  { const nb=ROWS.reduce((n,r)=>n+(r.fy?0:1),0); if(nb) STS.seasonInfo+=` · ${nb.toLocaleString('en-IN')} row(s) with a blank / unknown season code are left out of the Financial year view`; }
 }
 function afterLoadInfo(){
   let dmin=Infinity, dmax=-Infinity; for(const r of ROWS){ if(r.d<dmin) dmin=r.d; if(r.d>dmax) dmax=r.d; }
@@ -764,15 +803,15 @@ function opts(el,vals,cur,all){ el.innerHTML=`<option value="">${all}</option>`+
 function fillFilters(){
   const uniq=(arr)=>[...new Set(arr)].sort();
   if(typeof syncPath==='function'&&ST.path) syncPath();
-  ST.zone=opts($('fZone'),[...new Set(ROWS.map(r=>r.z))].sort(divSort),ST.zone,'All Divisions');
-  let R=ROWS.filter(r=>!ST.zone||r.z===ST.zone);
-  ST.region=opts($('fRegion'),uniq(R.map(r=>r.r)),ST.region,ST.zone?'All regions of '+ST.zone:'All regions');
-  R=R.filter(r=>!ST.region||r.r===ST.region);
-  ST.terr=opts($('fTerr'),uniq(R.map(r=>r.t)),ST.terr,'All territories');
-  ST.crop=opts($('fCrop'),uniq(ROWS.map(r=>r.crop)),ST.crop,'All crops');
-  ST.hyb=opts($('fHyb'),uniq(ROWS.filter(r=>(!ST.crop||r.crop===ST.crop)&&(!ST.foc||r.foc===ST.foc)).map(r=>r.hyb)),ST.hyb,'All hybrids');
+  ST.zone=opts($('fZone'),[...GEO.keys()].sort(divSort),ST.zone,'All Divisions');
+  const regs=[]; for(const [z,mm] of GEO) if(!ST.zone||z===ST.zone) regs.push(...mm.keys());
+  ST.region=opts($('fRegion'),uniq(regs),ST.region,ST.zone?'All regions of '+ST.zone:'All regions');
+  const ters=[]; for(const [z,mm] of GEO) if(!ST.zone||z===ST.zone) for(const [rg,ts] of mm) if(!ST.region||rg===ST.region) ters.push(...ts);
+  ST.terr=opts($('fTerr'),uniq(ters),ST.terr,'All territories');
+  ST.crop=opts($('fCrop'),lc('crop',()=>uniq(ROWS.map(r=>r.crop))),ST.crop,'All crops');
+  ST.hyb=opts($('fHyb'),lc('hyb|'+ST.crop+'|'+ST.foc,()=>uniq(ROWS.filter(r=>(!ST.crop||r.crop===ST.crop)&&(!ST.foc||r.foc===ST.foc)).map(r=>r.hyb))),ST.hyb,'All hybrids');
   $('fFoc').parentElement.style.display=HAS_FOC?'':'none';
-  ST.foc=HAS_FOC?opts($('fFoc'),uniq(ROWS.map(r=>r.foc).filter(Boolean)),ST.foc,'Focus + Non Focus'):'';
+  ST.foc=HAS_FOC?opts($('fFoc'),lc('foc',()=>uniq(ROWS.map(r=>r.foc).filter(Boolean))),ST.foc,'Focus + Non Focus'):'';
   const P=periodList();
   if(!P.includes(ST.focus)){ const ok=P.filter(p=>!isMissing(p)); ST.focus=ok[ok.length-1]||P[P.length-1]||''; }
   $('fFocus').innerHTML=P.map(p=>`<option value="${p}"${p===ST.focus?' selected':''}>${p}${isMissing(p)?' (no data)':''}</option>`).join('');
@@ -800,12 +839,12 @@ function shownPeriods(){ const P=periodList(); const i=P.indexOf(ST.focus); retu
 function prevPeriod(){ const P=periodList(); const i=P.indexOf(ST.focus); return i>0?P[i-1]:null; }
 
 /* ===================== AGGREGATION ===================== */
-function blank(){ return {zs1Kg:0,net:0,kg:0,bill:0,billKg:0,ret:0,retKg:0,canc:0,disc:0,base:0,foc:0,inv:new Set(),cust:new Map(),hk:new Map()}; }
+function blank(){ return {zs1Kg:0,net:0,kg:0,bill:0,billKg:0,ret:0,retKg:0,canc:0,disc:0,base:0,foc:0,cust:new Map(),hk:new Map()}; }
 function add(a,r){
   a.net+=r.net; a.kg+=r.kg; a.disc+=r.disc; a.base+=r.base;
   const g=ORDER_TYPES[r.ty].grp;
   if(g==='Billing'){a.bill+=r.net;a.billKg+=r.kg;} else if(g==='Return'){a.ret+=r.net;a.retKg+=r.kg;} else a.canc+=r.net;
-  a.inv.add(r.inv); a.cust.set(r.c,(a.cust.get(r.c)||0)+mv(r));
+  a.cust.set(r.c,(a.cust.get(r.c)||0)+mv(r));
   a.hk.set(r.hyb,(a.hk.get(r.hyb)||0)+r.kg);
   if(r.foc==='Focus') a.foc+=mv(r);
   if(r.ty==='ZS1') a.zs1Kg+=r.kg;
@@ -822,6 +861,15 @@ function groupBy(rows,keyFn){ // -> Map key -> Map period -> agg
   for(const r of rows){ const p=periodKey(r); if(p==null) continue; const k=keyFn(r); let m=M.get(k); if(!m){m=new Map();M.set(k,m);} let a=m.get(p); if(!a){a=blank();m.set(p,a);} add(a,r); }
   return M;
 }
+
+/* ---------- speed: remember results for the same filters ---------- */
+// Each unit table, grade and total is worked out once per filter combination and reused across tabs.
+let CV=0; const MEMO=new Map(), LC=new Map();
+function memo(tag,fn){ const k=[CV,tag,ST.zone,ST.region,ST.terr,ST.crop,ST.hyb,ST.foc,ST.focus,ST.stype,ST.metric].join('|');
+  if(MEMO.has(k)) return MEMO.get(k); if(MEMO.size>80) MEMO.clear(); const v=fn(); MEMO.set(k,v); return v; }
+function lc(k,fn){ k=CV+'|'+k; if(!LC.has(k)){ if(LC.size>200) LC.clear(); LC.set(k,fn()); } return LC.get(k); }
+let GEO=new Map(); // Division -> Region -> Set of Territories
+function buildGeo(){ GEO=new Map(); for(const r of ROWS){ let mm=GEO.get(r.z); if(!mm){mm=new Map();GEO.set(r.z,mm);} let ts=mm.get(r.r); if(!ts){ts=new Set();mm.set(r.r,ts);} ts.add(r.t); } }
 
 /* ===================== CHARTS ===================== */
 const tip=$('tip');
@@ -865,7 +913,7 @@ function hbars(items,{color='var(--s1)'}={}){
 }
 
 /* ---------- SHARE AS PNG ---------- */
-const TAB_NAME={rv:'Review',cmp:'Division compare',lg:'League table',gr:'Grades',pm:'Product mix'};
+const TAB_NAME={rv:'Review',cmp:'Division compare',lg:'League table',gr:'Grades',pm:'Product mix',yr:'3-year trend'};
 function toast(msg,ms){ const t=$('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(toast._t); if(ms!==0) toast._t=setTimeout(()=>t.style.display='none',ms||2600); }
 function snapTitle(h){ const c=h.cloneNode(true); c.querySelectorAll('.info,button').forEach(n=>n.remove()); return c.textContent.replace(/\s+/g,' ').trim(); }
 function addShotBtns(){
@@ -1030,7 +1078,8 @@ function statsFor(totMap,custs){
   return o;
 }
 // children of the current node (or of any level, for the league table)
-function unitsAt(F,depth,parentStats){
+function unitsAt(F,depth){ return memo('u'+depth,()=>unitsAtRaw(F,depth)); }
+function unitsAtRaw(F,depth){
   const kf=KEYF[depth];
   if(depth===3){
     const byC=groupBy(F,r=>r.c);
@@ -1041,7 +1090,8 @@ function unitsAt(F,depth,parentStats){
   for(const [k,m] of byKC){ const i=k.lastIndexOf('¦'), u=k.slice(0,i); if(!cm.has(u)) cm.set(u,[]); cm.get(u).push([k.slice(i+1),m]); }
   return [...byK.entries()].map(([k,m])=>{ const parts=k.split('¦'); return Object.assign({k,parts,label:parts[depth],depth},statsFor(m,cm.get(k)||[])); });
 }
-function nodeStats(F){
+function nodeStats(F){ return Object.assign({},memo('n',()=>nodeStatsRaw(F))); }  // copy, so one tab's notes don't leak into another
+function nodeStatsRaw(F){
   const tot=groupBy(F,()=>'a').get('a')||new Map();
   return statsFor(tot,[...groupBy(F,r=>r.c).entries()]);
 }
@@ -1186,7 +1236,7 @@ function renderLeague(m){
   const units=gradedUnits(F,d); units.forEach(o=>o.share=N.cur?o.cur/N.cur*100:null); N.tg=unitGrade(N);
   const cols=colsFor(d,N,refName);
   const rows=sortRows(units.filter(o=>o.cur||o.prev),cols,ST.sortLg);
-  const divs=[...new Set(ROWS.map(r=>r.z))].sort(divSort);
+  const divs=[...GEO.keys()].sort(divSort);
   const sortName=ST.sortLg.k==='name'?'name':ST.sortLg.k==='cur'?(ST.metric==='val'?'net sales':'net qty'):((cols.find(c=>c.k===ST.sortLg.k)||{}).l||'').replace(/<[^>]+>/g,'').replace(/i$/,'');
   m.innerHTML=`<div class="row">
       <div class="seg" id="lgLvl">${[[1,'Regions'],[2,'Territories']].map(([v,l])=>`<button class="${d===v?'on':''}" onclick="ST.lgLevel=${v};render()">${l}</button>`).join('')}</div>
@@ -1248,7 +1298,7 @@ const TG_DEFAULT = { crit:[
 const TG_KEY='rasiorg_tgrade_v1';
 let TG=JSON.parse(JSON.stringify(TG_DEFAULT));
 try{ const s=localStorage.getItem(TG_KEY); if(s){ const o=JSON.parse(s); if(o&&o.crit&&o.crit.length===TG.crit.length) TG=o; } }catch(e){}
-function saveTG(){ try{ localStorage.setItem(TG_KEY,JSON.stringify(TG)); }catch(e){} }
+function saveTG(){ MEMO.clear(); try{ localStorage.setItem(TG_KEY,JSON.stringify(TG)); }catch(e){} }
 const tgCrit = () => TG.crit.filter(c=>c.k!=='fp'&&c.k!=='fg' || HAS_FOC);
 const tgMax = () => tgCrit().reduce((s,c)=>s+Math.max(c.na,...c.pts),0);
 function bandIdx(c,v){ if(v==null||isNaN(v)) return -1; const i=c.dir==='hi'? c.cuts.findIndex(x=>v>=x) : c.cuts.findIndex(x=>v<=x); return i<0?c.cuts.length:i; }
@@ -1330,7 +1380,7 @@ function renderGrades(m){
   const graded=units.filter(o=>o.tg), totV=graded.reduce((s,o)=>s+o.cur,0);
   const G={A:[],B:[],C:[],D:[]}; graded.forEach(o=>G[o.tg.grade].push(o));
   const up=graded.filter(o=>o.tgPrev&&'ABCD'.indexOf(o.tgPrev.grade)>'ABCD'.indexOf(o.tg.grade)).length, dn=graded.filter(o=>o.tgPrev&&'ABCD'.indexOf(o.tgPrev.grade)<'ABCD'.indexOf(o.tg.grade)).length;
-  const divs=[...new Set(ROWS.map(r=>r.z))].sort(divSort), Lp=LEVEL_PL[d].toLowerCase();
+  const divs=[...GEO.keys()].sort(divSort), Lp=LEVEL_PL[d].toLowerCase();
   let h=`<div class="row"><div class="seg">${[[2,'Territories'],[1,'Regions'],[0,'Divisions']].map(([v,l])=>`<button class="${d===v?'on':''}" onclick="ST.grLevel=${v};ST.grGrade='';ST.sortGr=${v===0?`{k:'org',d:1}`:`{k:'s',d:-1}`};render()">${l}</button>`).join('')}</div>
     ${ST.path.length?`<span class="note" style="margin:0">Within <b>${esc(refName)}</b> (Division / Region filter above)</span>`:''}
     <span class="note" style="margin:0">${refName} grade: ${tgChip(N.tg,true)}</span></div>`;
@@ -1446,12 +1496,136 @@ function gradeMixCell(t){
   return `<div style="display:flex;align-items:center;gap:6px;justify-content:flex-end"><span style="white-space:nowrap;font-size:12px">${['A','B','C','D'].map(g=>`<b style="color:${GCOL[g]}">${t[g]}</b>`).join(' / ')}</span>${mixBar(t,n)}</div>`;
 }
 
+/* ---------- 3-YEAR TREND ---------- */
+// Pick any Division / Region / Territory and see its last 3 periods (financial years or the same season) side by side
+ST.yrF='';
+function yrPeriods(){ const P=periodList(), i=P.indexOf(ST.focus); return i<0?[]:P.slice(Math.max(0,i-2),i+1); }
+function yrGo(path){ ST.path=path; ST.yrF=''; fillFilters(); render(); scrollTo({top:0,behavior:'smooth'}); }
+function yrCls(r,v,pv){ if(!r.b||v==null||pv==null) return ''; const diff=r.rel?(pv?(v-pv)/Math.abs(pv):0):v-pv; if(Math.abs(diff)<(r.t||1e-9)) return ''; return ((diff>0)===(r.b==='hi'))?'gd':'bd'; }
+function yrTrend(r,a,b){
+  if(a==null||b==null) return '<span class="muted">–</span>';
+  if(r.u==='money') return grTxt(b,a);
+  const diff=Math.abs(b-a)<(r.u==='pct'?0.05:r.dp?0.05:0.5)?0:b-a, cls=(!r.b||diff===0)?'muted':((diff>0)===(r.b==='hi')?'up':'dn');
+  return `<span class="${cls}">${diff>0?'▲':diff<0?'▼':'='} ${r.u==='pct'?inr(Math.abs(diff),1)+' pts':inr(Math.abs(diff),r.dp||0)}</span>`;
+}
+function gStack(G){ const n=G?G.A+G.B+G.C+G.D:0; if(!n) return '<span class="muted">–</span>';
+  return `<div class="gstack">${['A','B','C','D'].filter(g=>G[g]).map(g=>`<div style="flex:${G[g]};background:${GCOL[g]}" data-tip="${g} · ${GRADE_TXT[g]}: ${G[g]} (${inr(G[g]/n*100,0)}%)">${G[g]/n>=0.1?g+' '+inr(G[g]/n*100,0)+'%':''}</div>`).join('')}</div>`; }
+function renderYears(m){
+  syncPath();
+  const F=filtered(), d=ST.path.length, nodeName=d?ST.path[d-1]:'Company', lvlName=d?LEVEL[d-1]:'Company';
+  const Y=yrPeriods(), keep=ST.focus, S=[];
+  try{
+    for(const p of Y){ ST.focus=p;
+      const N=Object.assign({},nodeStats(F)); N.tg=unitGrade(N); N.pv=prevPeriod();
+      let kids;
+      if(d<3) kids=unitsAt(F,d).map(o=>({k:o.k,parts:o.parts,label:o.label,cur:o.cur,tg:unitGrade(o)}));
+      else kids=unitsAt(F,3).filter(o=>o.cur>0||o.prev>0).map(o=>({k:o.k,label:o.label,cur:o.cur,tg:o.h?{grade:o.h.grade,s:o.h.s,parts:[]}:null}));
+      if(d<3){ const T=d===2?kids:unitsAt(F,2).map(o=>({tg:unitGrade(o)})); N.tm={A:0,B:0,C:0,D:0}; T.forEach(o=>{ if(o.tg) N.tm[o.tg.grade]++; }); }
+      S.push({p,N,kids});
+    }
+  } finally { ST.focus=keep; }
+  // unit picker
+  const p=ST.path, z=p[0]||'', rg=p[1]||'', te=p[2]||'';
+  const op=(list,cur)=>list.map(v=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(v)}</option>`).join('');
+  const zm=GEO.get(z), regs=zm?[...zm.keys()].sort():[], ters=zm&&zm.get(rg)?[...zm.get(rg)].sort():[];
+  let h=crumbs()+`<div class="yrpick">
+    <div class="f"><label>Division</label><select data-yrl="0"><option value="">All divisions (Company)</option>${op([...GEO.keys()].sort(divSort),z)}</select></div>
+    <div class="f"><label>Region</label><select data-yrl="1"${z?'':' disabled'}><option value="">${z?'All regions of '+esc(z):'– pick a Division –'}</option>${op(regs,rg)}</select></div>
+    <div class="f"><label>Territory</label><select data-yrl="2"${rg?'':' disabled'}><option value="">${rg?'All territories of '+esc(rg):'– pick a Region –'}</option>${op(ters,te)}</select></div>
+    <span class="note" style="margin:0 0 6px">${Y.length} ${ST.stype==='FY'?'financial years':(STYPE_NAME[ST.stype]||ST.stype)+' seasons'} ending at <b>${esc(ST.focus)}</b> · ${unit()} · change <b>Compare by</b> / <b>Focus period</b> above for other years</span></div>`;
+  if(!S.length){ h+='<div class="empty">No periods available.</div>'; }
+  else {
+  const Ns=S.map(s=>s.N), L=Ns.length-1, mt=v=>v?big(v):'<span class="muted">–</span>';
+  // year cards
+  h+=`<div class="yrstrip" style="grid-template-columns:repeat(${S.length},1fr)">${S.map((s,i)=>{ const t=s.N.tg, pt=i?S[i-1].N.tg:null, N=s.N;
+    return `<div class="yrc${s.p===keep?' cur':''}"><div class="p">${perTh(s.p)}${s.p===keep?' · focus':''}</div>
+      ${i?`<div class="mv">${t&&pt?moveTxt(t,pt)+` <span class="muted">(${t.s-pt.s>=0?'+':''}${t.s-pt.s})</span>`:'<span class="muted">–</span>'}</div>`:''}
+      <div class="gr"><span class="gl" style="color:${t?GCOL[t.grade]:'var(--muted)'}">${t?t.grade:'–'}</span><span class="sc">${t?t.s+' / 100 · '+GRADE_TXT[t.grade]:'no sales'}</span></div>
+      <div class="d"><b>${N.cur?big(N.cur):'–'}</b> ${N.pv?grTxt(N.cur,N.prev)+' vs '+esc(N.pv):''}</div>
+      <div class="d">${N.act.toLocaleString('en-IN')} active · health ${N.hs==null?'–':inr(N.hs,0)}${HAS_FOC?' · focus '+pctC(N.fp,0):''}</div></div>`; }).join('')}</div>`;
+  // scorecard: parameters x years
+  const R=[
+    {sec:'Business'},
+    {l:`Net ${ST.metric==='val'?'sales':'qty'}`, v:o=>o.cur, f:o=>mt(o.cur), b:'hi', t:0.02, rel:1, u:'money'},
+    {l:'Growth vs previous period', i:'growth', v:o=>o.g, f:o=>grTxt(o.cur,o.prev), b:'hi', t:5, u:'pct'},
+    {l:'Gross billing', v:o=>o.bill, f:o=>mt(o.bill), b:'hi', t:0.02, rel:1, u:'money'},
+    {l:'Avg per customer', i:'avgc', v:o=>o.avgC, f:o=>o.avgC==null?'–':big(o.avgC), b:'hi', t:0.03, rel:1, u:'money'},
+    {sec:'Customers'},
+    {l:'Active customers', i:'active', v:o=>o.act, f:o=>o.act.toLocaleString('en-IN'), b:'hi', t:0.03, rel:1, u:'num'},
+    {l:'New + reactivated', v:o=>o.nw+o.re, f:o=>(o.nw+o.re)?`<span class="up">+${o.nw+o.re}</span>`:'0', b:'hi', t:0.1, rel:1, u:'num'},
+    {l:'Lost customers', v:o=>o.lost, f:o=>o.lost?`<span class="dn">−${o.lost}</span>`:'0', b:'lo', t:0.1, rel:1, u:'num'},
+    {l:'Retention %', i:'retn', v:o=>o.retn, f:o=>pctC(o.retn,0), b:'hi', t:5, u:'pct'},
+    {l:'Top 20% customers’ share', i:'conc', v:o=>o.top20, f:o=>pctC(o.top20,0), b:'lo', t:3, u:'pct'},
+    {sec:'Quality'},
+    {l:'Return %', i:'ret', v:o=>o.rp, f:o=>pctC(o.rp), b:'lo', t:0.5, u:'pct'},
+    {l:'Liquidation %', i:'liq', v:o=>o.lq, f:o=>pctC(o.lq), b:'hi', t:1, u:'pct'},
+    ...(HAS_FOC?[{l:'Focus share %', i:'focus', v:o=>o.fp, f:o=>pctC(o.fp), b:'hi', t:3, u:'pct'},
+                 {l:'Focus business growth %', v:o=>o.fg, f:o=>o.fg==null?(o.fc>0?'<span class="up">New</span>':'–'):grTxt(o.fc,o.fpv), b:'hi', t:5, u:'pct'}]:[]),
+    {l:'Discount %', i:'disc', v:o=>o.disc, f:o=>pctC(o.disc), b:'lo', t:0.5, u:'pct'},
+    {l:'Realisation ₹/kg', i:'real', v:o=>o.real, f:o=>o.real==null?'–':'₹ '+inr(o.real,1), b:'hi', t:0.03, rel:1, u:'num', dp:1},
+    {l:'Avg hybrid breadth', i:'breadth', v:o=>o.avgBr, f:o=>numC(o.avgBr), b:'hi', t:0.3, u:'num', dp:1},
+    {l:'Hybrids sold', v:o=>o.hyb, f:o=>o.hyb||'–', b:'hi', t:1, u:'num'},
+    {sec:'Health & grade'},
+    {l:lvlName+' grade (score)', i:'tgrade', v:o=>o.tg?o.tg.s:null, f:o=>tgChip(o.tg), b:'hi', t:3, u:'num'},
+    {l:'Dealer health (avg score)', i:'health', v:o=>o.hs, f:o=>o.hs==null?'–':`<b>${inr(o.hs,0)}</b>`, b:'hi', t:3, u:'num'},
+    {l:'Dealers A / B / C / D', v:o=>o.hsN?(o.G.A+o.G.B)/o.hsN*100:null, f:o=>gradeMixCell(o.G), b:'hi', t:3, u:'pct', note:'colour and change = share of dealers graded A or B'},
+    ...(d<3?[{l:'Territories A / B / C / D', i:'tgrade', v:o=>{ const t=o.tm, n=t?t.A+t.B+t.C+t.D:0; return n?(t.A+t.B)/n*100:null; }, f:o=>o.tm?gradeMixCell(o.tm):'–', b:'hi', t:3, u:'pct', note:'colour and change = share of territories graded A or B'}]:[])
+  ];
+  let body='';
+  for(const r of R){
+    if(r.sec){ body+=`<tr class="csec"><td colspan="${S.length+2}">${r.sec}</td></tr>`; continue; }
+    body+=`<tr><td class="cl"${r.note?` title="${esc(r.note)}"`:''}>${r.l}${r.i?info(r.i):''}</td>${Ns.map((o,i)=>{ const c=i?yrCls(r,r.v(o),r.v(Ns[i-1])):''; return `<td class="${c}${S[i].p===keep?' cy':''}">${r.f(o)}</td>`; }).join('')}<td class="ctot">${yrTrend(r,r.v(Ns[0]),r.v(Ns[L]))}</td></tr>`;
+  }
+  const head=`<tr><th class="l">Parameter</th>${S.map(s=>`<th class="chd${s.p===keep?' cy':''}"><div>${perTh(s.p)}</div><div style="margin-top:3px">${tgChip(s.N.tg)}</div></th>`).join('')}<th class="chd ctot"><div>Change</div><div class="muted" style="font-weight:400;font-size:11px">${esc(S[0].p)} → ${esc(S[L].p)}</div></th></tr>`;
+  h+=`<div class="card" id="yrCard"><h3>3-year scorecard · ${esc(nodeName)}</h3>
+    <div class="note">${unit()==='MT'?'Quantities in MT':'Values in ₹'} · each year is compared with the year before it: <span class="gd" style="padding:0 5px;border-radius:3px">green</span> = clearly better, <span class="bd" style="padding:0 5px;border-radius:3px">red</span> = clearly worse · last column = change from ${esc(S[0].p)} to ${esc(S[L].p)}</div>
+    <div class="scroll" style="max-height:none"><table class="cmp">${head}${body}</table></div></div>`;
+  // charts
+  const mixRow=(lab,G)=>{ const n=G?G.A+G.B+G.C+G.D:0; return `<div style="display:grid;grid-template-columns:64px 1fr 40px;gap:8px;align-items:center;margin:6px 0"><b style="font-size:12px">${esc(lab)}</b>${gStack(G)}<span class="muted" style="text-align:right;font-size:12px">${n}</span></div>`; };
+  h+=`<div class="grid2">
+    <div class="card"><h3>${esc(lvlName)} grade score by year${info('tgrade')}</h3><div class="note">Score out of 100 · colour = grade (A ≥ ${TG.grade[0]}, B ≥ ${TG.grade[1]}, C ≥ ${TG.grade[2]})</div>
+      ${vbars(S.map(s=>({label:s.p,value:s.N.tg?s.N.tg.s:0,color:s.N.tg?GCOL[s.N.tg.grade]:'#d6d4cd',tip:`<b>${esc(s.p)}</b><br>${s.N.tg?'Grade '+s.N.tg.grade+' · '+s.N.tg.s+' / 100':'no sales'}`})),{h:210,fmtAxis:v=>inr(v,0)})}</div>
+    <div class="card"><h3>Grade mix by year</h3><div class="note">Dealers by health grade${d<3?' · territories by territory grade':''} · number on the right = count · tap a block for details</div>
+      <div class="legend">${['A','B','C','D'].map(g=>`<span><i style="background:${GCOL[g]}"></i>${g} · ${GRADE_TXT[g]}</span>`).join('')}</div>
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-top:8px">Dealers${info('health')}</div>${S.map(s=>mixRow(s.p,s.N.G)).join('')}
+      ${d<3?`<div style="font-size:12px;font-weight:700;color:var(--text2);margin-top:12px">Territories${info('tgrade')}</div>${S.map(s=>mixRow(s.p,s.N.tm)).join('')}`:''}</div>
+  </div>`;
+  // grade build-up by criterion
+  const C=tgCrit();
+  h+=`<div class="card" id="yrCrit"><h3>How the ${esc(lvlName.toLowerCase())} grade was built · ${esc(nodeName)}${info('tgrade')}</h3><div class="note">Value (points) for each grading criterion in every year · <span class="gd" style="padding:0 5px;border-radius:3px">full points</span> / <span class="bd" style="padding:0 5px;border-radius:3px">zero points</span> · criteria are set in the Grades tab</div>
+    <div class="scroll" style="max-height:none"><table class="cmp"><tr><th class="l">Criterion</th>${S.map(s=>`<th class="chd${s.p===keep?' cy':''}">${perTh(s.p)}</th>`).join('')}<th class="chd ctot">Max pts</th></tr>
+    ${C.map(c=>{ const mx=Math.max(c.na,...c.pts); return `<tr><td class="cl">${esc(c.n)}</td>${S.map(s=>{ const t=s.N.tg; if(!t) return '<td class="muted">–</td>'; const pp=t.parts.find(x=>x.k===c.k); if(!pp) return '<td class="muted">–</td>';
+        return `<td class="${pp.p===mx?'gd':pp.p===0?'bd':''}" title="${esc(c.n+' band: '+bandLabel(c,pp.i))}">${pp.v==null?'<span class="muted">n/a</span>':(c.k==='avgBr'?inr(pp.v,1):inr(pp.v,1)+'%')} <span class="muted">(${pp.p})</span></td>`; }).join('')}<td class="ctot">${mx}</td></tr>`; }).join('')}
+    <tr class="csum"><td class="cl"><b>Grade · score / 100</b></td>${S.map(s=>`<td>${tgChip(s.N.tg)}</td>`).join('')}<td class="ctot"></td></tr>
+    <tr><td class="cl">Biggest lever</td>${S.map(s=>`<td style="white-space:normal">${s.N.tg&&s.N.tg.lever?esc(s.N.tg.lever.n)+` <span class="up">+${s.N.tg.lever.gap}</span>`:'<span class="muted">—</span>'}</td>`).join('')}<td class="ctot"></td></tr></table></div></div>`;
+  // children: grade journey
+  const km=new Map(); S.forEach((s,i)=>s.kids.forEach(o=>{ let x=km.get(o.k); if(!x){ x={k:o.k,parts:o.parts,label:o.label,y:[]}; km.set(o.k,x); } x.y[i]=o; }));
+  const fgr=x=>{ const f=x.y.find(o=>o&&o.tg); return f?f.tg:null; }, lgr=x=>(x.y[L]&&x.y[L].tg)||null;
+  const mvOf=x=>{ const a=fgr(x), b=lgr(x); return a&&b?'ABCD'.indexOf(a.grade)-'ABCD'.indexOf(b.grade):0; };
+  const weak=x=>S.every((_,i)=>x.y[i]&&x.y[i].tg&&'CD'.includes(x.y[i].tg.grade));
+  const kl=[...km.values()].filter(x=>x.y.some(o=>o&&o.cur));
+  kl.sort((a,b)=> d===0? divSort(a.label,b.label) : ((b.y[L]||{}).cur||0)-((a.y[L]||{}).cur||0));
+  const cnt={'':kl.length, up:kl.filter(x=>mvOf(x)>0).length, dn:kl.filter(x=>mvOf(x)<0).length, weak:kl.filter(weak).length};
+  let list=ST.yrF==='up'?kl.filter(x=>mvOf(x)>0):ST.yrF==='dn'?kl.filter(x=>mvOf(x)<0):ST.yrF==='weak'?kl.filter(weak):kl;
+  const lim=d===3?(MODE==='phone'?60:200):100000, more=list.length>lim; list=list.slice(0,lim);
+  h+=`<div class="card" id="yrKids"><h3>${d<3?LEVEL_PL[d]:'Customers'} of ${esc(nodeName)} · ${d<3?'grade':'dealer health'} journey</h3>
+    <div class="note">${d<3?'Grade of each '+LEVEL[d].toLowerCase()+' in every year · <b>click a row to see its own 3-year view</b>':'Dealer health grade in every year · top customers by '+esc(S[L].p)+' '+(ST.metric==='val'?'sales':'qty')}</div>
+    <div class="row"><div class="seg">${[['','All'],['up','▲ Improved'],['dn','▼ Slipped'],['weak','C / D every year']].map(([k,l])=>`<button class="${ST.yrF===k?'on':''}" onclick="ST.yrF='${k}';render()">${l} (${cnt[k]})</button>`).join('')}</div></div>
+    <div class="scroll" style="max-height:${MODE==='phone'?'70vh':'560px'}"><table class="rv"><tr><th class="l">${d<3?LEVEL[d]:'Customer'}</th>${S.map(s=>`<th class="l">${esc(s.p)}</th>`).join('')}${S.map(s=>`<th>${esc(s.p)} ${unit()}</th>`).join('')}<th class="l">Journey</th></tr>
+    ${list.map(x=>{ const a=fgr(x), b=lgr(x), mv=mvOf(x), click=d<3&&x.parts?` class="click" onclick="${esc(`yrGo(${JSON.stringify(x.parts)})`)}"`:'';
+      return `<tr${click}><td title="${esc(x.label)}">${d<3?'<span class="drill">▸</span> ':''}${esc(x.label)}${d===3?` <span class="muted">${esc(x.k)}</span>`:''}</td>${S.map((_,i)=>`<td style="text-align:left">${x.y[i]&&x.y[i].tg?tgChip(x.y[i].tg):'<span class="muted">–</span>'}</td>`).join('')}${S.map((_,i)=>`<td>${x.y[i]&&x.y[i].cur?fmt(x.y[i].cur):'<span class="muted">–</span>'}</td>`).join('')}<td style="text-align:left">${a&&b?(mv>0?`<span class="up">▲ ${a.grade} → ${b.grade}</span>`:mv<0?`<span class="dn">▼ ${a.grade} → ${b.grade}</span>`:`<span class="muted">= ${b.grade}</span>`):'<span class="muted">–</span>'}</td></tr>`; }).join('')}
+    </table></div>${more?`<div class="note">Showing first ${lim} – use Share › CSV for the full list.</div>`:''}</div>`;
+  }
+  m.innerHTML=h;
+  m.querySelectorAll('select[data-yrl]').forEach(s=>s.addEventListener('change',()=>{ const l=+s.dataset.yrl, np=ST.path.slice(0,l); if(s.value) np.push(s.value); yrGo(np); }));
+}
+
 /* ===================== RENDER ===================== */
 function render(){
   fltSummary();
   if(!ROWS.length) return;
   const m=$('main');
-  ({rv:renderReview,cmp:renderCompare,lg:renderLeague,gr:renderGrades,pm:renderMix})[ST.tab](m);
+  ({rv:renderReview,cmp:renderCompare,lg:renderLeague,gr:renderGrades,pm:renderMix,yr:renderYears})[ST.tab](m);
 }
 function stColor(type){ const types=[...new Set(SEASONS.map(s=>s.type))]; return STYPE_COLOR[types.indexOf(type)%4]||'var(--s1)'; }
 

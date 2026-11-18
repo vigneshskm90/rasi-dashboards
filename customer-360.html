@@ -213,7 +213,7 @@ body.m-phone .legend{gap:10px}
 
 <button class="btn" id="fltBtn" style="display:none" onclick="$('filters').classList.toggle('open');fltSummary()"></button>
 <div id="filters" style="display:none">
-  <div class="f"><label>Zone</label><select id="fZone"></select></div>
+  <div class="f"><label>Division</label><select id="fZone"></select></div>
   <div class="f"><label>Region</label><select id="fRegion"></select></div>
   <div class="f"><label>Territory</label><select id="fTerr"></select></div>
   <div class="f"><label>Crop</label><select id="fCrop"></select></div>
@@ -304,13 +304,17 @@ function setMode(m,save){
 }
 function fltSummary(){
   const b=document.getElementById('fltBtn'); if(!b) return;
-  const parts=[ST.zone||'All zones',ST.region,ST.terr,ST.crop,ST.hyb,ST.foc,ST.focus,ST.metric==='val'?'₹':'MT'].filter(Boolean);
+  const parts=[ST.zone||'All Divisions',ST.region,ST.terr,ST.crop,ST.hyb,ST.foc,ST.focus,ST.metric==='val'?'₹':'MT'].filter(Boolean);
   b.innerHTML=`<span>⚙ <b>Filters:</b> ${esc(parts.join(' · '))}</span><span>${document.getElementById('filters').classList.contains('open')?'▲':'▼'}</span>`;
   b.style.display=(MODE==='phone'&&ROWS.length)?'':'none';
 }
 document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('#modeSw button'); if(b) setMode(b.dataset.mode,true); });
 
 /* ===================== HELPERS ===================== */
+// Fixed Division (Zone) order: North1, North2, Central, South – any other division follows alphabetically
+const DIV_ORDER=['north1','north2','central','south'];
+function divRank(z){ const n=String(z||'').toLowerCase().replace(/division/g,'').replace(/[^a-z0-9]/g,''); const i=DIV_ORDER.indexOf(n); return i<0? 100 : i; }
+function divSort(a,b){ return divRank(a)-divRank(b) || String(a).localeCompare(String(b)); }
 const $ = id => document.getElementById(id);
 const norm = s => String(s??'').toLowerCase().replace(/[^a-z0-9]/g,'');
 const num = v => { if(v==null||v==='') return 0; if(typeof v==='number') return v; const n=parseFloat(String(v).replace(/,/g,'')); return isNaN(n)?0:n; };
@@ -596,6 +600,17 @@ function normSeason(v){
   const code=L+yy; if(raw!==code) SEAS_RAW.set(raw,code); return code;
 }
 function seasonType(code){ const m=String(code).match(/^[A-Z]+/); return m?m[0]:''; }
+// Financial year from the SEASON CODE (not the invoice date):
+//   FY yyyy-yy = Rabi of the first year + Summer, Zaid and Kharif of the second year
+//   e.g. FY 2023-24 = RB23 + SU24 + KH24 (+ ZR24). Rows with a blank / unreadable season code are left out of the FY view.
+const FYS={};
+function seasonFY(code){
+  if(!code) return ''; if(FYS[code]!==undefined) return FYS[code];
+  const m=String(code).match(/^([A-Z]+)(\d{2})$/); let out='';
+  if(m){ const y=2000+(+m[2]), start = m[1]==='RB' ? y : (m[1]==='KH'||m[1]==='SU'||m[1]==='ZR') ? y-1 : null;
+    if(start!=null) out='FY '+start+'-'+String((start+1)%100).padStart(2,'0'); }
+  return FYS[code]=out;
+}
 function fyOf(t){ const d=new Date(t); const y=d.getMonth()>=3?d.getFullYear():d.getFullYear()-1; return 'FY'+String(y).slice(2)+'-'+String(y+1).slice(2); }
 function buildSeasons(){
   const m=new Map();
@@ -606,9 +621,9 @@ function buildSeasons(){
   // tie-break by season year number if starts are messy
   SEASONS.sort((a,b)=>yr(a.code)-yr(b.code)||a.min-b.min);
 }
-function periodKey(r){ return ST.stype==='FY' ? fyOf(r.d) : (seasonType(r.s)===ST.stype ? r.s : null); }
+function periodKey(r){ return ST.stype==='FY' ? (seasonFY(r.s)||null) : (seasonType(r.s)===ST.stype ? r.s : null); }
 function periodList(){
-  if(ST.stype==='FY'){ return [...new Set(ROWS.map(r=>fyOf(r.d)))].sort(); }
+  if(ST.stype==='FY'){ return [...new Set(ROWS.map(r=>seasonFY(r.s)).filter(Boolean))].sort(); }
   const have=SEASONS.filter(s=>s.type===ST.stype); if(!have.length) return [];
   const ys=have.map(s=>+s.code.slice(ST.stype.length)).filter(n=>!isNaN(n)); const lo=Math.min(...ys), hi=Math.max(...ys);
   const out=[]; for(let y=lo;y<=hi;y++) out.push(ST.stype+String(y).padStart(2,'0'));   // every year, even if missing in the data
@@ -630,7 +645,7 @@ function afterLoad(){
   buildSeasons();
   const types=[...new Set(SEASONS.map(s=>s.type))];
   let latest=ROWS[0]; for(const r of ROWS) if(r.d>latest.d) latest=r;
-  $('fStype').innerHTML=types.map(t=>`<option value="${t}">${STYPE_NAME[t]||t} seasons (${t})</option>`).join('')+'<option value="FY">Financial year (Apr–Mar)</option>';
+  $('fStype').innerHTML=types.map(t=>`<option value="${t}">${STYPE_NAME[t]||t} seasons (${t})</option>`).join('')+'<option value="FY">Financial year (Rabi + Summer + Kharif)</option>';
   ST.stype=ST.stype||seasonType(latest.s)||'FY'; $('fStype').value=ST.stype;
   $('filters').style.display='flex'; $('tabs').style.display='flex'; $('clearBtn').style.display='';
   afterLoadInfo(); seasonCheck(); fillFilters(); render();
@@ -646,6 +661,7 @@ function seasonCheck(){
       <div style="margin-top:4px;color:var(--text2)">Seasons found (rows): ${found}</div>`; }
   // also list in the status panel
   STS.seasonInfo=`Seasons found (rows): ${found}`+(fixed.length?` · Season codes cleaned: ${fixed.slice(0,8).map(([a,b])=>`“${a}” → ${b}`).join(', ')}${fixed.length>8?'…':''}`:'')+(miss.length?` · Missing: ${miss.join(', ')}`:'');
+  { const nb=ROWS.reduce((n,r)=>n+(seasonFY(r.s)?0:1),0); if(nb) STS.seasonInfo+=` · ${nb.toLocaleString('en-IN')} row(s) with a blank / unknown season code are left out of the Financial year view`; }
 }
 function afterLoadInfo(){
   let dmin=Infinity, dmax=-Infinity; for(const r of ROWS){ if(r.d<dmin) dmin=r.d; if(r.d>dmax) dmax=r.d; }
@@ -655,7 +671,7 @@ function afterLoadInfo(){
 function opts(el,vals,cur,all){ el.innerHTML=`<option value="">${all}</option>`+vals.map(v=>`<option${v===cur?' selected':''}>${esc(v)}</option>`).join(''); if(!vals.includes(cur)) el.value=''; return el.value; }
 function fillFilters(){
   const uniq=(arr)=>[...new Set(arr)].sort();
-  ST.zone=opts($('fZone'),uniq(ROWS.map(r=>r.z)),ST.zone,'All zones');
+  ST.zone=opts($('fZone'),[...new Set(ROWS.map(r=>r.z))].sort(divSort),ST.zone,'All Divisions');
   let R=ROWS.filter(r=>!ST.zone||r.z===ST.zone);
   ST.region=opts($('fRegion'),uniq(R.map(r=>r.r)),ST.region,'All regions');
   R=R.filter(r=>!ST.region||r.r===ST.region);
@@ -812,10 +828,10 @@ function geoTable(F,P,pv){
   const byZ=groupBy(F,r=>r.z), byR=groupBy(F,r=>r.z+'¦'+r.r), byT=groupBy(F,r=>r.z+'¦'+r.r+'¦'+r.t);
   const byZC=groupBy(F,r=>r.z+'¦'+r.c), byRC=groupBy(F,r=>r.z+'¦'+r.r+'¦'+r.c), byTC=groupBy(F,r=>r.z+'¦'+r.r+'¦'+r.t+'¦'+r.c), byAC=groupBy(F,r=>r.c);
   const brOf=(M,prefix)=>{ let n=0,s=0; for(const [k,m] of M){ if(prefix!=null&&!k.startsWith(prefix+'¦')) continue; const a=m.get(ST.focus); if(val(a)>0){n++;s+=breadth(a);} } return n?inr(s/n,1):'–'; };
-  const hdr=`<tr><th class="l">Zone / Region / Territory</th>${P.map(p=>`<th>${perTh(p)}</th>`).join('')}<th>Growth${info('growth')}</th><th>Active cust.</th><th>Avg breadth${info('breadth')}</th>${HAS_FOC?`<th>Focus %${info('focus')}</th>`:''}<th>Return %${info('ret')}</th><th>Liquidation %${info('liq')}</th></tr>`;
+  const hdr=`<tr><th class="l">Division / Region / Territory</th>${P.map(p=>`<th>${perTh(p)}</th>`).join('')}<th>Growth${info('growth')}</th><th>Active cust.</th><th>Avg breadth${info('breadth')}</th>${HAS_FOC?`<th>Focus %${info('focus')}</th>`:''}<th>Return %${info('ret')}</th><th>Liquidation %${info('liq')}</th></tr>`;
   const line=(cls,label,m,attr,key,pm,brM)=>{ const c=m.get(ST.focus), p=pv?m.get(pv):null, rp=retPct(c);
     return `<tr class="${cls}" ${attr||''}><td>${label}</td>${P.map(x=>`<td>${fmt(val(m.get(x)))}</td>`).join('')}<td>${grTxt(val(c),val(p))}</td><td>${activeCust(c)}</td><td>${brOf(brM,key==='a'?null:key)}</td>${HAS_FOC?`<td>${pctTxt(focPct(c))}</td>`:''}<td>${rp==null?'–':inr(rp,1)+'%'}</td><td>${pctTxt(liqPct(c))}</td></tr>`; };
-  let b='', zs=[...byZ.keys()].sort();
+  let b='', zs=[...byZ.keys()].sort(divSort);
   const all=groupBy(F,()=>'a').get('a')||new Map();
   for(const z of zs){
     b+=line('zone',esc(z),byZ.get(z),'',z,null,byZC);
@@ -907,7 +923,7 @@ function drawCuTable(out,P,pv){
 function sortCu(k){ if(ST.sortCu.k===k) ST.sortCu.d*=-1; else ST.sortCu={k,d:(k==='name'||k==='terr'||k==='st')?1:-1}; const {out,P,pv}=customerTable(); drawCuTable(out,P,pv); }
 function exportCustomers(){
   const P=shownPeriods();
-  const lines=[['Customer No','Customer Name','Zone','Region','Territory',...P.map(p=>p+' ('+unit()+')'),'Growth %','Status','Hybrid breadth','Focus %','Return %','Liquidation %','Health score','Grade','Last billed'].join(',')];
+  const lines=[['Customer No','Customer Name','Division','Region','Territory',...P.map(p=>p+' ('+unit()+')'),'Growth %','Status','Hybrid breadth','Focus %','Return %','Liquidation %','Health score','Grade','Last billed'].join(',')];
   for(const o of CU_VIEW) lines.push([o.c,'"'+String(o.name).replace(/"/g,'""')+'"',o.z,o.r,o.t,...o.vals.map(v=>(ST.metric==='val'?v/1e5:v/1000).toFixed(2)),o.g==null?'':o.g.toFixed(1),STATUS[o.st].t,o.br,o.fp==null?'':o.fp.toFixed(1),o.rp==null?'':o.rp.toFixed(1),o.lq==null?'':o.lq.toFixed(1),o.h?o.h.s:'',o.h?o.h.grade:'',o.last?new Date(o.last).toISOString().slice(0,10):''].join(','));
   saveFile(`Customers_${ST.focus}_${ST.custStatus||'all'}.csv`, lines.join('\n'));
 }
@@ -950,7 +966,7 @@ function shareMenu(btn,el,title,o){
 }
 function closeShareMenu(){ const m=document.getElementById('shareMenu'); if(m) m.remove(); }
 function cssVar(v){ return getComputedStyle(document.body).getPropertyValue(v).trim()||'#888'; }
-function filtText(){ return [ST.zone||'All zones',ST.region,ST.terr,ST.crop,ST.hyb,ST.foc,ST.stype==='FY'?'FY':(STYPE_NAME[ST.stype]||ST.stype),ST.focus,ST.metric==='val'?'₹ Net Value':'Qty (MT)'].filter(Boolean).join(' · '); }
+function filtText(){ return [ST.zone||'All Divisions',ST.region,ST.terr,ST.crop,ST.hyb,ST.foc,ST.stype==='FY'?'FY':(STYPE_NAME[ST.stype]||ST.stype),ST.focus,ST.metric==='val'?'₹ Net Value':'Qty (MT)'].filter(Boolean).join(' · '); }
 const stamp = () => new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 const fileBase = title => ('Rasi360_'+title+(title.includes(ST.focus)?'':'_'+ST.focus)).replace(/[^\w\-]+/g,'_').replace(/_+/g,'_').replace(/_$/,'').slice(0,90);
 // clean copy of a card/table: no buttons, inputs as text, chart colours fixed, full height
@@ -1174,14 +1190,14 @@ function renderHealth(m){
      <td style="width:28%"><div style="display:flex;height:12px;gap:2px" data-tip="${['A','B','C','D'].map(g=>g+' · '+GRADE_TXT[g]+': '+a[g]+' ('+inr(a[g]/a.n*100,0)+'%)').join('<br>')}">${['A','B','C','D'].filter(g=>a[g]).map(g=>`<div style="flex:${a[g]};background:${gcol[g]};border-radius:2px"></div>`).join('')}</div></td><td><b>${inr(a.s/a.n,0)}</b></td></tr>`;
   const avg=a=>a.s/a.n;
   let regRows='';
-  for(const [rk,a] of [...byR.entries()].sort((x,y)=>avg(y[1])-avg(x[1]))){
+  for(const [rk,a] of [...byR.entries()].sort((x,y)=>divSort(x[0].split('¦')[0],y[0].split('¦')[0]) || avg(y[1])-avg(x[1]))){
     const open=HS_OPEN.has(rk);
     regRows+=mixRow('reg click'+(ST.hsTerr&&ST.hsTerr.startsWith(rk+'¦')?' sel':''),`${open?'▾':'▸'} ${esc(rk.replace('¦',' › '))}`,a,`onclick="hsToggle('${rk.replace(/'/g,"\\'")}')"`);
     if(open) for(const [tk,ta] of [...byT.entries()].filter(([k])=>k.startsWith(rk+'¦')).sort((x,y)=>avg(y[1])-avg(x[1])))
       regRows+=mixRow('ter click'+(ST.hsTerr===tk?' sel':''),`${esc(tk.split('¦')[2])}${ST.hsTerr===tk?' <span class="chip g-B" style="font-size:10.5px">showing below</span>':''}`,ta,`onclick="hsTerr('${tk.replace(/'/g,"\\'")}')" title="Show this territory's dealers in the scorecard"`);
   }
   if(byR.size>1) regRows+=mixRow('tot','Total',tot);
-  h+=criteriaHTML()+`<div class="card"><h3>Grade mix by region · ${ST.focus}</h3><div class="note">Sorted by average score · <b>tap a region to see its territories</b>, then tap a territory to list its dealers in the scorecard · bar shows A / B / C / D share of dealers</div>
+  h+=criteriaHTML()+`<div class="card"><h3>Grade mix by region · ${ST.focus}</h3><div class="note">Divisions in fixed order (North1, North2, Central, South), regions by average score · <b>tap a region to see its territories</b>, then tap a territory to list its dealers in the scorecard · bar shows A / B / C / D share of dealers</div>
      <div class="legend">${['A','B','C','D'].map(g=>`<span><i style="background:${gcol[g]}"></i>${g} · ${GRADE_TXT[g]}</span>`).join('')}
        <span class="noshot" style="margin-left:auto"><button class="linkbtn" onclick="hsAll(true)">Expand all</button> · <button class="linkbtn" onclick="hsAll(false)">Collapse all</button></span></div>
      <div class="scroll" style="max-height:${MODE==='phone'?'70vh':'460px'}"><table><tr><th class="l">Zone › Region › Territory</th><th>Dealers</th><th>A</th><th>B</th><th>C</th><th>D</th><th class="l">Mix</th><th>Avg score</th></tr>${regRows}</table></div></div>`;
@@ -1211,7 +1227,7 @@ function hsToggle(k){ HS_OPEN.has(k)?HS_OPEN.delete(k):HS_OPEN.add(k); render();
 function hsAll(open){ HS_OPEN=open?new Set(HS_REGIONS):new Set(); render(); }
 function hsTerr(k){ ST.hsTerr=(ST.hsTerr===k?'':k); render(); if(ST.hsTerr){ const c=document.getElementById('hsCard'); if(c) c.scrollIntoView({behavior:'smooth',block:'start'}); } }
 function exportHealth(){
-  const lines=[['Customer No','Customer Name','Zone','Region','Territory',(prevPeriod()||'Prev')+' ('+unit()+')',ST.focus+' ('+unit()+')','Growth %','Growth pts','Focus %','Focus pts','Return %','Return pts','Hybrid breadth','Breadth pts','Liquidation %','Score','Grade'].join(',')];
+  const lines=[['Customer No','Customer Name','Division','Region','Territory',(prevPeriod()||'Prev')+' ('+unit()+')',ST.focus+' ('+unit()+')','Growth %','Growth pts','Focus %','Focus pts','Return %','Return pts','Hybrid breadth','Breadth pts','Liquidation %','Score','Grade'].join(',')];
   const sc=v=>(ST.metric==='val'?v/1e5:v/1000).toFixed(2);
   for(const o of HS_VIEW) lines.push([o.c,'"'+String(o.name).replace(/"/g,'""')+'"',o.z,o.r,o.t,sc(o.prev),sc(o.cur),o.h.g==null?'New':o.h.g.toFixed(1),o.h.gp,o.h.fs==null?'':o.h.fs.toFixed(1),o.h.fpP,o.h.rp.toFixed(1),o.h.rpP,o.h.br,o.h.bp,o.lq==null?'':o.lq.toFixed(1),o.h.s,o.h.grade].join(','));
   saveFile(`Dealer_Health_${ST.focus}_${ST.hsTerr?ST.hsTerr.split('¦')[2]+'_':''}${ST.hsGrade||'all'}.csv`, lines.join('\n'));
