@@ -124,6 +124,24 @@ svg text{font-family:inherit}
 .modesw button{font:inherit;background:transparent;color:#fff;border:0;padding:6px 9px;font-size:12px;cursor:pointer;opacity:.8}
 .modesw button.on{background:#fff;color:#14442f;opacity:1;font-weight:600}
 #fltBtn{display:none}
+.share{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap}
+.share .lbl{font-size:11px;color:var(--ink2);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-right:2px}
+.share button{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:600}
+.share button:hover{border-color:var(--accent)}
+body.touch .share button{min-height:36px;padding:4px 12px}
+nav .sv{margin-left:auto;display:inline-flex;align-items:center;gap:6px;background:var(--surface);color:var(--accent);border:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:8px;font-weight:600;align-self:center;padding:6px 14px;margin-bottom:6px;box-shadow:none}
+nav .sv:hover{border-color:var(--accent)}
+body.touch nav .sv{position:sticky;right:0;box-shadow:-8px 0 8px var(--bg)}
+.card{position:relative}
+.cshare{position:absolute;top:10px;right:10px;display:inline-flex;align-items:center;gap:5px;font:inherit;font-size:12.5px;font-weight:600;color:var(--accent);background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:4px 10px;cursor:pointer;z-index:2}
+.cshare:hover{border-color:var(--accent)}
+body.touch .cshare{padding:6px 12px}
+.card>h3{padding-right:96px}
+#shareMenu .mh{font-size:11px;color:var(--ink2);font-weight:600;text-transform:uppercase;letter-spacing:.3px;padding:6px 10px 4px}
+#shareMenu{position:fixed;z-index:60;display:none;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.18);padding:6px;min-width:200px}
+#shareMenu button{display:block;width:100%;text-align:left;font:inherit;font-size:13px;background:none;border:0;color:var(--ink);padding:8px 10px;border-radius:5px;cursor:pointer}
+#shareMenu button:hover{background:var(--surface2)}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#1c1c1a;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;z-index:70;display:none;max-width:90vw}
 #guide{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;z-index:40;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
 #guide .box{background:var(--surface);border-radius:10px;max-width:920px;width:100%;padding:18px 22px}
 #guide td{white-space:normal;text-align:left;vertical-align:top} #guide th{text-align:left;position:static}
@@ -172,7 +190,7 @@ body.m-phone #guide{padding:0} body.m-phone #guide .box{border-radius:0;min-heig
   <div class="modesw" id="modeSw" title="Layout"><button type="button" data-mode="pc">PC</button><button type="button" data-mode="phone">Phone</button><button type="button" data-mode="tab">iPad</button></div>
   <button class="btn" type="button" id="themeBtn" title="Switch light / dark">Dark</button>
 </header>
-<div id="mini" role="region" aria-label="Current view"><select id="miniTab" aria-label="Tab"></select><span class="ms" id="miniSum"></span><button type="button" id="miniBtn">Filters ▲</button></div>
+<div id="mini" role="region" aria-label="Current view"><select id="miniTab" aria-label="Tab"></select><span class="ms" id="miniSum"></span><button type="button" id="miniShare" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.45)">Share</button><button type="button" id="miniBtn">Filters ▲</button></div>
 <div id="exbar">Example data: these retailers and numbers are made up. Load your own file to replace them.</div>
 <div id="status"><b id="stTitle"></b> <span id="stDetail" class="muted"></span><div class="pbar"><div id="stBar"></div></div></div>
 <p id="sum"></p>
@@ -203,6 +221,7 @@ body.m-phone #guide{padding:0} body.m-phone #guide .box{border-radius:0;min-heig
   <button type="button" data-t="pr">Products</button>
   <button type="button" data-t="sr" id="srTab">Sourcing</button>
   <button type="button" data-t="op">Opportunities</button>
+  <button type="button" class="sv" id="shareBtn" title="Share this tab as a picture or a page"><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="5" r="3" fill="currentColor"/><circle cx="6" cy="12" r="3" fill="currentColor"/><circle cx="18" cy="19" r="3" fill="currentColor"/><path d="M8.6 10.7l6.8-4M8.6 13.3l6.8 4" stroke="currentColor" stroke-width="2" fill="none"/></svg>Share view</button>
 </nav>
 <main id="main">
   <div class="empty">
@@ -217,6 +236,8 @@ body.m-phone #guide{padding:0} body.m-phone #guide .box{border-radius:0;min-heig
   </div>
 </main>
 <div id="tip"></div>
+<div id="shareMenu" role="menu"></div>
+<div id="toast" role="status"></div>
 <div id="guide"><div class="box" id="guideBox"></div></div>
 
 <script>
@@ -416,13 +437,13 @@ const FMAP={fKind:'kind',fFocus:'focus',fComp:'comp',fDiv:'div',fReg:'reg',fTer:
 Object.keys(FMAP).forEach(id=>$(id).addEventListener('change',e=>{const k=FMAP[id],v=e.target.value;ST[k]=(k==='kind'||k==='foc'||k==='rst'||k==='src')?v:+v;
   if(id==='fKind'){ST.focus=-1;ST.comp=-1}if(id==='fFocus')ST.comp=-1;if(id==='fDiv'){ST.reg=-1;ST.ter=-1;ST.dis=-1}if(id==='fReg'){ST.ter=-1;ST.dis=-1}if(id==='fTer')ST.dis=-1;if(id==='fPc'||id==='fFoc')ST.prod=-1;
   ST.hsTer=-1;fillFilters();render()}));
-$('tabs').addEventListener('click',e=>{const t=e.target.dataset.t;if(t)setTab(t)});
-function setTab(t){ST.tab=t;[...$('tabs').children].forEach(b=>b.classList.toggle('on',b.dataset.t===t));render()}
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b&&b.dataset.t)setTab(b.dataset.t)});
+function setTab(t){ST.tab=t;[...$('tabs').children].forEach(b=>{if(b.dataset.t)b.classList.toggle('on',b.dataset.t===t)});render()}
 $('fltBtn').addEventListener('click',()=>{$('filters').classList.toggle('open');fltSummary()});
 function fltSummary(){const b=$('fltBtn');if(!D){b.style.display='none';return}const L=D.L;
   const parts=[PER[ST.focus]+(ST.comp>=0?' vs '+PER[ST.comp]:''),ST.div>=0?L.div[ST.div]:'',ST.reg>=0?L.reg[ST.reg]:'',ST.ter>=0?L.ter[ST.ter][0]:'',ST.dis>=0?L.dis[ST.dis][0]:'',ST.cat>=0?L.cat[ST.cat]:'',ST.pc>=0?L.pc[ST.pc]:'',ST.foc,ST.prod>=0?D.PR[ST.prod][0]:'',ST.rst,ST.src].filter(Boolean);
   b.innerHTML=`<span><b>Filters:</b> ${esc(parts.join(' · '))}</span><span>${$('filters').classList.contains('open')?'▲':'▼'}</span>`;b.style.display='';
-  $('miniSum').textContent=parts.join(' · ');$('miniTab').innerHTML=[...$('tabs').children].map(t=>`<option value="${t.dataset.t}"${t.dataset.t===ST.tab?' selected':''}>${t.textContent}</option>`).join('')}
+  $('miniSum').textContent=parts.join(' · ');$('miniTab').innerHTML=[...$('tabs').children].filter(t=>t.dataset.t).map(t=>`<option value="${t.dataset.t}"${t.dataset.t===ST.tab?' selected':''}>${t.textContent}</option>`).join('')}
 $('miniTab').addEventListener('change',e=>{setTab(e.target.value);scrollTo(0,0)});
 $('miniBtn').addEventListener('click',()=>{if(MODE==='phone')$('filters').classList.add('open');scrollTo({top:0});fltSummary()});
 function miniCheck(){const t=$('tabs');if(!D||t.style.display==='none'){$('mini').classList.remove('show');return}$('mini').classList.toggle('show',t.getBoundingClientRect().bottom<0)}
@@ -530,6 +551,7 @@ function render(){ if(!D)return; RL=null;
   const ch=$('chips');if(ST.dst>=0){ch.style.display='flex';ch.innerHTML=`<button class="fchip" type="button" id="dstX">Distributor: ${esc(D.L.dst[ST.dst][1])} ✕</button>`;$('dstX').onclick=()=>{ST.dst=-1;render()}}else ch.style.display='none';
   summary();
   ({ov:renderOverview,geo:renderGeo,hs:renderHealth,rt:renderRetailers,r360:render360,ty:renderType,sr:renderSource,pr:renderProducts,op:renderOpp})[ST.tab]($('main'));
+  addCardShare($('main'));
 }
 function totals(){const {F,fi,ci}=C;const A={kg:0,n:0,f:0,act:0},B={kg:0,n:0,f:0};
   for(const r of F){const p=SP[r[0]];if(p===fi){A.kg+=r[8];A.n+=r[9];if(isFoc(r[6]))A.f+=r[8];if(D.RT[r[5]][4]==='ACTIVE')A.act+=r[8]}else if(p===ci&&ci>=0){B.kg+=r[8];B.n+=r[9];if(isFoc(r[6]))B.f+=r[8]}}
@@ -600,10 +622,10 @@ function renderGeo(m){const {F,fi,ci,a,b}=C,NP=D.PR.length,N=new Map();
 function renderRetailers(m){const L=retList(),{a,b}=C,cnt={};L.forEach(o=>cnt[o.st]=(cnt[o.st]||0)+1);
   m.innerHTML=`<div class="note">Status of each retailer in <b>${a}</b> against <b>${b||'no earlier period'}</b>. Select a retailer to open Retailer 360.</div>
    <div class="statusbar">${['','grow','stab','decl','new','react','lost','dorm'].map(k=>`<button type="button" class="stat ${ST.rStatus===k?'on':''}" data-st="${k}"><div class="s">${k?chip(k):'<b>All retailers</b>'}</div><div class="n">${inr(k?cnt[k]||0:L.length)}</div></button>`).join('')}</div>
-   <div class="row"><input type="search" id="rq" placeholder="Search shop, owner, code, territory or district" value="${esc(ST.rq)}" style="min-width:300px;max-width:100%"><button class="btn" type="button" id="rExp">Export CSV</button><span class="muted" id="rCount"></span></div>
+   <div class="row"><input type="search" id="rq" placeholder="Search shop, owner, code, territory or district" value="${esc(ST.rq)}" style="min-width:300px;max-width:100%">${shareBtns("rt")}<span class="muted" id="rCount"></span></div>
    <div class="scroll"  id="rTbl"></div>`;
   m.querySelectorAll('.stat').forEach(s=>s.onclick=()=>{ST.rStatus=s.dataset.st;render()});
-  $('rq').addEventListener('input',e=>{ST.rq=e.target.value;drawRet()});$('rExp').onclick=exportRet;drawRet()}
+  $('rq').addEventListener('input',e=>{ST.rq=e.target.value;drawRet()});SHARE.rt={title:'Retailers '+(ST.rStatus?STATUS[ST.rStatus][0]:'all'),file:`Retailers_${C.a}_${ST.rStatus||'all'}`,csv:()=>retCsv(RVIEW),el:()=>$('rTbl')};drawRet()}
 let RVIEW=[];
 function drawRet(){const L=retList(),{a,b,fi,ci}=C,q=ST.rq.trim().toLowerCase();
   let rows=L.filter(o=>(!ST.rStatus||o.st===ST.rStatus)&&(!q||(o.name+' '+o.owner+' '+o.code+' '+o.tn+' '+o.dn+' '+o.gn).toLowerCase().includes(q)));
@@ -613,17 +635,70 @@ function drawRet(){const L=retList(),{a,b,fi,ci}=C,q=ST.rq.trim().toLowerCase();
   $('rTbl').innerHTML=`<table><tr>${th('name','Retailer','l')}${th('ter','Territory / District','l')}${b?th('prev',b+' kg'):''}${th('cur',a+' kg')}${th('g','Growth')}${th('st','Status','l')}${th('br','SKUs')}${D.hasFoc?th('fp','Focus %'):''}${th('hs','Health','l')}<th class="l">Contact</th></tr>
    ${rows.slice(0,lim).map(o=>`<tr class="click" data-ret="${o.k}"><td><div class="cn"><span>${esc(o.name)}${regTag(o.reg)}<br><small>${esc(o.owner?o.owner+' · ':'')}${esc(o.code)}${o.sp?' · '+esc(o.sp):''}</small></span>${sparkCell(o.sv)}</div></td><td class="l">${esc(o.tn)}<br><small class="muted">${esc(o.dn)}</small></td>${b?`<td>${o.prev?KG(o.prev):dash}</td>`:''}<td>${o.cur?KG(o.cur):dash}</td><td>${grTxt(o.cur,o.prev)}</td><td class="l">${chip(o.st)}</td><td>${o.br||dash}</td>${D.hasFoc?`<td>${pctTxt(o.fp)}</td>`:''}<td class="l">${gradeChip(o.h)}</td><td class="l">${callCell(o.mob)}</td></tr>`).join('')}</table>`;
   $('rCount').textContent=`${inr(rows.length)} retailers${rows.length>lim?` (first ${lim} shown; search or export to see the rest)`:''}`;
-  $('rTbl').querySelectorAll('th.s').forEach(h=>h.onclick=()=>{const k=h.dataset.k;ST.sort=ST.sort.k===k?{k,d:-ST.sort.d}:{k,d:(k==='name'||k==='ter'||k==='st')?1:-1};drawRet()});
+  addCardShare($('main'));$('rTbl').querySelectorAll('th.s').forEach(h=>h.onclick=()=>{const k=h.dataset.k;ST.sort=ST.sort.k===k?{k,d:-ST.sort.d}:{k,d:(k==='name'||k==='ter'||k==='st')?1:-1};drawRet()});
   bindRows($('rTbl'))}
 function bindRows(el){el.querySelectorAll('tr[data-ret]').forEach(tr=>tr.onclick=e=>{if(e.target.closest('[data-stop]'))return;open360(+tr.dataset.ret)})}
 const csvq=s=>'"'+String(s??'').replace(/"/g,'""')+'"';
 function retCsv(list){const {a,b}=C;const lines=[['Retailer Code','Shop','Owner','Mobile','Registration','Source Pattern','Source Customer Count','Distributors used in period','Main distributor','Main distributor share %','Division','Region','Territory','District',(b||'Compare')+' kg',a+' kg','Growth %','Status','SKU breadth','Focus %','Health score','Grade'].join(',')];
   for(const o of list)lines.push([o.code,csvq(o.name),csvq(o.owner),o.mob,o.reg,csvq(o.sp),o.sc??'',o.nd||'',o.nd?csvq(D.L.dst[o.md][1]):'',o.mds==null?'':o.mds.toFixed(1),csvq(D.L.div[o.d]),csvq(o.gn),csvq(o.tn),csvq(o.dn),Math.round(o.prev),Math.round(o.cur),o.g100==null?'':o.g100.toFixed(1),STATUS[o.st][0],o.br,o.fp==null?'':o.fp.toFixed(1),o.h?o.h.s:'',o.h?o.h.grade:''].join(','));return lines.join('\n')}
-function exportRet(){saveFile(`Retailers_${C.a}_${ST.rStatus||'all'}.csv`,retCsv(RVIEW))}
 let DL=null;if(window.claude&&typeof window.claude.use==='function')window.claude.use('downloads').then(d=>{DL=d}).catch(()=>{});
-async function saveFile(name,text){name=name.replace(/[^\w.\-]+/g,'_');
-  if(DL){try{await DL.save({filename:name,data:'﻿'+text})}catch(e){}return}
-  try{const el=document.createElement('a');el.href=URL.createObjectURL(new Blob(['﻿'+text],{type:'text/csv'}));el.download=name;document.body.appendChild(el);el.click();el.remove()}catch(e){}}
+function toast(t,ms){const el=$('toast');el.textContent=t;el.style.display='block';clearTimeout(toast.t);if(ms!==0)toast.t=setTimeout(()=>{el.style.display='none'},ms||3500)}
+const safeName=n=>n.replace(/[^\w.\-]+/g,'_');
+async function shareBlob(name,blob,mime){name=safeName(name);
+  if(DL){try{await DL.save({filename:name,data:blob});toast('Saved '+name)}catch(e){if(e&&e.code!=='declined')toast('Could not save the file here ('+(e.code||'error')+'). Try the downloaded copy of the dashboard.')}return}
+  try{const f=new File([blob],name,{type:mime});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e&&e.name==='AbortError')return}
+  try{const el=document.createElement('a');el.href=URL.createObjectURL(blob);el.download=name;document.body.appendChild(el);el.click();setTimeout(()=>{URL.revokeObjectURL(el.href);el.remove()},4000);toast('Downloaded '+name)}catch(e){toast('This browser could not save the file.')}}
+async function saveFile(name,text){await shareBlob(name,new Blob(['﻿'+text],{type:'text/csv'}),'text/csv')}
+/* shared heading for HTML and PNG */
+function shareHead(title){const L=D.L,f=[C.a+(C.b?' vs '+C.b:''),ST.div>=0?L.div[ST.div]:'',ST.reg>=0?L.reg[ST.reg]:'',ST.ter>=0?L.ter[ST.ter][0]:'',ST.dis>=0?L.dis[ST.dis][0]:'',ST.cat>=0?L.cat[ST.cat]:'',ST.pc>=0?L.pc[ST.pc]:'',ST.foc,ST.prod>=0?D.PR[ST.prod][0]:'',ST.rst,ST.src,ST.dst>=0?L.dst[ST.dst][1]:''].filter(Boolean).join(' · ');
+  return `<div style="background:#14442f;color:#fff;padding:12px 16px;border-bottom:4px solid #e0a526;border-radius:8px 8px 0 0"><div style="font-size:18px;font-weight:600">Rasi Rewards Dashboard · ${esc(title)}</div><div style="font-size:12px;color:#cfe5d8;margin-top:2px">${esc(f)} · shared ${new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'})}${D.src.example?' · EXAMPLE DATA':''}</div></div>`}
+function pageCss(){return [...document.querySelectorAll('style')].map(x=>x.textContent).join('\n')}
+function cleanClone(el,maxRows,pic){const c=el.cloneNode(true);c.removeAttribute('id');c.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));
+  if(pic){[c,...c.querySelectorAll('*')].forEach(x=>{if(x.style&&x.style.overflowX)x.style.overflowX='visible';if(x.style&&x.style.overflow)x.style.overflow='visible'});[c,...c.querySelectorAll('.card,.scroll')].forEach(x=>{if(x.classList.contains('card')||x.classList.contains('scroll')){x.style.overflow='visible';x.style.maxHeight='none'}});c.querySelectorAll('.call').forEach(x=>{const a=x.querySelector('a');x.replaceWith(document.createTextNode(a?a.textContent.replace('Call ',''):''))})}c.querySelectorAll('button,input,select,.share,[data-noshare]').forEach(x=>x.remove());
+  c.querySelectorAll('.scroll').forEach(x=>{x.style.maxHeight='none';x.style.overflow='visible'});c.querySelectorAll('[data-tip]').forEach(x=>x.removeAttribute('data-tip'));
+  c.querySelectorAll('.call a').forEach(a=>{a.removeAttribute('target');a.removeAttribute('data-stop')});
+  if(maxRows)c.querySelectorAll('table').forEach(t=>{const rows=[...t.querySelectorAll('tr')].filter(r=>!r.querySelector('th'));if(rows.length>maxRows){rows.slice(maxRows).forEach(r=>r.remove());const tr=document.createElement('tr');const td=document.createElement('td');td.colSpan=40;td.style.cssText='text-align:left;color:#84918a;font-style:italic';td.textContent=`… ${rows.length-maxRows} more rows. Share as HTML or CSV for the full list.`;tr.appendChild(td);t.appendChild(tr)}});
+  return c}
+function htmlDoc(title,body){const th=isDark()?'dark':'light';return `<!DOCTYPE html><html lang="en" data-theme="${th}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc('Rasi Rewards · '+title)}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"><style>${pageCss()}
+body{padding:12px}main.snap{margin:0;border-radius:0 0 8px 8px;min-height:0}.snap .card{break-inside:avoid}.snap tr.click{cursor:default}</style></head><body>${shareHead(title)}<main class="snap">${body}</main></body></html>`}
+async function shareHTML(title,el){await shareBlob(`Rasi_Rewards_${title}_${C.a}.html`,new Blob([htmlDoc(title,cleanClone(el).outerHTML)],{type:'text/html'}),'text/html')}
+function listHTML(title,csv){const rows=csv.split('\n').map(l=>{const out=[];let f='',q=false;for(let i=0;i<l.length;i++){const ch=l[i];if(q){if(ch==='"'){if(l[i+1]==='"'){f+='"';i++}else q=false}else f+=ch}else if(ch==='"')q=true;else if(ch===','){out.push(f);f=''}else f+=ch}out.push(f);return out});
+  const hd=rows.shift(),mi=hd.indexOf('Mobile'),num=hd.map((h,i)=>rows.slice(0,50).every(r=>r[i]===''||!isNaN(r[i].replace(/,/g,''))));
+  const cell=(v,i)=>i===mi&&/^\d{10}$/.test(v)?`<td class="l"><span class="call"><a href="tel:+91${v}">Call ${v}</a> <a class="wa" href="https://wa.me/91${v}">WhatsApp</a></span></td>`:`<td class="${num[i]?'':'l'}">${esc(v)}</td>`;
+  return `<div class="card"><h3>${esc(title)} <span class="chip c-stab">${inr(rows.length)}</span></h3><div style="overflow-x:auto"><table><tr>${hd.map((h,i)=>`<th class="${num[i]?'':'l'}">${esc(h)}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(cell).join('')}</tr>`).join('')}</table></div></div>`}
+/* PNG via html-to-image, loaded only when first used */
+let h2c=null;function needH2C(){if(window.htmlToImage)return Promise.resolve();if(h2c)return h2c;h2c=new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js';sc.onload=res;sc.onerror=()=>{h2c=null;rej(new Error('net'))};document.head.appendChild(sc)});return h2c}
+async function sharePNG(title,el,maxRows){toast('Making the picture…',0);
+  try{await needH2C()}catch(e){toast('The picture maker could not be downloaded. Check the internet connection, or share as HTML.');return}
+  const host=document.createElement('div'),wrap=document.createElement('div'),w=MODE==='phone'?520:1200;host.style.cssText='position:fixed;left:-20000px;top:0';wrap.style.cssText=`width:${w}px;background:var(--bg);padding:12px;font-family:var(--font);color:var(--ink)`;host.appendChild(wrap);
+  wrap.innerHTML=shareHead(title);const body=document.createElement('main');body.style.cssText='margin:0;border-radius:0 0 8px 8px;min-height:0;padding:14px';body.appendChild(cleanClone(el,maxRows||40,true));wrap.appendChild(body);document.body.appendChild(host);
+  wrap.querySelectorAll('.grid2').forEach(g=>{if([...g.children].some(ch=>ch.scrollWidth>ch.clientWidth+2))g.style.gridTemplateColumns='1fr'});
+  for(let i=0;i<4;i++){const over=Math.max(0,...[...wrap.querySelectorAll('table')].map(t=>{const p=t.closest('.card')||t.parentElement;return t.getBoundingClientRect().right-p.getBoundingClientRect().right+14}));if(over<=1)break;wrap.style.width=(wrap.getBoundingClientRect().width+over)+'px'}
+  // charts: copy the theme colours onto the SVG so the picture keeps them
+  wrap.querySelectorAll('svg').forEach(sv=>{const r=sv.getBoundingClientRect();if(!sv.getAttribute('width')||sv.getAttribute('width').includes('%'))sv.setAttribute('width',Math.round(r.width));sv.setAttribute('height',Math.round(r.height));
+    sv.querySelectorAll('*').forEach(n=>{const cs=getComputedStyle(n);if(n.style.fill||n.tagName==='text')n.setAttribute('fill',cs.fill);if(n.style.stroke)n.setAttribute('stroke',cs.stroke);n.style.fill='';n.style.stroke='';if(n.tagName==='text'){n.setAttribute('font-family','IBM Plex Sans, Arial, sans-serif')}})});
+  try{const blob=await htmlToImage.toBlob(wrap,{pixelRatio:2,backgroundColor:getComputedStyle(document.body).backgroundColor,skipFonts:true,cacheBust:false});host.remove();if(!blob)throw new Error('empty');toast('Picture ready',1200);await shareBlob(`Rasi_Rewards_${title}_${C.a}.png`,blob,'image/png')}
+  catch(e){host.remove();toast('Could not make the picture. Try sharing as HTML.')}}
+/* list share buttons: CSV, HTML (full list), PNG (first 40 rows) */
+const SHARE={};
+const shareBtns=key=>`<span class="share" data-sh="${key}"><span class="lbl">Share</span><button type="button" data-fmt="csv">CSV</button><button type="button" data-fmt="html">HTML</button><button type="button" data-fmt="png">PNG</button></span>`;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-fmt]');if(!b)return;const k=b.closest('[data-sh]').dataset.sh,x=SHARE[k];if(!x)return;const f=b.dataset.fmt;
+  if(f==='csv')saveFile(x.file+'.csv',x.csv());else if(f==='html')shareBlob(x.file+'.html',new Blob([htmlDoc(x.title,listHTML(x.title,x.csv()))],{type:'text/html'}),'text/html');else sharePNG(x.title,x.el())});
+/* whole-tab share */
+const TABNAME=()=>[...$('tabs').children].find(t=>t.dataset.t===ST.tab).textContent.trim();
+let MENU=[];
+function openShareMenu(btn,head,items){const m=$('shareMenu');MENU=items;m.innerHTML=`<div class="mh">${esc(head)}</div>`+items.map((it,i)=>`<button type="button" role="menuitem" data-mi="${i}">${it[0]}</button>`).join('');const r=btn.getBoundingClientRect();m.style.display='block';m.style.top=Math.min(r.bottom+6,innerHeight-m.offsetHeight-8)+'px';m.style.left=Math.max(8,Math.min(r.right-m.offsetWidth,innerWidth-m.offsetWidth-8))+'px'}
+const tabItems=()=>{const t=TABNAME(),el=$('main');return [['PNG picture of this tab',()=>sharePNG(t,el,25)],['HTML page of this tab',()=>shareHTML(t,el)]]};
+$('shareBtn').addEventListener('click',e=>{e.stopPropagation();openShareMenu(e.currentTarget,'Share '+TABNAME(),tabItems())});
+$('miniShare').addEventListener('click',e=>{e.stopPropagation();openShareMenu(e.currentTarget,'Share '+TABNAME(),tabItems())});
+document.addEventListener('click',e=>{if(!e.target.closest('#shareMenu'))$('shareMenu').style.display='none'});
+$('shareMenu').addEventListener('click',e=>{const b=e.target.closest('[data-mi]');if(!b)return;$('shareMenu').style.display='none';const it=MENU[+b.dataset.mi];if(it)it[1]()});
+/* a Share button on every card */
+const cardTitle=c=>{const h=c.querySelector('h3');return h?(h.firstChild&&h.firstChild.nodeType===3?h.firstChild.textContent:h.textContent).trim():TABNAME()};
+function addCardShare(root){root.querySelectorAll('.card').forEach(c=>{if(c.querySelector(':scope>.cshare')||!c.querySelector('h3'))return;const b=document.createElement('button');b.type='button';b.className='cshare';b.title='Share this card';b.setAttribute('data-noshare','1');b.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="5" r="3" fill="currentColor"/><circle cx="6" cy="12" r="3" fill="currentColor"/><circle cx="18" cy="19" r="3" fill="currentColor"/><path d="M8.6 10.7l6.8-4M8.6 13.3l6.8 4" stroke="currentColor" stroke-width="2" fill="none"/></svg>Share';c.appendChild(b)})}
+document.addEventListener('click',e=>{const b=e.target.closest('.cshare');if(!b)return;e.stopPropagation();const c=b.closest('.card'),t=cardTitle(c),sh=c.querySelector('[data-sh]'),x=sh&&SHARE[sh.dataset.sh];
+  const items=[['PNG picture',()=>sharePNG(t,c,40)],[x?'HTML page (full list)':'HTML page',()=>x?shareBlob(x.file+'.html',new Blob([htmlDoc(x.title,listHTML(x.title,x.csv()))],{type:'text/html'}),'text/html'):shareHTML(t,c)]];
+  if(x)items.push(['CSV file (full list)',()=>saveFile(x.file+'.csv',x.csv())]);openShareMenu(b,'Share '+t,items)},true);
 
 /* ---------- RETAILER 360 ---------- */
 function open360(k){ST.ret=k;setTab('r360');scrollTo(0,0)}
@@ -675,6 +750,7 @@ function draw360(){const el=$('b360'),k=ST.ret;if(k<0||!D.RT[k]){el.innerHTML='<
    <div class="card"><h3>Supplied by</h3><div class="note">Distributors this retailer bought through</div><div style="overflow-x:auto"><table><tr><th class="l">Distributor</th><th class="l">Code</th><th>${a} kg</th><th>All seasons kg</th><th>Last season</th></tr>
      ${[...byD.entries()].sort((x,y)=>y[1].kg-x[1].kg).map(([d,v])=>`<tr><td>${esc(D.L.dst[d][1])}</td><td class="l">${esc(D.L.dst[d][0])}</td><td>${v.a?KG(v.a):dash}</td><td>${KG(v.kg)}</td><td>${D.S[v.ls]}</td></tr>`).join('')}</table></div></div>`}
 
+{const f=draw360;draw360=function(){f();addCardShare($('main'))}}
 /* ---------- HEALTH ---------- */
 function ci_(path){const [k,i]=path.split('.');const v=i==null?HC[k]:HC[k][+i];return `<input type="number" step="any" value="${v}" data-p="${path}" id="hc-${path.replace('.','-')}" aria-label="${path}">`}
 function criteriaHTML(){const {a,b}=C,gc=HC.gCut,fc=HC.fCut,bc=HC.bCut;
@@ -697,7 +773,7 @@ function renderHealth(m){const L=retList(),{a,b}=C,scored=L.filter(o=>o.h),totV=
    <div class="scroll" style="max-height:440px"><table><tr><th class="l">Division › Region › Territory</th><th>Retailers</th><th>A</th><th>B</th><th>C</th><th>D</th><th class="l">Mix</th><th>Avg score</th></tr>${rr}</table></div></div>`;
   const base=ST.hsTer>=0?scored.filter(o=>o.t===ST.hsTer):scored,list=(ST.hsGrade?base.filter(o=>o.h.grade===ST.hsGrade):base).slice().sort((x,y)=>y.h.s-x.h.s||y.cur-x.cur);HSVIEW=list;
   h+=`<div class="card" id="hsCard"><h3>Retailer scorecard · ${a}${ST.hsTer>=0?' · '+esc(D.L.ter[ST.hsTer][0]):''}${ST.hsGrade?' · Grade '+ST.hsGrade:''}</h3>
-   <div class="row"><span class="note" style="margin:0">${inr(list.length)} retailers · kg</span>${ST.hsTer>=0?'<button class="btn" type="button" id="hsAllT">Show all territories</button>':''}<button class="btn" type="button" id="hsExp">Export CSV</button></div>
+   <div class="row"><span class="note" style="margin:0">${inr(list.length)} retailers · kg</span>${ST.hsTer>=0?'<button class="btn" type="button" id="hsAllT">Show all territories</button>':''}${shareBtns("hs")}</div>
    <div class="scroll"  id="hsTbl"><table><tr><th class="l">Retailer</th><th class="l">Territory</th>${b?`<th>${b}</th>`:''}<th>${a}</th><th>Growth</th><th>Pts</th>${D.hasFoc?'<th>Focus %</th><th>Pts</th>':''}<th>SKUs</th><th>Pts</th><th>Score</th><th class="l">Grade</th></tr>
    ${list.slice(0,MODE==='phone'?200:800).map(o=>`<tr class="click" data-ret="${o.k}"><td>${esc(o.name)} <small class="muted">${esc(o.code)}</small></td><td class="l">${esc(o.tn)}</td>${b?`<td>${o.prev?KG(o.prev):dash}</td>`:''}<td>${KG(o.cur)}</td><td>${grTxt(o.cur,o.prev)}</td><td class="muted">${o.h.gp}</td>${D.hasFoc?`<td>${pctTxt(o.h.fs)}</td><td class="muted">${o.h.fpP}</td>`:''}<td>${o.br}</td><td class="muted">${o.h.bp}</td><td><b>${o.h.s}</b></td><td class="l"><span class="chip g-${o.h.grade}">${o.h.grade} · ${GRADE_TXT[o.h.grade]}</span></td></tr>`).join('')}</table></div></div>`;
   m.innerHTML=h;
@@ -706,7 +782,7 @@ function renderHealth(m){const L=retList(),{a,b}=C,scored=L.filter(o=>o.h),totV=
   m.querySelectorAll('[data-tt]').forEach(t=>t.onclick=()=>{const v=+t.dataset.tt;ST.hsTer=ST.hsTer===v?-1:v;render();if(ST.hsTer>=0)$('hsCard').scrollIntoView({block:'start'})});
   m.querySelectorAll('.crit input').forEach(inp=>inp.addEventListener('change',e=>{const [k,i]=e.target.dataset.p.split('.'),v=parseFloat(e.target.value);if(isNaN(v))return;if(i==null)HC[k]=v;else HC[k][+i]=v;saveHC();render()}));
   $('hcReset').onclick=()=>{HC=JSON.parse(JSON.stringify(HC_DEFAULT));saveHC();render()};if($('hsAllT'))$('hsAllT').onclick=()=>{ST.hsTer=-1;render()};
-  $('hsExp').onclick=()=>saveFile(`Retailer_Health_${a}_${ST.hsGrade||'all'}.csv`,retCsv(HSVIEW));bindRows($('hsTbl'))}
+  SHARE.hs={title:'Retailer Health'+(ST.hsGrade?' grade '+ST.hsGrade:''),file:`Retailer_Health_${a}_${ST.hsGrade||'all'}`,csv:()=>retCsv(HSVIEW),el:()=>$('hsCard')};bindRows($('hsTbl'))}
 
 /* ---------- RETAILER TYPE ---------- */
 const TYPE_NOTE=n=>/DISTRIB/.test(n)?'Retails, and gets stock directly from the company':/^RETAILER$/.test(n)?'Retail only; gets stock from distributors':'';
@@ -798,7 +874,7 @@ function renderSource(m){if(!D.hasSrc){m.innerHTML=`<div class="empty"><h2>No so
   const split=act.filter(o=>o.cur>0&&o.nd>=2&&o.mds<60).sort((x,y)=>y.cur-x.cur);
   const lostM=b?act.filter(o=>o.st==='lost'&&o.sp==='ONE TO MANY').sort((x,y)=>y.prev-x.prev):[];
   const X={mism,split,lostM};
-  const sec=(id,title,note,list,cols,cells)=>`<div class="card"><h3>${title} <span class="chip c-stab">${inr(list.length)}</span></h3><div class="note">${note}</div>${list.length?`<div class="row"><button class="btn" type="button" data-sx="${id}">Export CSV</button></div><div class="scroll" style="max-height:380px" data-tb="1"><table><tr><th class="l">Retailer</th><th class="l">Territory / District</th>${cols}<th class="l">Contact</th></tr>
+  const sec=(id,title,note,list,cols,cells)=>`<div class="card"><h3>${title} <span class="chip c-stab">${inr(list.length)}</span></h3><div class="note">${note}</div>${list.length?`<div class="row">${shareBtns("sx_"+id)}</div><div class="scroll" style="max-height:380px" data-tb="1"><table><tr><th class="l">Retailer</th><th class="l">Territory / District</th>${cols}<th class="l">Contact</th></tr>
     ${list.slice(0,100).map(o=>`<tr class="click" data-ret="${o.k}"><td>${esc(o.name)}${regTag(o.reg)}<br><small class="muted">${esc(o.owner?o.owner+' · ':'')}${esc(o.code)}</small></td><td class="l">${esc(o.tn)}<br><small class="muted">${esc(o.dn)}</small></td>${cells(o)}<td class="l">${callCell(o.mob)}</td></tr>`).join('')}</table></div>${list.length>100?'<div class="note" style="margin-top:6px">First 100 shown. Export for the full list.</div>':''}`:'<div class="muted">None for these filters.</div>'}</div>`;
   const dlist=o=>[...o.da].filter(x=>x[1]>0).sort((p,q)=>q[1]-p[1]).slice(0,3).map(([d,v])=>esc(D.L.dst[d][1])+' '+inr(v/o.cur*100,0)+'%').join('<br>');
   h+=sec('split','Split between distributors',`Bought through 2 or more distributors in ${a}, with no distributor above 60% of the retailer's kg. Largest first.`,split,`<th>${a} kg</th><th>Distributors used</th><th class="l">Split</th>`,o=>`<td>${KG(o.cur)}</td><td>${o.nd}</td><td class="l" style="white-space:normal;min-width:220px">${dlist(o)}</td>`)
@@ -806,7 +882,7 @@ function renderSource(m){if(!D.hasSrc){m.innerHTML=`<div class="empty"><h2>No so
    +sec('mism','Pattern does not match the transactions',`One To One retailers who bought through more than one distributor in ${a}, or One To Many retailers who used only one. Check the master data.`,mism,`<th class="l">Source pattern</th><th>Source count</th><th>Distributors used</th><th>${a} kg</th>`,o=>`<td class="l">${esc(o.sp)}</td><td>${o.sc}</td><td>${o.nd}</td><td>${KG(o.cur)}</td>`);
   m.innerHTML=h;
   m.querySelectorAll('tr[data-sp]').forEach(t=>t.onclick=()=>{ST.src=t.dataset.sp;ST.rStatus='';fillFilters();setTab('rt');scrollTo(0,0)});
-  bindTree(m,ST3,SRC_SET);m.querySelectorAll('[data-sx]').forEach(bt=>bt.onclick=()=>saveFile(`Sourcing_${bt.dataset.sx}_${a}.csv`,retCsv(X[bt.dataset.sx])));
+  bindTree(m,ST3,SRC_SET);Object.keys(X).forEach(id=>{const el=m.querySelector(`[data-sh="sx_${id}"]`);if(el)SHARE['sx_'+id]={title:el.closest('.card').querySelector('h3').firstChild.textContent.trim(),file:`Sourcing_${id}_${a}`,csv:()=>retCsv(X[id]),el:()=>el.closest('.card')}});
   m.querySelectorAll('[data-tb]').forEach(bindRows)}
 
 /* ---------- PRODUCTS ---------- */
@@ -824,7 +900,7 @@ function renderOpp(m){const L=retList(),{a,b,F,fi}=C;
   const tf=new Map();L.forEach(o=>{if(o.cur<=0)return;let x=tf.get(o.t);if(!x){x={n:0,f:0};tf.set(o.t,x)}x.n++;if(o.fa>0)x.f++});
   const tp=new Map();for(const r of F){if(SP[r[0]]!==fi||!isFoc(r[6]))continue;let x=tp.get(r[3]);if(!x){x=new Map();tp.set(r[3],x)}x.set(r[6],(x.get(r[6])||0)+r[8])}
   const topF=t=>{const x=tp.get(t);if(!x)return'';const e=[...x].sort((p,q)=>q[1]-p[1])[0];return D.PR[e[0]][0]};
-  const sec=(id,title,note,list,cols,cells)=>`<div class="card"><h3>${title} <span class="chip c-stab">${inr(list.length)}</span></h3><div class="note">${note}</div>${list.length?`<div class="row"><button class="btn" type="button" data-x="${id}">Export CSV</button></div><div class="scroll" style="max-height:380px" data-tb="1"><table><tr><th class="l">Retailer</th><th class="l">Territory / District</th>${cols}<th class="l">Contact</th></tr>
+  const sec=(id,title,note,list,cols,cells)=>`<div class="card"><h3>${title} <span class="chip c-stab">${inr(list.length)}</span></h3><div class="note">${note}</div>${list.length?`<div class="row">${shareBtns("x_"+id)}</div><div class="scroll" style="max-height:380px" data-tb="1"><table><tr><th class="l">Retailer</th><th class="l">Territory / District</th>${cols}<th class="l">Contact</th></tr>
     ${list.slice(0,100).map(o=>`<tr class="click" data-ret="${o.k}"><td>${esc(o.name)}${regTag(o.reg)}<br><small class="muted">${esc(o.owner?o.owner+' · ':'')}${esc(o.code)}</small></td><td class="l">${esc(o.tn)}<br><small class="muted">${esc(o.dn)}</small></td>${cells(o)}<td class="l">${callCell(o.mob)}</td></tr>`).join('')}</table></div>${list.length>100?'<div class="note" style="margin-top:6px">First 100 shown. Export for the full list.</div>':''}`:'<div class="muted">None for these filters.</div>'}</div>`;
   const X={};
   X.gap=D.hasFoc?L.filter(o=>o.cur>0&&o.fa<=0&&tf.get(o.t)&&tf.get(o.t).f>0).sort((x,y)=>y.cur-x.cur):[];
@@ -836,7 +912,7 @@ function renderOpp(m){const L=retList(),{a,b,F,fi}=C;
    +(b?sec('lost','Lost retailers to win back',`Bought in ${b}, nothing in ${a}.`,X.lost,`<th>${b} kg</th><th>SKUs in ${b}</th>`,o=>`<td>${KG(o.prev)}</td><td>${o.brp}</td>`):'')
    +(b?sec('decl','Declining retailers',`Down 10% or more against ${b}, sorted by kg lost.`,X.decl,`<th>${b} kg</th><th>${a} kg</th><th>Change</th><th>kg lost</th>`,o=>`<td>${KG(o.prev)}</td><td>${KG(o.cur)}</td><td>${grTxt(o.cur,o.prev)}</td><td class="dn">−${KG(o.prev-o.cur)}</td>`):'')
    +(D.hasSt?sec('reg','Registration not ACTIVE, still buying',`Retailers with volume in ${a} whose registration status is not ACTIVE.`,X.reg,`<th class="l">Registration</th><th>${a} kg</th>`,o=>`<td class="l">${esc(o.reg)}</td><td>${KG(o.cur)}</td>`):'');
-  m.querySelectorAll('[data-x]').forEach(bt=>bt.onclick=()=>saveFile(`Opportunity_${bt.dataset.x}_${a}.csv`,retCsv(X[bt.dataset.x])));
+  Object.keys(X).forEach(id=>{const el=m.querySelector(`[data-sh="x_${id}"]`);if(el)SHARE['x_'+id]={title:el.closest('.card').querySelector('h3').firstChild.textContent.trim(),file:`Opportunity_${id}_${a}`,csv:()=>retCsv(X[id]),el:()=>el.closest('.card')}});
   m.querySelectorAll('[data-tb]').forEach(bindRows)}
 
 /* ===================== START ===================== */

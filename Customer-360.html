@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#123d24">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Rasi Customer 360 – Intelligence Dashboard</title>
+<style>
+:root{
+  --bg:#f4f3ef; --surface:#fcfcfb; --line:#e3e1da; --line2:#efeee9;
+  --text:#0b0b0b; --text2:#52514e; --muted:#8a8984;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --good:#0f7b3f; --goodbg:#e3f3e8; --warn:#9a6200; --warnbg:#fbf0d9;
+  --bad:#b42323; --badbg:#fbe4e2; --info:#1f5fae; --infobg:#e2edfa; --neutralbg:#ecebe6;
+  --accent:#14532d;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:13px}
+header{background:linear-gradient(90deg,#123d24,#1f6b3a);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{font-size:18px;margin:0;font-weight:600;letter-spacing:.2px}
+header .sub{font-size:12px;opacity:.85}
+header .sp{flex:1}
+.btn{border:1px solid var(--line);background:#fff;color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12.5px}
+.btn:hover{border-color:#b9b7ae}
+.btn.primary{background:#fff;color:#123d24;font-weight:600;border-color:#fff}
+.btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
+#filters{background:var(--surface);border-bottom:1px solid var(--line);padding:10px 20px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;position:sticky;top:0;z-index:5}
+.f{display:flex;flex-direction:column;gap:3px}
+.f label{font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+select,input[type=search]{border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12.5px;background:#fff;min-width:120px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:6px 10px;font-size:12px;cursor:pointer;color:var(--text2)}
+.seg button.on{background:#1f6b3a;color:#fff}
+nav{display:flex;gap:4px;padding:10px 20px 0}
+nav button{border:1px solid var(--line);border-bottom:0;background:#ecebe6;padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--text2)}
+nav button.on{background:var(--surface);color:var(--text);font-weight:600}
+main{background:var(--surface);margin:0 20px 20px;border:1px solid var(--line);border-radius:0 8px 8px 8px;padding:16px;min-height:60vh}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:14px}
+.tile{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fff}
+.tile .k{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;font-weight:600}
+.tile .v{font-size:20px;font-weight:600;margin-top:4px}
+.tile .d{font-size:11.5px;color:var(--text2);margin-top:2px}
+.up{color:var(--good)} .dn{color:var(--bad)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:1100px){.grid2{grid-template-columns:1fr}}
+.card{border:1px solid var(--line);border-radius:8px;padding:12px;background:#fff;margin-bottom:14px;min-width:0}
+.card h3{margin:0 0 2px;font-size:14px}
+.card .note{font-size:11.5px;color:var(--text2);margin-bottom:8px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{background:#f1f0eb;text-align:right;padding:6px 8px;font-weight:600;color:var(--text2);border-bottom:1px solid var(--line);position:sticky;top:0;cursor:pointer;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th.l,td.l{text-align:left}
+td{padding:5px 8px;border-bottom:1px solid var(--line2);text-align:right;white-space:nowrap}
+tr.zone td{background:#f6f5f1;font-weight:600}
+tr.reg td:first-child{padding-left:20px;cursor:pointer}
+tr.ter td:first-child{padding-left:40px;color:var(--text2)}
+tr.click{cursor:pointer} tr.click:hover td{background:#f3f8f4} tr.sel td{background:#eef5ff !important}
+tr.tot td{font-weight:700;border-top:2px solid var(--line)}
+.scroll{max-height:520px;overflow:auto;border:1px solid var(--line2);border-radius:6px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.c-grow{background:var(--goodbg);color:var(--good)} .c-stab{background:var(--neutralbg);color:var(--text2)}
+.c-decl{background:var(--warnbg);color:var(--warn)} .c-lost{background:var(--badbg);color:var(--bad)}
+.c-new{background:var(--infobg);color:var(--info)} .c-react{background:#efe9fb;color:#5a3fc0}
+.c-dorm{background:var(--neutralbg);color:var(--muted)}
+.g-A{background:var(--goodbg);color:var(--good)} .g-B{background:var(--infobg);color:var(--info)} .g-C{background:var(--warnbg);color:var(--warn)} .g-D{background:var(--badbg);color:var(--bad)}
+.ftag{font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:4px;background:#e6efe8;color:#14532d}
+.crit td,.crit th{padding:4px 8px} .crit input{width:64px;border:1px solid var(--line);border-radius:4px;padding:3px 5px;text-align:right;font-size:12.5px}
+.crit .band{color:var(--text2)}
+.statusbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.stat{border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:#fff;cursor:pointer;min-width:130px}
+.stat.on{outline:2px solid #1f6b3a}
+.stat .n{font-size:18px;font-weight:600;margin-top:3px}
+.stat .s{font-size:11px;color:var(--text2)}
+.empty{text-align:center;padding:70px 20px;color:var(--text2)}
+.empty h2{color:var(--text);font-weight:600}
+.drop{border:2px dashed #b9b7ae;border-radius:10px;padding:30px;max-width:620px;margin:20px auto;background:#fff}
+#tip{position:fixed;pointer-events:none;background:#1c1c1a;color:#fff;padding:6px 9px;border-radius:6px;font-size:12px;display:none;z-index:50;line-height:1.45;max-width:280px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--text2);margin:4px 0 6px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.prof{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-bottom:12px}
+.prof h2{margin:0;font-size:20px}
+.flags{display:flex;flex-direction:column;gap:6px}
+.flag{padding:6px 10px;border-radius:6px;font-size:12.5px}
+.flag.bad{background:var(--badbg);color:var(--bad)} .flag.warn{background:var(--warnbg);color:var(--warn)} .flag.good{background:var(--goodbg);color:var(--good)} .flag.info{background:var(--infobg);color:var(--info)}
+.muted{color:var(--muted)}
+.loadinfo{font-size:12px;color:#e7f3ea}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+svg text{font-family:inherit}
+#seasonWarn{margin:10px 20px 0;padding:9px 12px;border-radius:8px;background:var(--warnbg);color:var(--warn);font-size:12.5px;border:1px solid #f0d9a8}
+#seasonWarn b{color:#6b4500} body.m-phone #seasonWarn{margin:8px 8px 0}
+#seasonWarn .x{float:right;background:none;border:0;color:var(--warn);font-size:14px;cursor:pointer}
+.card{position:relative}
+.card>h3{padding-right:44px}
+.pngbtn{position:absolute;top:8px;right:8px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer;color:var(--text2);z-index:2}
+.pngbtn:hover{border-color:#1f6b3a;color:#1f6b3a}
+.card>h3{padding-right:90px} body.m-phone .card>h3{padding-right:44px}
+#shareMenu{position:fixed;z-index:70;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:6px;min-width:230px}
+#shareMenu .smh{font-size:11.5px;color:var(--text2);padding:4px 8px 6px;border-bottom:1px solid var(--line2);margin-bottom:4px}
+#shareMenu button{display:grid;grid-template-columns:22px 1fr;column-gap:6px;width:100%;text-align:left;background:none;border:0;padding:8px;border-radius:6px;cursor:pointer;font-size:13px}
+#shareMenu button:hover{background:#f1f6f2} #shareMenu button span{grid-column:2;font-size:11.5px;color:var(--text2)}
+body.touch #shareMenu button{padding:11px 10px;font-size:14.5px}
+body.touch .pngbtn{padding:6px 10px;font-size:15px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1c1c1a;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;display:none;z-index:60;max-width:90vw;text-align:center}
+.shotview{margin-left:auto;align-self:center;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;font-size:12.5px;cursor:pointer;white-space:nowrap}
+body.touch .shotview{padding:8px 12px;font-size:13.5px}
+.snapwrap th,.snapwrap td{position:static !important;box-shadow:none !important}
+.snapwrap .scroll{max-height:none !important;overflow:visible !important;border:0}
+.snapwrap .card{overflow:visible !important}
+.snaphead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:3px solid #1f6b3a;padding-bottom:8px;margin-bottom:12px}
+.snaphead .t{font-size:18px;font-weight:700;color:#123d24} .snaphead .s{font-size:12px;color:var(--text2)}
+/* ===== device modes ===== */
+.modesw{display:inline-flex;border:1px solid rgba(255,255,255,.5);border-radius:6px;overflow:hidden}
+.modesw button{background:transparent;color:#fff;border:0;padding:6px 9px;font-size:12px;cursor:pointer;opacity:.75}
+.modesw button.on{background:#fff;color:#123d24;opacity:1;font-weight:600}
+#fltBtn{display:none}
+.mob-only{display:none}
+/* touch modes (phone + iPad) */
+body.touch .btn, body.touch select, body.touch input[type=search], body.touch .seg button{min-height:40px;font-size:14px}
+body.touch nav{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+body.touch nav::-webkit-scrollbar{display:none}
+body.touch nav button{white-space:nowrap;flex:0 0 auto;padding:10px 16px}
+body.touch .card{overflow-x:auto}
+body.touch .scroll{-webkit-overflow-scrolling:touch}
+body.touch .scroll td:first-child, body.touch .scroll th:first-child{position:sticky;left:0;z-index:1;background:#fff;box-shadow:1px 0 0 var(--line2)}
+body.touch .scroll th:first-child{z-index:3;background:#f1f0eb}
+body.touch tr.zone td:first-child{background:#f6f5f1} body.touch tr.click:hover td{background:inherit}
+body.touch .info{width:20px;height:20px;font-size:12px}
+body.touch td, body.touch th{padding:8px 8px}
+body.touch #guide{padding:0}
+body.touch #guide .box{border-radius:0;min-height:100%;max-width:none}
+/* iPad */
+body.m-tab #filters{display:grid !important;grid-template-columns:repeat(4,1fr);gap:10px}
+body.m-tab #filters select{width:100%;min-width:0}
+body.m-tab .tiles{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+@media (orientation:portrait){ body.m-tab .grid2{grid-template-columns:1fr} }
+body.m-tab main{margin:0 12px 16px} body.m-tab nav{padding:10px 12px 0}
+/* Phone (Pixel 10 Pro, ~412px) */
+body.m-phone{font-size:14px;-webkit-text-size-adjust:100%}
+body.m-phone header{padding:10px 12px calc(10px) 12px;gap:8px;padding-top:max(10px,env(safe-area-inset-top))}
+body.m-phone header h1{font-size:17px} body.m-phone header .sub{font-size:11px}
+body.m-phone header .sp{display:none}
+body.m-phone #loadinfo{order:10;width:100%;font-size:11.5px}
+body.m-phone .pc-only{display:none !important} body.m-phone .mob-only{display:inline}
+body.m-phone header .btn{padding:6px 10px}
+body.m-phone #fltBtn{display:flex;width:calc(100% - 24px);margin:8px 12px 0;justify-content:space-between;align-items:center;background:#fff;text-align:left;font-size:13.5px}
+body.m-phone #filters{display:none !important;grid-template-columns:1fr 1fr;gap:10px;padding:10px 12px;position:static}
+body.m-phone #filters.open{display:grid !important}
+body.m-phone #filters .f{min-width:0} body.m-phone #filters select{width:100%;min-width:0}
+body.m-phone #filters .f:last-child{grid-column:1/-1} body.m-phone #filters .seg{display:flex} body.m-phone #filters .seg button{flex:1}
+body.m-phone nav{padding:8px 8px 0;gap:3px} body.m-phone nav button{padding:9px 13px;font-size:13.5px}
+body.m-phone main{margin:0 0 12px;border-radius:0;border-left:0;border-right:0;padding:10px}
+body.m-phone .tiles{grid-template-columns:1fr 1fr;gap:8px}
+body.m-phone .tile{padding:9px 10px} body.m-phone .tile .v{font-size:17px} body.m-phone .tile .k{font-size:10.5px}
+body.m-phone .grid2{grid-template-columns:1fr;gap:10px}
+body.m-phone .card{padding:10px}
+body.m-phone .statusbar{gap:6px} body.m-phone .stat{min-width:0;flex:1 1 calc(50% - 6px);padding:7px 9px}
+body.m-phone .row input[type=search]{min-width:0 !important;width:100%}
+body.m-phone .scroll{max-height:70vh !important}
+body.m-phone .scroll td:first-child{max-width:150px;overflow:hidden;text-overflow:ellipsis}
+body.m-phone table{font-size:12.5px}
+body.m-phone #status{padding:8px 12px} body.m-phone header .modesw button{padding:6px 7px} body.m-phone #status .top{font-size:12px} body.m-phone #stDetail{width:100%;order:5}
+body.m-phone .crit input{width:56px}
+body.m-phone #guide table, body.m-phone #guide tbody, body.m-phone #guide tr, body.m-phone #guide td{display:block;width:100%}
+body.m-phone #guide tr:first-child{display:none} body.m-phone #guide tr{border-bottom:1px solid var(--line);padding:6px 0}
+body.m-phone #guide td{border:0;padding:3px 4px} body.m-phone #guide td:last-child{color:var(--text2);font-size:12px}
+body.m-phone .prof h2{font-size:18px} body.m-phone .empty{padding:30px 12px} body.m-phone .drop{padding:18px}
+body.m-phone .legend{gap:10px}
+.info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#e2edfa;color:#1f5fae;font-size:10px;font-weight:700;cursor:help;margin-left:4px;vertical-align:1px;font-style:normal;text-transform:none;letter-spacing:0}
+#guide{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:40;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+#guide .box{background:#fff;border-radius:10px;max-width:980px;width:100%;padding:18px 22px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+#guide h2{margin:0 0 4px;font-size:18px} #guide table td{white-space:normal;vertical-align:top;text-align:left;line-height:1.45}
+#guide table th{text-align:left;position:static} #guide td:first-child{font-weight:600;white-space:nowrap}
+#guide .ex{color:var(--text2);font-size:12px}
+#status{background:#fff;border-bottom:1px solid var(--line);padding:10px 20px;display:none}
+#status .top{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+#status .top b{font-size:13px}
+#status .pct{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums}
+.pbar{height:8px;background:#ecebe6;border-radius:4px;overflow:hidden;margin:7px 0 4px}
+.pbar div{height:100%;width:0;background:#1f6b3a;border-radius:4px;transition:width .15s}
+#status.done .pbar div{background:#1baf7a}
+#status.err .pbar div{background:var(--bad)}
+#stFiles{display:none;margin-top:6px} #status.open #stFiles{display:block}
+#stFiles table{font-size:12px} #stFiles td{padding:3px 8px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid #cfe3d5;border-top-color:#1f6b3a;border-radius:50%;animation:sp 0.8s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.linkbtn{background:none;border:0;color:#1f5fae;cursor:pointer;font-size:12px;padding:0}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Rasi Customer 360</h1>
+    <div class="sub">Customer intelligence · 3-year transaction history</div>
+  </div>
+  <div class="sp"></div>
+  <span class="loadinfo" id="loadinfo">No data loaded</span>
+  <input type="file" id="file" accept=".csv,.xlsx,.xls,.xlsb" multiple hidden>
+  <button class="btn primary" id="loadBtn" onclick="document.getElementById('file').click()" title="Select one or more CSV files (Ctrl / Shift + click to pick several). Files are added to what is already loaded.">📂 Load CSV<span class="pc-only"> File(s)</span></button>
+  <button class="btn ghost" onclick="openGuide()" title="How each measure is calculated and where it is shown">❓<span class="pc-only"> Guide</span></button>
+  <div class="modesw" id="modeSw" title="Layout: PC, Smartphone (Pixel) or iPad"><button data-mode="pc">🖥 PC</button><button data-mode="phone">📱 Phone</button><button data-mode="tab">iPad</button></div>
+  <button class="btn ghost" id="clearBtn" onclick="clearData()" style="display:none" title="Clear loaded data">🗑<span class="pc-only"> Clear</span></button>
+</header>
+
+<div id="status">
+  <div class="top"><span id="stIcon"></span><b id="stTitle"></b><span id="stDetail" class="muted"></span><span class="pct" id="stPct"></span>
+    <button class="linkbtn" id="stToggle" onclick="$('status').classList.toggle('open');this.textContent=$('status').classList.contains('open')?'Hide files':'Show files'">Show files</button>
+    <button class="linkbtn" id="stClose" onclick="$('status').style.display='none'" style="display:none">✕</button></div>
+  <div class="pbar"><div id="stBar"></div></div>
+  <div id="stFiles"></div>
+</div>
+
+<button class="btn" id="fltBtn" style="display:none" onclick="$('filters').classList.toggle('open');fltSummary()"></button>
+<div id="filters" style="display:none">
+  <div class="f"><label>Zone</label><select id="fZone"></select></div>
+  <div class="f"><label>Region</label><select id="fRegion"></select></div>
+  <div class="f"><label>Territory</label><select id="fTerr"></select></div>
+  <div class="f"><label>Crop</label><select id="fCrop"></select></div>
+  <div class="f"><label>Hybrid</label><select id="fHyb"></select></div>
+  <div class="f"><label>Focus</label><select id="fFoc"></select></div>
+  <div class="f"><label>Compare by</label><select id="fStype"></select></div>
+  <div class="f"><label>Focus period</label><select id="fFocus"></select></div>
+  <div class="f"><label>Measure</label>
+    <div class="seg" id="fMetric"><button data-m="val" class="on">₹ Net Value</button><button data-m="qty">Qty (MT)</button></div>
+  </div>
+</div>
+
+<nav id="tabs" style="display:none">
+  <button data-t="ov" class="on">Overview</button>
+  <button data-t="hs">Dealer Health</button>
+  <button data-t="cu">Customers</button>
+  <button data-t="c360">Customer 360</button>
+  <button data-t="pr">Products</button>
+  <button data-t="rt">Returns</button>
+  <button class="shotview" id="shotView" title="Share the whole current tab as PNG image or HTML page">📤 Share view</button>
+</nav>
+
+<div id="seasonWarn" style="display:none"></div>
+<main id="main">
+  <div class="empty">
+    <h2>Load your customer transaction file(s)</h2>
+    <div class="drop" id="drop">
+      Click <b>Load CSV File(s)</b> or drop CSV files here (same columns as the sample file).<br><br>
+      <b>Several files at once:</b> in the file window, hold <b>Ctrl</b> (or <b>Shift</b>) and click each file – e.g. one file per year.
+      You can also load more files later; they are added to what is already loaded. Duplicate rows across files are skipped.<br><br>
+      A status bar shows progress while large files are read.<br><br>
+      <span class="muted">Order-type signs: ZCFC, ZMFC, ZS2 = +ve · ZCRF, ZMRF, ZS1, ZRFC = −ve. Other order types are ignored.</span>
+    </div>
+  </div>
+</main>
+<div id="tip"></div>
+<div id="toast"></div>
+<script>/* html-to-image 1.11.13 (MIT) – used for Share PNG */
+!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeof define&&define.amd?define(["exports"],e):e((t="undefined"!=typeof globalThis?globalThis:t||self).htmlToImage={})}(this,(function(t){"use strict";function e(t,e,n,r){return new(n||(n=Promise))((function(i,o){function u(t){try{a(r.next(t))}catch(t){o(t)}}function c(t){try{a(r.throw(t))}catch(t){o(t)}}function a(t){var e;t.done?i(t.value):(e=t.value,e instanceof n?e:new n((function(t){t(e)}))).then(u,c)}a((r=r.apply(t,e||[])).next())}))}function n(t,e){var n,r,i,o,u={label:0,sent:function(){if(1&i[0])throw i[1];return i[1]},trys:[],ops:[]};return o={next:c(0),throw:c(1),return:c(2)},"function"==typeof Symbol&&(o[Symbol.iterator]=function(){return this}),o;function c(c){return function(a){return function(c){if(n)throw new TypeError("Generator is already executing.");for(;o&&(o=0,c[0]&&(u=0)),u;)try{if(n=1,r&&(i=2&c[0]?r.return:c[0]?r.throw||((i=r.return)&&i.call(r),0):r.next)&&!(i=i.call(r,c[1])).done)return i;switch(r=0,i&&(c=[2&c[0],i.value]),c[0]){case 0:case 1:i=c;break;case 4:return u.label++,{value:c[1],done:!1};case 5:u.label++,r=c[1],c=[0];continue;case 7:c=u.ops.pop(),u.trys.pop();continue;default:if(!(i=u.trys,(i=i.length>0&&i[i.length-1])||6!==c[0]&&2!==c[0])){u=0;continue}if(3===c[0]&&(!i||c[1]>i[0]&&c[1]<i[3])){u.label=c[1];break}if(6===c[0]&&u.label<i[1]){u.label=i[1],i=c;break}if(i&&u.label<i[2]){u.label=i[2],u.ops.push(c);break}i[2]&&u.ops.pop(),u.trys.pop();continue}c=e.call(t,u)}catch(t){c=[6,t],r=0}finally{n=i=0}if(5&c[0])throw c[1];return{value:c[0]?c[1]:void 0,done:!0}}([c,a])}}}var r,i=(r=0,function(){return r+=1,"u".concat("0000".concat((Math.random()*Math.pow(36,4)<<0).toString(36)).slice(-4)).concat(r)});function o(t){for(var e=[],n=0,r=t.length;n<r;n++)e.push(t[n]);return e}var u=null;function c(t){return void 0===t&&(t={}),u||(u=t.includeStyleProperties?t.includeStyleProperties:o(window.getComputedStyle(document.documentElement)))}function a(t,e){var n=(t.ownerDocument.defaultView||window).getComputedStyle(t).getPropertyValue(e);return n?parseFloat(n.replace("px","")):0}function s(t,e){void 0===e&&(e={});var n,r,i,o=e.width||(r=a(n=t,"border-left-width"),i=a(n,"border-right-width"),n.clientWidth+r+i),u=e.height||function(t){var e=a(t,"border-top-width"),n=a(t,"border-bottom-width");return t.clientHeight+e+n}(t);return{width:o,height:u}}var l=16384;function f(t,e){return void 0===e&&(e={}),t.toBlob?new Promise((function(n){t.toBlob(n,e.type?e.type:"image/png",e.quality?e.quality:1)})):new Promise((function(n){for(var r=window.atob(t.toDataURL(e.type?e.type:void 0,e.quality?e.quality:void 0).split(",")[1]),i=r.length,o=new Uint8Array(i),u=0;u<i;u+=1)o[u]=r.charCodeAt(u);n(new Blob([o],{type:e.type?e.type:"image/png"}))}))}function h(t){return new Promise((function(e,n){var r=new Image;r.onload=function(){r.decode().then((function(){requestAnimationFrame((function(){return e(r)}))}))},r.onerror=n,r.crossOrigin="anonymous",r.decoding="async",r.src=t}))}function d(t){return e(this,void 0,void 0,(function(){return n(this,(function(e){return[2,Promise.resolve().then((function(){return(new XMLSerializer).serializeToString(t)})).then(encodeURIComponent).then((function(t){return"data:image/svg+xml;charset=utf-8,".concat(t)}))]}))}))}function v(t,r,i){return e(this,void 0,void 0,(function(){var e,o,u;return n(this,(function(n){return e="http://www.w3.org/2000/svg",o=document.createElementNS(e,"svg"),u=document.createElementNS(e,"foreignObject"),o.setAttribute("width","".concat(r)),o.setAttribute("height","".concat(i)),o.setAttribute("viewBox","0 0 ".concat(r," ").concat(i)),u.setAttribute("width","100%"),u.setAttribute("height","100%"),u.setAttribute("x","0"),u.setAttribute("y","0"),u.setAttribute("externalResourcesRequired","true"),o.appendChild(u),u.appendChild(t),[2,d(o)]}))}))}var p=function(t,e){if(t instanceof e)return!0;var n=Object.getPrototypeOf(t);return null!==n&&(n.constructor.name===e.name||p(n,e))};function g(t,e,n,r){var i=".".concat(t,":").concat(e),o=n.cssText?function(t){var e=t.getPropertyValue("content");return"".concat(t.cssText," content: '").concat(e.replace(/'|"/g,""),"';")}(n):function(t,e){return c(e).map((function(e){var n=t.getPropertyValue(e),r=t.getPropertyPriority(e);return"".concat(e,": ").concat(n).concat(r?" !important":"",";")})).join(" ")}(n,r);return document.createTextNode("".concat(i,"{").concat(o,"}"))}function m(t,e,n,r){var o=window.getComputedStyle(t,n),u=o.getPropertyValue("content");if(""!==u&&"none"!==u){var c=i();try{e.className="".concat(e.className," ").concat(c)}catch(t){return}var a=document.createElement("style");a.appendChild(g(c,n,o,r)),e.appendChild(a)}}var w="application/font-woff",y="image/jpeg",b={woff:w,woff2:w,ttf:"application/font-truetype",eot:"application/vnd.ms-fontobject",png:"image/png",jpg:y,jpeg:y,gif:"image/gif",tiff:"image/tiff",svg:"image/svg+xml",webp:"image/webp"};function S(t){var e=function(t){var e=/\.([^./]*?)$/g.exec(t);return e?e[1]:""}(t).toLowerCase();return b[e]||""}function E(t){return-1!==t.search(/^(data:)/)}function x(t,e){return"data:".concat(e,";base64,").concat(t)}function C(t,r,i){return e(this,void 0,void 0,(function(){var e,o;return n(this,(function(n){switch(n.label){case 0:return[4,fetch(t,r)];case 1:if(404===(e=n.sent()).status)throw new Error('Resource "'.concat(e.url,'" not found'));return[4,e.blob()];case 2:return o=n.sent(),[2,new Promise((function(t,n){var r=new FileReader;r.onerror=n,r.onloadend=function(){try{t(i({res:e,result:r.result}))}catch(t){n(t)}},r.readAsDataURL(o)}))]}}))}))}var P={};function R(t,r,i){return e(this,void 0,void 0,(function(){var e,o,u,c,a;return n(this,(function(n){switch(n.label){case 0:if(e=function(t,e,n){var r=t.replace(/\?.*/,"");return n&&(r=t),/ttf|otf|eot|woff2?/i.test(r)&&(r=r.replace(/.*\//,"")),e?"[".concat(e,"]").concat(r):r}(t,r,i.includeQueryParams),null!=P[e])return[2,P[e]];i.cacheBust&&(t+=(/\?/.test(t)?"&":"?")+(new Date).getTime()),n.label=1;case 1:return n.trys.push([1,3,,4]),[4,C(t,i.fetchRequestInit,(function(t){var e=t.res,n=t.result;return r||(r=e.headers.get("Content-Type")||""),function(t){return t.split(/,/)[1]}(n)}))];case 2:return u=n.sent(),o=x(u,r),[3,4];case 3:return c=n.sent(),o=i.imagePlaceholder||"",a="Failed to fetch resource: ".concat(t),c&&(a="string"==typeof c?c:c.message),a&&console.warn(a),[3,4];case 4:return P[e]=o,[2,o]}}))}))}function T(t){return e(this,void 0,void 0,(function(){var e;return n(this,(function(n){return"data:,"===(e=t.toDataURL())?[2,t.cloneNode(!1)]:[2,h(e)]}))}))}function A(t,r){return e(this,void 0,void 0,(function(){var e,i,o,u;return n(this,(function(n){switch(n.label){case 0:return t.currentSrc?(e=document.createElement("canvas"),i=e.getContext("2d"),e.width=t.clientWidth,e.height=t.clientHeight,null==i||i.drawImage(t,0,0,e.width,e.height),[2,h(e.toDataURL())]):(o=t.poster,u=S(o),[4,R(o,u,r)]);case 1:return[2,h(n.sent())]}}))}))}function k(t,r){var i;return e(this,void 0,void 0,(function(){return n(this,(function(e){switch(e.label){case 0:return e.trys.push([0,3,,4]),(null===(i=null==t?void 0:t.contentDocument)||void 0===i?void 0:i.body)?[4,I(t.contentDocument.body,r,!0)]:[3,2];case 1:return[2,e.sent()];case 2:return[3,4];case 3:return e.sent(),[3,4];case 4:return[2,t.cloneNode(!1)]}}))}))}var L=function(t){return null!=t.tagName&&"SVG"===t.tagName.toUpperCase()};function N(t,e,n){return p(e,Element)&&(function(t,e,n){var r=e.style;if(r){var i=window.getComputedStyle(t);i.cssText?(r.cssText=i.cssText,r.transformOrigin=i.transformOrigin):c(n).forEach((function(n){var o=i.getPropertyValue(n);if("font-size"===n&&o.endsWith("px")){var u=Math.floor(parseFloat(o.substring(0,o.length-2)))-.1;o="".concat(u,"px")}p(t,HTMLIFrameElement)&&"display"===n&&"inline"===o&&(o="block"),"d"===n&&e.getAttribute("d")&&(o="path(".concat(e.getAttribute("d"),")")),r.setProperty(n,o,i.getPropertyPriority(n))}))}}(t,e,n),function(t,e,n){m(t,e,":before",n),m(t,e,":after",n)}(t,e,n),function(t,e){p(t,HTMLTextAreaElement)&&(e.innerHTML=t.value),p(t,HTMLInputElement)&&e.setAttribute("value",t.value)}(t,e),function(t,e){if(p(t,HTMLSelectElement)){var n=e,r=Array.from(n.children).find((function(e){return t.value===e.getAttribute("value")}));r&&r.setAttribute("selected","")}}(t,e)),e}function I(t,r,i){return e(this,void 0,void 0,(function(){return n(this,(function(u){return i||!r.filter||r.filter(t)?[2,Promise.resolve(t).then((function(t){return function(t,r){return e(this,void 0,void 0,(function(){return n(this,(function(e){return p(t,HTMLCanvasElement)?[2,T(t)]:p(t,HTMLVideoElement)?[2,A(t,r)]:p(t,HTMLIFrameElement)?[2,k(t,r)]:[2,t.cloneNode(L(t))]}))}))}(t,r)})).then((function(i){return function(t,r,i){var u,c;return e(this,void 0,void 0,(function(){var e;return n(this,(function(n){switch(n.label){case 0:return L(r)?[2,r]:(e=[],0===(e=null!=(a=t).tagName&&"SLOT"===a.tagName.toUpperCase()&&t.assignedNodes?o(t.assignedNodes()):p(t,HTMLIFrameElement)&&(null===(u=t.contentDocument)||void 0===u?void 0:u.body)?o(t.contentDocument.body.childNodes):o((null!==(c=t.shadowRoot)&&void 0!==c?c:t).childNodes)).length||p(t,HTMLVideoElement)?[2,r]:[4,e.reduce((function(t,e){return t.then((function(){return I(e,i)})).then((function(t){t&&r.appendChild(t)}))}),Promise.resolve())]);case 1:return n.sent(),[2,r]}var a}))}))}(t,i,r)})).then((function(e){return N(t,e,r)})).then((function(t){return function(t,r){return e(this,void 0,void 0,(function(){var e,i,o,u,c,a,s,l,f,h,d,v,p;return n(this,(function(n){switch(n.label){case 0:if(0===(e=t.querySelectorAll?t.querySelectorAll("use"):[]).length)return[2,t];i={},p=0,n.label=1;case 1:return p<e.length?(o=e[p],(u=o.getAttribute("xlink:href"))?(c=t.querySelector(u),a=document.querySelector(u),c||!a||i[u]?[3,3]:(s=i,l=u,[4,I(a,r,!0)])):[3,3]):[3,4];case 2:s[l]=n.sent(),n.label=3;case 3:return p++,[3,1];case 4:if((f=Object.values(i)).length){for(h="http://www.w3.org/1999/xhtml",(d=document.createElementNS(h,"svg")).setAttribute("xmlns",h),d.style.position="absolute",d.style.width="0",d.style.height="0",d.style.overflow="hidden",d.style.display="none",v=document.createElementNS(h,"defs"),d.appendChild(v),p=0;p<f.length;p++)v.appendChild(f[p]);t.appendChild(d)}return[2,t]}}))}))}(t,r)}))]:[2,null]}))}))}var D=/url\((['"]?)([^'"]+?)\1\)/g,H=/url\([^)]+\)\s*format\((["']?)([^"']+)\1\)/g,M=/src:\s*(?:url\([^)]+\)\s*format\([^)]+\)[,;]\s*)+/g;function F(t,r,i,o,u){return e(this,void 0,void 0,(function(){var e,c,a,s;return n(this,(function(n){switch(n.label){case 0:return n.trys.push([0,5,,6]),e=i?function(t,e){if(t.match(/^[a-z]+:\/\//i))return t;if(t.match(/^\/\//))return window.location.protocol+t;if(t.match(/^[a-z]+:/i))return t;var n=document.implementation.createHTMLDocument(),r=n.createElement("base"),i=n.createElement("a");return n.head.appendChild(r),n.body.appendChild(i),e&&(r.href=e),i.href=t,i.href}(r,i):r,c=S(r),a=void 0,u?[4,u(e)]:[3,2];case 1:return s=n.sent(),a=x(s,c),[3,4];case 2:return[4,R(e,c,o)];case 3:a=n.sent(),n.label=4;case 4:return[2,t.replace((l=r,f=l.replace(/([.*+?^${}()|\[\]\/\\])/g,"\\$1"),new RegExp("(url\\(['\"]?)(".concat(f,")(['\"]?\\))"),"g")),"$1".concat(a,"$3"))];case 5:return n.sent(),[3,6];case 6:return[2,t]}var l,f}))}))}function V(t){return-1!==t.search(D)}function q(t,r,i){return e(this,void 0,void 0,(function(){var e,o;return n(this,(function(n){return V(t)?(e=function(t,e){var n=e.preferredFontFormat;return n?t.replace(M,(function(t){for(;;){var e=H.exec(t)||[],r=e[0],i=e[2];if(!i)return"";if(i===n)return"src: ".concat(r,";")}})):t}(t,i),o=function(t){var e=[];return t.replace(D,(function(t,n,r){return e.push(r),t})),e.filter((function(t){return!E(t)}))}(e),[2,o.reduce((function(t,e){return t.then((function(t){return F(t,e,r,i)}))}),Promise.resolve(e))]):[2,t]}))}))}function U(t,r,i){var o;return e(this,void 0,void 0,(function(){var e,u;return n(this,(function(n){switch(n.label){case 0:return(e=null===(o=r.style)||void 0===o?void 0:o.getPropertyValue(t))?[4,q(e,null,i)]:[3,2];case 1:return u=n.sent(),r.style.setProperty(t,u,r.style.getPropertyPriority(t)),[2,!0];case 2:return[2,!1]}}))}))}function j(t,r){return e(this,void 0,void 0,(function(){var e,i;return n(this,(function(n){switch(n.label){case 0:return[4,U("background",t,r)];case 1:return n.sent()?[3,3]:[4,U("background-image",t,r)];case 2:n.sent(),n.label=3;case 3:return[4,U("mask",t,r)];case 4:return(i=n.sent())?[3,6]:[4,U("-webkit-mask",t,r)];case 5:i=n.sent(),n.label=6;case 6:return(e=i)?[3,8]:[4,U("mask-image",t,r)];case 7:e=n.sent(),n.label=8;case 8:return e?[3,10]:[4,U("-webkit-mask-image",t,r)];case 9:n.sent(),n.label=10;case 10:return[2]}}))}))}function O(t,r){return e(this,void 0,void 0,(function(){var e,i,o;return n(this,(function(n){switch(n.label){case 0:return(e=p(t,HTMLImageElement))&&!E(t.src)||p(t,SVGImageElement)&&!E(t.href.baseVal)?[4,R(i=e?t.src:t.href.baseVal,S(i),r)]:[2];case 1:return o=n.sent(),[4,new Promise((function(n,i){t.onload=n,t.onerror=r.onImageErrorHandler?function(){for(var t=[],e=0;e<arguments.length;e++)t[e]=arguments[e];try{n(r.onImageErrorHandler.apply(r,t))}catch(t){i(t)}}:i;var u=t;u.decode&&(u.decode=n),"lazy"===u.loading&&(u.loading="eager"),e?(t.srcset="",t.src=o):t.href.baseVal=o}))];case 2:return n.sent(),[2]}}))}))}function B(t,r){return e(this,void 0,void 0,(function(){var e,i;return n(this,(function(n){switch(n.label){case 0:return e=o(t.childNodes),i=e.map((function(t){return z(t,r)})),[4,Promise.all(i).then((function(){return t}))];case 1:return n.sent(),[2]}}))}))}function z(t,r){return e(this,void 0,void 0,(function(){return n(this,(function(e){switch(e.label){case 0:return p(t,Element)?[4,j(t,r)]:[3,4];case 1:return e.sent(),[4,O(t,r)];case 2:return e.sent(),[4,B(t,r)];case 3:e.sent(),e.label=4;case 4:return[2]}}))}))}var W={};function $(t){return e(this,void 0,void 0,(function(){var e,r;return n(this,(function(n){switch(n.label){case 0:return null!=(e=W[t])?[2,e]:[4,fetch(t)];case 1:return[4,n.sent().text()];case 2:return r=n.sent(),e={url:t,cssText:r},W[t]=e,[2,e]}}))}))}function G(t,r){return e(this,void 0,void 0,(function(){var i,o,u,c,a=this;return n(this,(function(s){return i=t.cssText,o=/url\(["']?([^"')]+)["']?\)/g,u=i.match(/url\([^)]+\)/g)||[],c=u.map((function(u){return e(a,void 0,void 0,(function(){var e;return n(this,(function(n){return(e=u.replace(o,"$1")).startsWith("https://")||(e=new URL(e,t.url).href),[2,C(e,r.fetchRequestInit,(function(t){var e=t.result;return i=i.replace(u,"url(".concat(e,")")),[u,e]}))]}))}))})),[2,Promise.all(c).then((function(){return i}))]}))}))}function _(t){if(null==t)return[];for(var e=[],n=t.replace(/(\/\*[\s\S]*?\*\/)/gi,""),r=new RegExp("((@.*?keyframes [\\s\\S]*?){([\\s\\S]*?}\\s*?)})","gi");;){if(null===(u=r.exec(n)))break;e.push(u[0])}n=n.replace(r,"");for(var i=/@import[\s\S]*?url\([^)]*\)[\s\S]*?;/gi,o=new RegExp("((\\s*?(?:\\/\\*[\\s\\S]*?\\*\\/)?\\s*?@media[\\s\\S]*?){([\\s\\S]*?)}\\s*?})|(([\\s\\S]*?){([\\s\\S]*?)})","gi");;){var u;if(null===(u=i.exec(n))){if(null===(u=o.exec(n)))break;i.lastIndex=o.lastIndex}else o.lastIndex=i.lastIndex;e.push(u[0])}return e}function J(t,r){return e(this,void 0,void 0,(function(){var e,i;return n(this,(function(n){return e=[],i=[],t.forEach((function(e){if("cssRules"in e)try{o(e.cssRules||[]).forEach((function(t,n){if(t.type===CSSRule.IMPORT_RULE){var o=n+1,u=$(t.href).then((function(t){return G(t,r)})).then((function(t){return _(t).forEach((function(t){try{e.insertRule(t,t.startsWith("@import")?o+=1:e.cssRules.length)}catch(e){console.error("Error inserting rule from remote css",{rule:t,error:e})}}))})).catch((function(t){console.error("Error loading remote css",t.toString())}));i.push(u)}}))}catch(o){var n=t.find((function(t){return null==t.href}))||document.styleSheets[0];null!=e.href&&i.push($(e.href).then((function(t){return G(t,r)})).then((function(t){return _(t).forEach((function(t){n.insertRule(t,n.cssRules.length)}))})).catch((function(t){console.error("Error loading remote stylesheet",t)}))),console.error("Error inlining remote css file",o)}})),[2,Promise.all(i).then((function(){return t.forEach((function(t){if("cssRules"in t)try{o(t.cssRules||[]).forEach((function(t){e.push(t)}))}catch(e){console.error("Error while reading CSS rules from ".concat(t.href),e)}})),e}))]}))}))}function Q(t){return t.filter((function(t){return t.type===CSSRule.FONT_FACE_RULE})).filter((function(t){return V(t.style.getPropertyValue("src"))}))}function X(t,r){return e(this,void 0,void 0,(function(){return n(this,(function(e){switch(e.label){case 0:if(null==t.ownerDocument)throw new Error("Provided element is not within a Document");return[4,J(o(t.ownerDocument.styleSheets),r)];case 1:return[2,Q(e.sent())]}}))}))}function K(t){return t.trim().replace(/["']/g,"")}function Y(t,r){return e(this,void 0,void 0,(function(){var e,i;return n(this,(function(n){switch(n.label){case 0:return[4,X(t,r)];case 1:return e=n.sent(),i=function(t){var e=new Set;return function t(n){(n.style.fontFamily||getComputedStyle(n).fontFamily).split(",").forEach((function(t){e.add(K(t))})),Array.from(n.children).forEach((function(e){e instanceof HTMLElement&&t(e)}))}(t),e}(t),[4,Promise.all(e.filter((function(t){return i.has(K(t.style.fontFamily))})).map((function(t){var e=t.parentStyleSheet?t.parentStyleSheet.href:null;return q(t.cssText,e,r)})))];case 2:return[2,n.sent().join("\n")]}}))}))}function Z(t,r){return e(this,void 0,void 0,(function(){var e,i,o,u,c;return n(this,(function(n){switch(n.label){case 0:return null==r.fontEmbedCSS?[3,1]:(i=r.fontEmbedCSS,[3,5]);case 1:return r.skipFonts?(o=null,[3,4]):[3,2];case 2:return[4,Y(t,r)];case 3:o=n.sent(),n.label=4;case 4:i=o,n.label=5;case 5:return(e=i)&&(u=document.createElement("style"),c=document.createTextNode(e),u.appendChild(c),t.firstChild?t.insertBefore(u,t.firstChild):t.appendChild(u)),[2]}}))}))}function tt(t,r){return void 0===r&&(r={}),e(this,void 0,void 0,(function(){var e,i,o,u;return n(this,(function(n){switch(n.label){case 0:return e=s(t,r),i=e.width,o=e.height,[4,I(t,r,!0)];case 1:return[4,Z(u=n.sent(),r)];case 2:return n.sent(),[4,z(u,r)];case 3:return n.sent(),function(t,e){var n=t.style;e.backgroundColor&&(n.backgroundColor=e.backgroundColor),e.width&&(n.width="".concat(e.width,"px")),e.height&&(n.height="".concat(e.height,"px"));var r=e.style;null!=r&&Object.keys(r).forEach((function(t){n[t]=r[t]}))}(u,r),[4,v(u,i,o)];case 4:return[2,n.sent()]}}))}))}function et(t,r){return void 0===r&&(r={}),e(this,void 0,void 0,(function(){var e,i,o,u,c,a,f,d,v;return n(this,(function(n){switch(n.label){case 0:return e=s(t,r),i=e.width,o=e.height,[4,tt(t,r)];case 1:return[4,h(n.sent())];case 2:return u=n.sent(),c=document.createElement("canvas"),a=c.getContext("2d"),f=r.pixelRatio||function(){var t,e;try{e=process}catch(t){}var n=e&&e.env?e.env.devicePixelRatio:null;return n&&(t=parseInt(n,10),Number.isNaN(t)&&(t=1)),t||window.devicePixelRatio||1}(),d=r.canvasWidth||i,v=r.canvasHeight||o,c.width=d*f,c.height=v*f,r.skipAutoScale||function(t){(t.width>l||t.height>l)&&(t.width>l&&t.height>l?t.width>t.height?(t.height*=l/t.width,t.width=l):(t.width*=l/t.height,t.height=l):t.width>l?(t.height*=l/t.width,t.width=l):(t.width*=l/t.height,t.height=l))}(c),c.style.width="".concat(d),c.style.height="".concat(v),r.backgroundColor&&(a.fillStyle=r.backgroundColor,a.fillRect(0,0,c.width,c.height)),a.drawImage(u,0,0,c.width,c.height),[2,c]}}))}))}t.getFontEmbedCSS=function(t,r){return void 0===r&&(r={}),e(this,void 0,void 0,(function(){return n(this,(function(e){return[2,Y(t,r)]}))}))},t.toBlob=function(t,r){return void 0===r&&(r={}),e(this,void 0,void 0,(function(){return n(this,(function(e){switch(e.label){case 0:return[4,et(t,r)];case 1:return[4,f(e.sent())];case 2:return[2,e.sent()]}}))}))},t.toCanvas=et,t.toJpeg=function(t,r){return void 0===r&&(r={}),e(this,void 0,void 0,(function(){return n(this,(function(e){switch(e.label){case 0:return[4,et(t,r)];case 1:return[2,e.sent().toDataURL("image/jpeg",r.quality||1)]}}))}))},t.toPixelData=function(t,r){return void 0===r&&(r={}),e(this,void 0,void 0,(function(){var e,i,o,u;return n(this,(function(n){switch(n.label){case 0:return e=s(t,r),i=e.width,o=e.height,[4,et(t,r)];case 1:return u=n.sent(),[2,u.getContext("2d").getImageData(0,0,i,o).data]}}))}))},t.toPng=function(t,r){return void 0===r&&(r={}),e(this,void 0,void 0,(function(){return n(this,(function(e){switch(e.label){case 0:return[4,et(t,r)];case 1:return[2,e.sent().toDataURL()]}}))}))},t.toSvg=tt}));
+//# sourceMappingURL=html-to-image.js.map
+
+</script>
+<div id="guide" onclick="if(event.target===this)this.style.display='none'"><div class="box" id="guideBox"></div></div>
+
+<script>
+/* ===================== CONFIG ===================== */
+const ORDER_TYPES = {
+  ZCFC:{sign: 1, desc:'C&F Invoice',            grp:'Billing'},
+  ZMFC:{sign: 1, desc:'Plant Invoice',          grp:'Billing'},
+  ZS1: {sign:-1, desc:'Cancel Invoice RSPL',    grp:'Cancellation'},
+  ZS2: {sign: 1, desc:'Cancel Cred. Memo RSPL', grp:'Cancellation'},
+  ZCRF:{sign:-1, desc:'C&F Returns',            grp:'Return'},
+  ZMRF:{sign:-1, desc:'Plant Returns',          grp:'Return'},
+  ZRFC:{sign:-1, desc:'Returns (Without Invoice Reference)', grp:'Return'}
+};
+const STYPE_COLOR = ['var(--s1)','var(--s2)','var(--s3)','var(--s4)'];
+const STYPE_NAME = {KH:'Kharif', RB:'Rabi', SU:'Summer', ZR:'Zaid'};
+const COLS = { // normalised header -> field
+  zone:'z', region:'r', territory:'t', customerno:'c', customername:'cn', seasoncode:'s',
+  invoiceplant:'pl', invoicetype:'ty', ordertype:'ty', invoiceno:'inv', invoicedate:'d', product:'crop',
+  actualitemid:'hyb', itemcode:'sku', lotno:'lot', qtyinkgs:'kg', basevalue:'base',
+  discountamount:'disc', netamount:'net',
+  productcategory:'foc', productcat:'foc', prodcategory:'foc', focus:'foc', focusnonfocus:'foc', focusnonfocusproduct:'foc', focuscategory:'foc', focusproduct:'foc', productfocus:'foc', category:'foc', focustype:'foc'
+};
+const REQUIRED = ['c','ty','d','net','kg'];
+
+/* ===================== STATE ===================== */
+let ROWS = [];            // cleaned rows
+let KEYS = new Set();     // dedupe across files
+let CUST = new Map();     // custNo -> {name,z,r,t}
+let FILES = [], IGNORED = {};
+let HAS_FOC = false;      // data file has a Focus / Non Focus column
+let HYB_INFO = new Map(); // hybrid -> {crop, foc}
+const ST = {zone:'',region:'',terr:'',crop:'',hyb:'',foc:'',hsGrade:'',hsTerr:'',stype:'',focus:'',metric:'val',tab:'ov',
+            cust:'', custStatus:'', custSearch:'', sortCu:{k:'cur',d:-1}};
+
+/* ===================== DEVICE MODE ===================== */
+// auto: phone ≤ 600px wide (Pixel 10 Pro = 412px); touch screens up to 1400px = iPad; otherwise PC
+function autoMode(){ const w=Math.min(screen.width,screen.height), W=Math.max(screen.width,screen.height), touch=navigator.maxTouchPoints>0||'ontouchstart' in window;
+  if(w<=600) return 'phone'; if(touch&&W<=1400) return 'tab'; return 'pc'; }
+let MODE='pc'; try{ MODE=localStorage.getItem('rasi360_mode')||autoMode(); }catch(e){ MODE=autoMode(); }
+function setMode(m,save){
+  MODE=m; if(save){ try{ localStorage.setItem('rasi360_mode',m); }catch(e){} }
+  document.body.classList.toggle('m-phone',m==='phone'); document.body.classList.toggle('m-tab',m==='tab');
+  document.body.classList.toggle('touch',m!=='pc');
+  document.querySelectorAll('#modeSw button').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));
+  if(typeof ROWS!=='undefined'&&ROWS.length){ fltSummary(); render(); }
+}
+function fltSummary(){
+  const b=document.getElementById('fltBtn'); if(!b) return;
+  const parts=[ST.zone||'All zones',ST.region,ST.terr,ST.crop,ST.hyb,ST.foc,ST.focus,ST.metric==='val'?'₹':'MT'].filter(Boolean);
+  b.innerHTML=`<span>⚙ <b>Filters:</b> ${esc(parts.join(' · '))}</span><span>${document.getElementById('filters').classList.contains('open')?'▲':'▼'}</span>`;
+  b.style.display=(MODE==='phone'&&ROWS.length)?'':'none';
+}
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('#modeSw button'); if(b) setMode(b.dataset.mode,true); });
+
+/* ===================== HELPERS ===================== */
+const $ = id => document.getElementById(id);
+const norm = s => String(s??'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const num = v => { if(v==null||v==='') return 0; if(typeof v==='number') return v; const n=parseFloat(String(v).replace(/,/g,'')); return isNaN(n)?0:n; };
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const inr = (v,d=0) => v.toLocaleString('en-IN',{minimumFractionDigits:d,maximumFractionDigits:d});
+function parseDate(v){
+  if(v instanceof Date) return isNaN(v)?null:v;
+  if(typeof v==='number'){ // excel serial
+    const d=new Date(Math.round((v-25569)*864e5)); return isNaN(d)?null:new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+  }
+  const s=String(v||'').trim(); if(!s) return null;
+  let m=s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/); if(m) return new Date(+m[1],m[2]-1,+m[3]);
+  m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/); // Indian dd-mm-yyyy
+  if(m){let y=+m[3]; if(y<100) y+=2000; return new Date(y,m[2]-1,+m[1]);}
+  m=s.match(/^(\d{1,2})[-\s]([A-Za-z]{3})[A-Za-z]*[-\s](\d{2,4})/);
+  if(m){let y=+m[3]; if(y<100) y+=2000; const mi='janfebmaraprmayjunjulaugsepoctnovdec'.indexOf(m[2].toLowerCase())/3; if(mi>=0) return new Date(y,mi,+m[1]);}
+  const d=new Date(s); return isNaN(d)?null:d;
+}
+function normFoc(v){ const n=norm(v); if(!n) return ''; if(n.includes('non')) return 'Non Focus'; if(n.includes('focus')||n==='yes'||n==='y') return 'Focus'; if(n==='no'||n==='n') return 'Non Focus'; return String(v).trim(); }
+const fmtDate = t => { if(!t) return '–'; const d=new Date(t); return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}); };
+// measure formatting
+function mv(r){ return ST.metric==='val' ? r.net : r.kg; }
+function fmt(v){ // table cells: ₹ Lakh or MT
+  if(ST.metric==='val') return inr(v/1e5,2);
+  return inr(v/1000,2);
+}
+const unit = () => ST.metric==='val' ? '₹ Lakh' : 'MT';
+function big(v){ // tiles
+  if(ST.metric==='val'){ const a=Math.abs(v); return a>=1e7? '₹ '+inr(v/1e7,2)+' Cr' : '₹ '+inr(v/1e5,2)+' L'; }
+  return inr(v/1000,1)+' MT';
+}
+const bigVal = v => { const a=Math.abs(v); return a>=1e7? '₹ '+inr(v/1e7,2)+' Cr' : '₹ '+inr(v/1e5,2)+' L'; };
+function gr(cur,prev){ if(prev>0) return (cur-prev)/prev*100; return null; }
+function grTxt(cur,prev){
+  const g=gr(cur,prev);
+  if(g==null) return cur>0?'<span class="up">New</span>':'<span class="muted">–</span>';
+  return `<span class="${g>=0?'up':'dn'}">${g>=0?'▲':'▼'} ${inr(Math.abs(g),1)}%</span>`;
+}
+
+/* ===================== LOADING ===================== */
+$('file').addEventListener('change', e=>{ loadFiles([...e.target.files]); e.target.value=''; });
+document.addEventListener('dragover', e=>e.preventDefault());
+document.addEventListener('drop', e=>{ e.preventDefault(); if(e.dataTransfer.files.length) loadFiles([...e.dataTransfer.files]); });
+
+let xlsxReady=null;
+function needXLSX(){
+  if(window.XLSX) return Promise.resolve();
+  if(xlsxReady) return xlsxReady;
+  xlsxReady=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.onload=res; s.onerror=()=>{xlsxReady=null;rej(new Error('Could not load the Excel reader (needs internet once). Save the file as CSV and load that instead.'));};
+    document.head.appendChild(s);
+  });
+  return xlsxReady;
+}
+function parseCSV(text){
+  const rows=[]; let row=[], f='', q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(q){ if(ch==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=ch; }
+    else if(ch==='"') q=true;
+    else if(ch===','){ row.push(f); f=''; }
+    else if(ch==='\n'||ch==='\r'){ if(ch==='\r'&&text[i+1]==='\n') i++; row.push(f); rows.push(row); row=[]; f=''; }
+    else f+=ch;
+  }
+  if(f!==''||row.length){row.push(f); rows.push(row);}
+  return rows;
+}
+async function readFile(file){ // Excel only (CSV is streamed)
+  await needXLSX();
+  const wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});
+  return wb.SheetNames.map(n=>XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:''}));
+}
+const tick=()=>new Promise(r=>setTimeout(r,0));
+/* Streams a file row by row without freezing the page.
+   onHeader(cells) -> true when the header row is found; onRow(cells) for each data row; prog(bytesDone) for progress. */
+async function streamRows(file,onHeader,onRow,prog){
+  let header=false, scanned=0, last=performance.now();
+  const handle=cells=>{ if(!header){ if(++scanned>30) return; if(onHeader(cells)) header=true; return; } onRow(cells); };
+  if(!/\.csv$/i.test(file.name)){            // Excel: read whole workbook, then process in batches
+    prog(0,'Opening Excel workbook (large Excel files are slow – CSV is faster)…');
+    const sheets=await readFile(file); const total=sheets.reduce((s,g)=>s+g.length,0)||1; let done=0;
+    for(const grid of sheets){ header=false; scanned=0;
+      for(let i=0;i<grid.length;i++){ handle(grid[i]); done++;
+        if(performance.now()-last>80){ prog(file.size*done/total); await tick(); last=performance.now(); } } }
+    return header;
+  }
+  const reader=file.stream().getReader(), dec=new TextDecoder('utf-8');
+  let row=[], f='', q=false, cr=false, read=0, first=true;
+  const end=()=>{ row.push(f); f=''; handle(row); row=[]; };
+  for(;;){
+    const {done,value}=await reader.read();
+    let t=done?dec.decode():dec.decode(value,{stream:true});
+    if(value) read+=value.length;
+    if(first&&t){ if(t.charCodeAt(0)===0xFEFF) t=t.slice(1); first=false; }
+    for(let i=0;i<t.length;i++){
+      const ch=t[i];
+      if(q){ if(ch==='"'){ if(t[i+1]==='"'){f+='"';i++;} else q=false; } else f+=ch; continue; }
+      if(ch==='\r'){ end(); cr=true; continue; }
+      if(ch==='\n'){ if(cr){cr=false; continue;} end(); continue; }
+      cr=false;
+      if(ch==='"') q=true; else if(ch===',') { row.push(f); f=''; } else f+=ch;
+    }
+    if(performance.now()-last>80||done){ prog(read); await tick(); last=performance.now(); }
+    if(done) break;
+  }
+  if(f!==''||row.length) end();
+  return header;
+}
+
+/* ---------- STATUS BAR ---------- */
+const STS={files:[],t0:0};
+const mb=b=>(b/1048576).toFixed(b<1048576*10?1:0)+' MB';
+const secs=ms=>{ const s=Math.round(ms/1000); return s<60? s+' s' : Math.floor(s/60)+' min '+(s%60)+' s'; };
+function stStart(files,kind){
+  STS.files=files.map(f=>({name:f.name,size:f.size,done:0,state:'Waiting',info:''})); STS.t0=performance.now(); STS.kind=kind;
+  const el=$('status'); el.style.display='block'; el.classList.remove('done','err'); $('stClose').style.display='none';
+  $('stIcon').innerHTML='<span class="spin"></span>'; $('loadBtn').disabled=true; stDraw();
+}
+function stDraw(msg){
+  const tot=STS.files.reduce((s,f)=>s+f.size,0)||1, done=STS.files.reduce((s,f)=>s+f.done,0), pct=Math.min(100,done/tot*100);
+  const cur=STS.files.find(f=>f.state==='Reading'), idx=cur?STS.files.indexOf(cur)+1:STS.files.length;
+  const el=performance.now()-STS.t0, rate=done/Math.max(el,1), eta=rate>0?(tot-done)/rate:0;
+  $('stBar').style.width=pct.toFixed(1)+'%'; $('stPct').textContent=pct.toFixed(0)+'%';
+  if(!$('status').classList.contains('done')&&!$('status').classList.contains('err')){
+    $('loadinfo').innerHTML=`<span class="spin" style="border-color:rgba(255,255,255,.35);border-top-color:#fff"></span> Loading ${STS.kind} file ${idx} of ${STS.files.length} · <b style="font-size:15px">${pct.toFixed(0)}%</b>`;
+    document.title=`${pct.toFixed(0)}% · Loading – Rasi Customer 360`; }
+  if(cur){
+    $('stTitle').textContent=`Loading ${STS.kind} file ${idx} of ${STS.files.length}: ${cur.name}`;
+    $('stDetail').textContent=msg || `${mb(done)} of ${mb(tot)} · ${ROWS.length.toLocaleString('en-IN')} rows so far · ${secs(el)} elapsed${pct>3?' · about '+secs(eta)+' left':''}`;
+  }
+  $('stFiles').innerHTML=(STS.seasonInfo&&!STS.files.some(f=>f.state==='Reading')?`<div style="font-size:12px;color:var(--text2);margin:4px 0 6px">${esc(STS.seasonInfo)}</div>`:'')+`<table><tr><th class="l">File</th><th>Size</th><th class="l">Status</th><th class="l">Result</th></tr>${STS.files.map(f=>`<tr><td>${esc(f.name)}</td><td>${mb(f.size)}</td><td class="l">${f.state==='Reading'?'<span class="spin"></span> '+Math.round(f.done/(f.size||1)*100)+'%':f.state}</td><td class="l">${esc(f.info)}</td></tr>`).join('')}</table>`;
+}
+function stEnd(summary,isErr){
+  document.title=document.title.replace(/^.*Loading – /,'');
+  const el=$('status'); el.classList.add(isErr?'err':'done'); $('stBar').style.width='100%'; $('stPct').textContent=isErr?'':'100%';
+  $('stIcon').textContent=isErr?'⚠️':'✅'; $('stTitle').textContent=summary;
+  $('stDetail').textContent=`${STS.files.length} file(s) in ${secs(performance.now()-STS.t0)}`+(Object.keys(IGNORED).length?` · ignored order types: ${Object.entries(IGNORED).map(([k,v])=>k+' ('+v.toLocaleString('en-IN')+')').join(', ')}`:'');
+  $('stClose').style.display=''; $('loadBtn').disabled=false;
+  if(!isErr && MODE!=='pc' && !missingSeasons().length) setTimeout(()=>{ if($('status').classList.contains('done')) $('status').style.display='none'; },4000); stDraw(); 
+}
+
+async function loadFiles(files){
+  if(!files.length) return;
+  stStart(files,'data');
+  let errors=0;
+  for(const [fi,f] of files.entries()){
+    const S=STS.files[fi]; S.state='Reading'; stDraw();
+    let added=0, dup=0, map=null; const fileKeys=new Set();
+    try{
+      const ok=await streamRows(f, cells=>{
+          const n=cells.map(norm); if(!(n.includes('invoicetype')||n.includes('ordertype'))) return false;
+          map={}; cells.forEach((h,ix)=>{ const k=COLS[norm(h)]; if(k&&map[k]==null) map[k]=ix; });
+          if(map.foc==null){ const ix=cells.findIndex(h=>/focus/.test(norm(h))); if(ix>=0) map.foc=ix; else if(/categ/.test(norm(cells[13]))) map.foc=13; }
+          const miss=REQUIRED.filter(k=>map[k]==null);
+          if(miss.length) throw new Error('missing column(s): '+miss.map(k=>({c:'Customer No',ty:'Invoice Type',d:'Invoice Date',net:'Net Amount',kg:'Qty In Kgs'}[k])).join(', '));
+          return true;
+        }, g=>{
+          if(g.length<2) return;
+          const get=k=>map[k]==null?'':g[map[k]];
+          const ty=String(get('ty')).trim().toUpperCase(); if(!ty) return;
+          const ot=ORDER_TYPES[ty];
+          if(!ot){ IGNORED[ty]=(IGNORED[ty]||0)+1; return; }
+          const d=parseDate(get('d')); if(!d) return;
+          const c=String(get('c')).trim(); if(!c) return;
+          const sg=ot.sign;
+          const r={ z:String(get('z')).trim()||'(blank)', r:String(get('r')).trim()||'(blank)', t:String(get('t')).trim()||'(blank)',
+            c, s:normSeason(get('s')), ty, inv:String(get('inv')).trim(), d:d.getTime(),
+            crop:String(get('crop')).trim()||'(blank)', hyb:String(get('hyb')).trim()||'(blank)', sku:String(get('sku')).trim(),
+            kg:sg*Math.abs(num(get('kg'))), net:sg*Math.abs(num(get('net'))), base:sg*Math.abs(num(get('base'))), disc:sg*Math.abs(num(get('disc'))),
+            foc: map.foc!=null ? (normFoc(get('foc'))||'(blank)') : '' };
+          if(map.foc!=null) HAS_FOC=true;
+          if(!HYB_INFO.has(r.hyb) || (r.foc && r.foc!=='(blank)')) HYB_INFO.set(r.hyb,{crop:r.crop,foc:r.foc});
+          const key=r.inv+'|'+r.sku+'|'+String(get('lot')).trim()+'|'+r.ty+'|'+r.kg+'|'+r.net;
+          if(KEYS.has(key)){dup++; return;}
+          fileKeys.add(key);
+          ROWS.push(r); added++;
+          const cn=String(get('cn')).trim();
+          const prev=CUST.get(c);
+          if(!prev || r.d>=prev.d) CUST.set(c,{name:cn||(prev&&prev.name)||c, z:r.z, r:r.r, t:r.t, d:r.d});
+        }, (b,msg)=>{ S.done=b; stDraw(msg); });
+      if(!ok) throw new Error('header row with "Invoice Type" not found');
+      S.state='✅ Done'; S.info=`${added.toLocaleString('en-IN')} rows added${dup?`, ${dup.toLocaleString('en-IN')} duplicates skipped`:''}`;
+    }catch(err){ errors++; S.state='⚠️ Error'; S.info=err.message||String(err); }
+    fileKeys.forEach(k=>KEYS.add(k)); S.done=S.size;
+    FILES.push(`${f.name}: ${S.info}`); stDraw();
+  }
+  $('stTitle').textContent='Building dashboard…'; $('stDetail').textContent=`${ROWS.length.toLocaleString('en-IN')} rows`; await tick();
+  afterLoad();
+  stEnd(errors? `Loaded with ${errors} problem file(s) – see Show files` : `Loaded ${ROWS.length.toLocaleString('en-IN')} rows · ${CUST.size.toLocaleString('en-IN')} customers`, errors>0);
+  if(errors) $('status').classList.add('open'), $('stToggle').textContent='Hide files';
+}
+function clearData(){ SEAS_RAW.clear(); ROWS=[];KEYS=new Set();CUST=new Map();FILES=[];IGNORED={}; location.reload(); }
+
+/* ===================== POG & LIQUIDATION ===================== */
+// POG = Billing − Returns (from the transaction file itself, in Kg)
+//   Billing = ZCFC + ZMFC, less invoice cancellations (ZS1)
+//   Returns = ZCRF + ZMRF + ZRFC, less credit-memo cancellations (ZS2)
+// Liquidation % = POG ÷ Billing
+const POG_HAS_CUST=true;
+const billKgNet = a => a? a.billKg + a.zs1Kg : 0;
+const pogKg = a => a? a.kg : 0;
+const liqPct = a => { const b=billKgNet(a); return b>0 ? pogKg(a)/b*100 : null; };
+
+/* ===================== GUIDE ===================== */
+const GUIDE={
+ breadth:{n:'Hybrid breadth',f:'Number of different hybrids (Actual Item ID) a dealer bought in the period, counting only hybrids with net quantity above zero after returns. For a region or territory it is the average across its active dealers.',
+   ex:'Dealer bought RCH3366, RCH3999 and RBX5303 in KH26, and returned all of RCH3999 → breadth = 2.',
+   w:'Overview tile “Avg hybrid breadth” · Geography table “Avg breadth” · Customers tab column · Customer 360 tile · Dealer Health (criterion 3, scorecard column)',
+   why:'A wider basket means the dealer depends less on one hybrid and is easier to grow with new launches.'},
+ pog:{n:'POG',f:'Billing − Returns, in Kg. Billing = ZCFC + ZMFC less ZS1 cancellations; Returns = ZCRF + ZMRF + ZRFC less ZS2.',ex:'Billed 10 MT, returned 0.8 MT → POG = 9.2 MT.',w:'Overview tile · Customer 360 tile'},
+ liq:{n:'Liquidation %',f:'POG ÷ Billing × 100 (on quantity).',ex:'9.2 MT POG ÷ 10 MT billed = 92%.',w:'Overview tile · Geography table · Customers tab · Customer 360 (alert if below 90%) · Dealer Health scorecard'},
+ ret:{n:'Return %',f:'(ZCRF + ZMRF + ZRFC) ÷ Gross billing (ZCFC + ZMFC) × 100, on the selected measure (₹ or MT).',ex:'₹2 L returned on ₹50 L billed = 4%.',w:'Overview · Geography · Customers · Products · Returns tab · Customer 360 · Dealer Health (criterion 2)'},
+ growth:{n:'Growth %',f:'(Focus period − previous period of the same kind) ÷ previous period × 100. E.g. KH26 vs KH25, or FY26-27 vs FY25-26.',ex:'₹40 L in KH25 → ₹46 L in KH26 = +15%.',w:'Everywhere a period is compared · Dealer Health (criterion 1)'},
+ focus:{n:'Focus share %',f:'Sales of hybrids marked “Focus” in column N “Product Category” ÷ total sales of the dealer / area.',ex:'₹12 L of focus hybrids out of ₹40 L = 30%.',w:'Overview tile · Geography table · Customers tab · Customer 360 · Products tab'},
+ health:{n:'Dealer Health Score',f:'Growth (max 30) + Focus product share (max 35) + Return % (max 15) + Hybrid breadth (max 20) = 100. Focus share has the highest weight. Grade A ≥80, B ≥60, C ≥40, D below 40. Bands are shown and editable in the Dealer Health tab.',ex:'Growth +15% (22) + Focus share 52% (35) + Return 1.5% (15) + Breadth 3 (14) = 86 → Grade A.',w:'Dealer Health tab · Customers tab “Health” column · Customer 360 score card'},
+ status:{n:'Customer status',f:'Growing / Declining = ±10% or more vs previous period · Stable = within ±10% · New = first ever purchase · Reactivated = bought before, skipped previous period · Lost = bought previous period, not now · Dormant = inactive both periods.',ex:'',w:'Customers tab'},
+ conc:{n:'Customer concentration',f:'Share of sales from the top 20% of active dealers, and how many dealers make up 80% of sales.',ex:'',w:'Overview'}
+};
+const info = k => `<i class="info" data-tip="${esc('<b>'+GUIDE[k].n+'</b><br>'+GUIDE[k].f+(GUIDE[k].ex?'<br><i>e.g. '+GUIDE[k].ex+'</i>':''))}" onclick="event.stopPropagation();openGuide('${k}')">i</i>`;
+function openGuide(k){ hideTip();
+  $('guideBox').innerHTML=`<div style="display:flex;align-items:center"><h2>Guide – measures used in this dashboard</h2><span style="flex:1"></span><button class="btn" onclick="$('guide').style.display='none'">Close ✕</button></div>
+   <div class="note" style="margin-bottom:10px">Hover any <i class="info">i</i> icon in the dashboard for a quick explanation; click it to open this guide.</div>
+   <table><tr><th>Measure</th><th>How it is calculated</th><th>Where it is shown</th></tr>
+   ${Object.entries(GUIDE).map(([key,g])=>`<tr id="g-${key}" style="${key===k?'background:#fff7e0':''}"><td>${g.n}</td><td>${g.f}${g.ex?`<div class="ex">e.g. ${g.ex}</div>`:''}${g.why?`<div class="ex">Why it matters: ${g.why}</div>`:''}</td><td>${g.w}</td></tr>`).join('')}</table>`;
+  $('guide').style.display='flex';
+  if(k){ const el=document.getElementById('g-'+k); if(el) el.scrollIntoView({block:'center'}); }
+}
+
+/* ===================== DEALER HEALTH SCORE ===================== */
+// Score out of 100 = Growth + Focus share + Return % + Hybrid Breadth points. Editable in the Dealer Health tab.
+// Focus share (business from Focus products, column N "Product Category") carries the highest weight.
+const HC_DEFAULT = {
+  gCut:[20,10,0,-10],   gPts:[30,22,15,8,0], gNew:15,   // 1. growth % vs previous period        (max 30)
+  fCut:[50,35,20,10],   fPts:[35,26,18,9,0],            // 2. focus product share % of business  (max 35)
+  rCut:[2,5,10],        rPts:[15,10,5,0],               // 3. return % of gross billing           (max 15)
+  bCut:[5,3,2,1],       bPts:[20,14,7,3],               // 4. no. of hybrids bought               (max 20)
+  grade:[80,60,40]                                        // A ≥80, B ≥60, C ≥40, else D
+};
+const HC_KEY='rasi360_health_v2';
+let HC = JSON.parse(JSON.stringify(HC_DEFAULT));
+try{ const s=localStorage.getItem(HC_KEY); if(s) HC=Object.assign(HC,JSON.parse(s)); }catch(e){}
+function saveHC(){ try{ localStorage.setItem(HC_KEY,JSON.stringify(HC)); }catch(e){} }
+function health(curA, prevV){
+  const cv=val(curA); if(!(cv>0)) return null;
+  const g=gr(cv,prevV), rp=retPct(curA)||0, br=breadth(curA), fs=HAS_FOC?(focPct(curA)||0):null;
+  let gp; if(g==null) gp=HC.gNew; else { const i=HC.gCut.findIndex(c=>g>=c); gp=HC.gPts[i<0?HC.gCut.length:i]; }
+  let ri=HC.rCut.findIndex(c=>rp<=c); const rpP=HC.rPts[ri<0?HC.rCut.length:ri];
+  let bi=HC.bCut.findIndex(c=>br>=c); const bp=bi<0?0:HC.bPts[bi];
+  let fpP=0; if(fs!=null){ const fi=HC.fCut.findIndex(c=>fs>=c); fpP=HC.fPts[fi<0?HC.fCut.length:fi]; }
+  const raw=gp+fpP+rpP+bp, s=Math.round(raw/maxScore()*100), gi=HC.grade.findIndex(c=>s>=c), grade=gi<0?'D':'ABC'[gi];
+  return {s,raw,g,rp,br,fs,gp,fpP,rpP,bp,grade};
+}
+const maxScore = () => Math.max(HC.gNew,...HC.gPts)+(HAS_FOC?Math.max(...HC.fPts):0)+Math.max(...HC.rPts)+Math.max(...HC.bPts);
+function gBands(){ const c=HC.gCut, out=[]; c.forEach((x,i)=>out.push({l: i===0?`≥ ${x}%`:`${x}% to < ${c[i-1]}%`, p:HC.gPts[i]})); out.push({l:`< ${c[c.length-1]}%`,p:HC.gPts[c.length]}); out.push({l:'New / no purchase in previous period',p:HC.gNew}); return out; }
+function rBands(){ const c=HC.rCut, out=[]; c.forEach((x,i)=>out.push({l: i===0?`≤ ${x}%`:`> ${c[i-1]}% to ${x}%`, p:HC.rPts[i]})); out.push({l:`> ${c[c.length-1]}%`,p:HC.rPts[c.length]}); return out; }
+function bBands(){ const c=HC.bCut; return c.map((x,i)=>({l: i===0?`≥ ${x} hybrids`:(c[i-1]-1===x?`${x} hybrid${x>1?'s':''}`:`${x} – ${c[i-1]-1} hybrids`), p:HC.bPts[i]})); }
+function fBands(){ const c=HC.fCut, out=[]; c.forEach((x,i)=>out.push({l: i===0?`≥ ${x}%`:`${x}% to < ${c[i-1]}%`, p:HC.fPts[i]})); out.push({l:`< ${c[c.length-1]}%`,p:HC.fPts[c.length]}); return out; }
+function bandOf(h){ // which band label applied
+  const gi = h.g==null ? HC.gCut.length+1 : (i=>i<0?HC.gCut.length:i)(HC.gCut.findIndex(c=>h.g>=c));
+  const ri = (i=>i<0?HC.rCut.length:i)(HC.rCut.findIndex(c=>h.rp<=c));
+  const bi = HC.bCut.findIndex(c=>h.br>=c);
+  const fi = h.fs==null?-1:(i=>i<0?HC.fCut.length:i)(HC.fCut.findIndex(c=>h.fs>=c));
+  return {g:gBands()[gi].l, f: fi<0?'–':fBands()[fi].l, r:rBands()[ri].l, b: bi<0?'below minimum':bBands()[bi].l};
+}
+const gradeChip = h => h? `<span class="chip g-${h.grade}" title="Growth ${h.gp} + Focus ${h.fpP} + Return ${h.rpP} + Breadth ${h.bp} = ${h.raw}${h.raw!==h.s?' → '+h.s+' / 100':''}">${h.grade} · ${h.s}</span>` : '<span class="muted">–</span>';
+
+/* ===================== PERIODS ===================== */
+let SEASONS=[]; // [{code,type,min}]
+// Season codes are cleaned so that RB24, RB-24, RB 24, RB2024, Rabi 24, RABI-2024 all become RB24
+const SEAS_RAW=new Map(); // original spelling -> cleaned code (shown in the status panel)
+function normSeason(v){
+  const raw=String(v??'').trim(); if(!raw) return '';
+  const u=raw.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  const m=u.match(/^([A-Z]+)(\d+)$/) || u.match(/^(\d+)([A-Z]+)$/)&&[null,u.match(/^(\d+)([A-Z]+)$/)[2],u.match(/^(\d+)([A-Z]+)$/)[1]];
+  if(!m) { SEAS_RAW.set(raw,u); return u; }
+  let L=m[1], D=m[2];
+  if(/^KHA/.test(L)) L='KH'; else if(/^RAB/.test(L)) L='RB'; else if(/^(SUM|SMR)/.test(L)) L='SU'; else if(/^ZAI/.test(L)) L='ZR';
+  let yy;
+  if(D.length===4) yy = D.startsWith('20') ? D.slice(2) : D.slice(0,2);   // 2024 -> 24 ; 2425 -> 24
+  else if(D.length===2) yy=D; else if(D.length===1) yy='0'+D; else yy = D.startsWith('20') ? D.slice(2,4) : D.slice(0,2);  // 202425 -> 24
+  const code=L+yy; if(raw!==code) SEAS_RAW.set(raw,code); return code;
+}
+function seasonType(code){ const m=String(code).match(/^[A-Z]+/); return m?m[0]:''; }
+function fyOf(t){ const d=new Date(t); const y=d.getMonth()>=3?d.getFullYear():d.getFullYear()-1; return 'FY'+String(y).slice(2)+'-'+String(y+1).slice(2); }
+function buildSeasons(){
+  const m=new Map();
+  for(const r of ROWS){ if(!r.s) continue; const o=m.get(r.s); if(!o) m.set(r.s,{code:r.s,type:seasonType(r.s),min:r.d,n:1}); else {o.n++; if(r.d<o.min) o.min=r.d;} }
+  // order seasons by the date most of their billing starts: use 10th percentile-ish -> simple: min date of positive billing
+  SEASONS=[...m.values()].sort((a,b)=>a.min-b.min||a.code.localeCompare(b.code));
+  const yr=c=>+(String(c).match(/\d+/)||[0])[0];
+  // tie-break by season year number if starts are messy
+  SEASONS.sort((a,b)=>yr(a.code)-yr(b.code)||a.min-b.min);
+}
+function periodKey(r){ return ST.stype==='FY' ? fyOf(r.d) : (seasonType(r.s)===ST.stype ? r.s : null); }
+function periodList(){
+  if(ST.stype==='FY'){ return [...new Set(ROWS.map(r=>fyOf(r.d)))].sort(); }
+  const have=SEASONS.filter(s=>s.type===ST.stype); if(!have.length) return [];
+  const ys=have.map(s=>+s.code.slice(ST.stype.length)).filter(n=>!isNaN(n)); const lo=Math.min(...ys), hi=Math.max(...ys);
+  const out=[]; for(let y=lo;y<=hi;y++) out.push(ST.stype+String(y).padStart(2,'0'));   // every year, even if missing in the data
+  return out;
+}
+// seasons with no rows at all, inside the range of the loaded data
+function missingSeasons(){
+  const have=new Set(SEASONS.map(s=>s.code)), out=[];
+  for(const t of new Set(SEASONS.map(s=>s.type))){ const ys=SEASONS.filter(s=>s.type===t).map(s=>+s.code.slice(t.length)).filter(n=>!isNaN(n));
+    for(let y=Math.min(...ys);y<=Math.max(...ys);y++){ const c=t+String(y).padStart(2,'0'); if(!have.has(c)) out.push(c); } }
+  return out;
+}
+const isMissing = p => ST.stype!=='FY' && !SEASONS.some(s=>s.code===p);
+const perTh = p => isMissing(p) ? `<span title="No ${p} rows in the loaded files" style="color:var(--bad)">${p} ⚠</span>` : p;
+
+/* ===================== FILTER UI ===================== */
+function afterLoad(){
+  if(!ROWS.length){ $('loadinfo').textContent='No usable rows found'; return; }
+  buildSeasons();
+  const types=[...new Set(SEASONS.map(s=>s.type))];
+  let latest=ROWS[0]; for(const r of ROWS) if(r.d>latest.d) latest=r;
+  $('fStype').innerHTML=types.map(t=>`<option value="${t}">${STYPE_NAME[t]||t} seasons (${t})</option>`).join('')+'<option value="FY">Financial year (Apr–Mar)</option>';
+  ST.stype=ST.stype||seasonType(latest.s)||'FY'; $('fStype').value=ST.stype;
+  $('filters').style.display='flex'; $('tabs').style.display='flex'; $('clearBtn').style.display='';
+  afterLoadInfo(); seasonCheck(); fillFilters(); render();
+}
+function seasonCheck(){
+  const cnt=new Map(); for(const r of ROWS) if(r.s) cnt.set(r.s,(cnt.get(r.s)||0)+1);
+  const found=SEASONS.map(x=>`${x.code} (${(cnt.get(x.code)||0).toLocaleString('en-IN')})`).join(' · ');
+  const miss=missingSeasons(), fixed=[...SEAS_RAW.entries()].filter(([a,b])=>a.toUpperCase()!==b);
+  const el=$('seasonWarn');
+  if(!miss.length){ el.style.display='none'; }
+  else { el.style.display='block';
+    el.innerHTML=`<button class="x" onclick="this.parentElement.style.display='none'" title="Hide">✕</button>⚠ <b>No rows found for ${miss.join(', ')}</b> in the loaded file(s), so ${miss.length>1?'these columns show':'this column shows'} “–”. Check that the file covering ${miss.length>1?'these seasons':'this season'} was selected and that its Season Code column is filled in.
+      <div style="margin-top:4px;color:var(--text2)">Seasons found (rows): ${found}</div>`; }
+  // also list in the status panel
+  STS.seasonInfo=`Seasons found (rows): ${found}`+(fixed.length?` · Season codes cleaned: ${fixed.slice(0,8).map(([a,b])=>`“${a}” → ${b}`).join(', ')}${fixed.length>8?'…':''}`:'')+(miss.length?` · Missing: ${miss.join(', ')}`:'');
+}
+function afterLoadInfo(){
+  let dmin=Infinity, dmax=-Infinity; for(const r of ROWS){ if(r.d<dmin) dmin=r.d; if(r.d>dmax) dmax=r.d; }
+  $('loadinfo').innerHTML=`${ROWS.length.toLocaleString('en-IN')} rows · ${CUST.size.toLocaleString('en-IN')} customers · ${fmtDate(dmin)} – ${fmtDate(dmax)}`;
+  $('loadinfo').title=FILES.join('\n')+(Object.keys(IGNORED).length?'\nIgnored order types: '+Object.entries(IGNORED).map(([k,v])=>k+' ('+v+')').join(', '):'');
+}
+function opts(el,vals,cur,all){ el.innerHTML=`<option value="">${all}</option>`+vals.map(v=>`<option${v===cur?' selected':''}>${esc(v)}</option>`).join(''); if(!vals.includes(cur)) el.value=''; return el.value; }
+function fillFilters(){
+  const uniq=(arr)=>[...new Set(arr)].sort();
+  ST.zone=opts($('fZone'),uniq(ROWS.map(r=>r.z)),ST.zone,'All zones');
+  let R=ROWS.filter(r=>!ST.zone||r.z===ST.zone);
+  ST.region=opts($('fRegion'),uniq(R.map(r=>r.r)),ST.region,'All regions');
+  R=R.filter(r=>!ST.region||r.r===ST.region);
+  ST.terr=opts($('fTerr'),uniq(R.map(r=>r.t)),ST.terr,'All territories');
+  ST.crop=opts($('fCrop'),uniq(ROWS.map(r=>r.crop)),ST.crop,'All crops');
+  ST.hyb=opts($('fHyb'),uniq(ROWS.filter(r=>(!ST.crop||r.crop===ST.crop)&&(!ST.foc||r.foc===ST.foc)).map(r=>r.hyb)),ST.hyb,'All hybrids');
+  $('fFoc').parentElement.style.display=HAS_FOC?'':'none';
+  ST.foc=HAS_FOC?opts($('fFoc'),uniq(ROWS.map(r=>r.foc).filter(Boolean)),ST.foc,'Focus + Non Focus'):'';
+  const P=periodList();
+  if(!P.includes(ST.focus)){ const ok=P.filter(p=>!isMissing(p)); ST.focus=ok[ok.length-1]||P[P.length-1]||''; }
+  $('fFocus').innerHTML=P.map(p=>`<option value="${p}"${p===ST.focus?' selected':''}>${p}${isMissing(p)?' (no data)':''}</option>`).join('');
+}
+['fZone','fRegion','fTerr','fCrop','fHyb','fFoc','fStype','fFocus'].forEach(id=>$(id).addEventListener('change',e=>{
+  const k={fZone:'zone',fRegion:'region',fTerr:'terr',fCrop:'crop',fHyb:'hyb',fFoc:'foc',fStype:'stype',fFocus:'focus'}[id];
+  ST[k]=e.target.value;
+  if(id==='fZone'){ST.region='';ST.terr='';} if(id==='fRegion') ST.terr=''; if(id==='fCrop'||id==='fFoc') ST.hyb='';
+  if(id==='fStype') ST.focus='';
+  if(['fZone','fRegion','fTerr'].includes(id)) ST.hsTerr='';
+  fillFilters(); render();
+}));
+$('fMetric').addEventListener('click',e=>{ const m=e.target.dataset.m; if(!m) return; ST.metric=m; [...$('fMetric').children].forEach(b=>b.classList.toggle('on',b.dataset.m===m)); render(); });
+$('tabs').addEventListener('click',e=>{ const t=e.target.dataset.t; if(!t) return; ST.tab=t; [...$('tabs').children].forEach(b=>b.classList.toggle('on',b.dataset.t===t)); render(); });
+
+function filtered(){
+  return ROWS.filter(r=>(!ST.zone||r.z===ST.zone)&&(!ST.region||r.r===ST.region)&&(!ST.terr||r.t===ST.terr)&&(!ST.crop||r.crop===ST.crop)&&(!ST.hyb||r.hyb===ST.hyb)&&(!ST.foc||r.foc===ST.foc));
+}
+// periods to show as columns: up to 4 ending at focus
+function shownPeriods(){ const P=periodList(); const i=P.indexOf(ST.focus); return P.slice(Math.max(0,i-3),i+1); }
+function prevPeriod(){ const P=periodList(); const i=P.indexOf(ST.focus); return i>0?P[i-1]:null; }
+
+/* ===================== AGGREGATION ===================== */
+function blank(){ return {zs1Kg:0,net:0,kg:0,bill:0,billKg:0,ret:0,retKg:0,canc:0,disc:0,base:0,foc:0,inv:new Set(),cust:new Map(),hk:new Map()}; }
+function add(a,r){
+  a.net+=r.net; a.kg+=r.kg; a.disc+=r.disc; a.base+=r.base;
+  const g=ORDER_TYPES[r.ty].grp;
+  if(g==='Billing'){a.bill+=r.net;a.billKg+=r.kg;} else if(g==='Return'){a.ret+=r.net;a.retKg+=r.kg;} else a.canc+=r.net;
+  a.inv.add(r.inv); a.cust.set(r.c,(a.cust.get(r.c)||0)+mv(r));
+  a.hk.set(r.hyb,(a.hk.get(r.hyb)||0)+r.kg);
+  if(r.foc==='Focus') a.foc+=mv(r);
+  if(r.ty==='ZS1') a.zs1Kg+=r.kg;
+}
+// Hybrid breadth = no. of different hybrids with net quantity > 0
+const breadth = a => a? [...a.hk.values()].filter(v=>v>0).length : 0;
+const focPct = a => { const v=val(a); return a&&HAS_FOC&&v>0 ? a.foc/v*100 : null; };
+const pctTxt = (v,d=1) => v==null?'<span class="muted">–</span>':inr(v,d)+'%';
+const val = a => a? (ST.metric==='val'?a.net:a.kg) : 0;
+const activeCust = a => a? [...a.cust.values()].filter(v=>v>0).length : 0;
+const retPct = a => { if(!a) return null; return ST.metric==='val' ? (a.bill>0? Math.max(0,-a.ret)/a.bill*100 : null) : (a.billKg>0? Math.max(0,-a.retKg)/a.billKg*100 : null); };
+function groupBy(rows,keyFn){ // -> Map key -> Map period -> agg
+  const M=new Map();
+  for(const r of rows){ const p=periodKey(r); if(p==null) continue; const k=keyFn(r); let m=M.get(k); if(!m){m=new Map();M.set(k,m);} let a=m.get(p); if(!a){a=blank();m.set(p,a);} add(a,r); }
+  return M;
+}
+
+/* ===================== CHARTS ===================== */
+const tip=$('tip');
+function showTip(e,html){ tip.innerHTML=html; tip.style.display='block'; const w=Math.min(280,innerWidth-16); tip.style.maxWidth=w+'px'; const x=Math.max(8,Math.min(e.clientX+14,innerWidth-w-8)); tip.style.left=x+'px'; const y=e.clientY+14; tip.style.top=(y+tip.offsetHeight>innerHeight-8? Math.max(8,e.clientY-tip.offsetHeight-10):y)+'px'; }
+function hideTip(){ tip.style.display='none'; }
+document.addEventListener('mousemove',e=>{ if(MODE!=='pc') return; const t=e.target.closest&&e.target.closest('[data-tip]'); if(t) showTip(e,t.dataset.tip); else hideTip(); });
+// touch: tap a bar / chip / ⓘ to show its tooltip, tap elsewhere to hide
+document.addEventListener('click',e=>{ if(MODE==='pc') return; const t=e.target.closest&&e.target.closest('[data-tip]');
+  if(t && !t.classList.contains('info')){ showTip(e,t.dataset.tip); } else if(!t) hideTip(); },true);
+// vertical bars: items [{label,value,color,tip}]
+function vbars(items,{h=220,fmtAxis=fmt}={}){
+  if(!items.length) return '<div class="muted">No data</div>';
+  const W=Math.max(420,items.length*58), pad={l:56,r:10,t:16,b:30}, iw=W-pad.l-pad.r, ih=h-pad.t-pad.b;
+  const dmax=Math.max(0,...items.map(i=>i.value)), dmin=Math.min(0,...items.map(i=>i.value));
+  const raw=((dmax-dmin)||1)/4, mag=Math.pow(10,Math.floor(Math.log10(raw))), step=[1,2,2.5,5,10].map(x=>x*mag).find(x=>x>=raw);
+  const max=Math.ceil(dmax/step)*step, min=Math.floor(dmin/step)*step;
+  const span=(max-min)||1, y=v=>pad.t+(max-v)/span*ih, bw=Math.min(34,iw/items.length*0.6);
+  let s=`<svg viewBox="0 0 ${W} ${h}" width="100%" style="max-height:${h+20}px">`;
+  for(let v=min;v<=max+step/2;v+=step){ const yy=y(v); s+=`<line x1="${pad.l}" x2="${W-pad.r}" y1="${yy}" y2="${yy}" stroke="#eceae4"/><text x="${pad.l-6}" y="${yy+4}" text-anchor="end" font-size="10.5" fill="#8a8984">${fmtAxis(v)}</text>`; }
+  items.forEach((it,i)=>{
+    const cx=pad.l+(i+0.5)*iw/items.length, y0=y(0), y1=y(it.value), top=Math.min(y0,y1), hh=Math.max(1,Math.abs(y1-y0));
+    const r=Math.min(4,hh/2);
+    // rounded data-end only
+    const path = it.value>=0
+      ? `M${cx-bw/2},${y0} V${top+r} Q${cx-bw/2},${top} ${cx-bw/2+r},${top} H${cx+bw/2-r} Q${cx+bw/2},${top} ${cx+bw/2},${top+r} V${y0} Z`
+      : `M${cx-bw/2},${y0} V${top+hh-r} Q${cx-bw/2},${top+hh} ${cx-bw/2+r},${top+hh} H${cx+bw/2-r} Q${cx+bw/2},${top+hh} ${cx+bw/2},${top+hh-r} V${y0} Z`;
+    s+=`<g data-tip="${esc(it.tip)}"><rect x="${cx-iw/items.length/2}" y="${pad.t}" width="${iw/items.length}" height="${ih}" fill="transparent"/><path d="${path}" fill="${it.color}"/></g>`;
+    s+=`<text x="${cx}" y="${h-pad.b+16}" text-anchor="middle" font-size="11" fill="#52514e">${esc(it.label)}</text>`;
+  });
+  s+=`<line x1="${pad.l}" x2="${W-pad.r}" y1="${y(0)}" y2="${y(0)}" stroke="#b9b7ae"/></svg>`;
+  return s;
+}
+// horizontal bars for rankings
+function hbars(items,{color='var(--s1)'}={}){
+  if(!items.length) return '<div class="muted">No data</div>';
+  const max=Math.max(...items.map(i=>Math.abs(i.value)))||1;
+  return '<div>'+items.map(it=>`<div data-tip="${esc(it.tip)}" style="display:grid;grid-template-columns:minmax(120px,38%) 1fr 70px;gap:8px;align-items:center;padding:3px 0;${it.click?'cursor:pointer':''}" ${it.click?`onclick="${it.click}"`:''}>
+     <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(it.label)}">${esc(it.label)}</div>
+     <div style="background:#f1f0eb;border-radius:3px;height:12px"><div style="width:${Math.max(1,Math.abs(it.value)/max*100)}%;height:12px;background:${it.color||color};border-radius:0 4px 4px 0"></div></div>
+     <div style="text-align:right">${fmt(it.value)}</div></div>`).join('')+'</div>';
+}
+
+/* ===================== RENDER ===================== */
+function render(){
+  fltSummary();
+  if(!ROWS.length) return;
+  const m=$('main');
+  ({ov:renderOverview,hs:renderHealth,cu:renderCustomers,c360:render360,pr:renderProducts,rt:renderReturns})[ST.tab](m);
+}
+function stColor(type){ const types=[...new Set(SEASONS.map(s=>s.type))]; return STYPE_COLOR[types.indexOf(type)%4]||'var(--s1)'; }
+
+/* ---------- OVERVIEW ---------- */
+function renderOverview(m){
+  const F=filtered(), P=shownPeriods(), pv=prevPeriod();
+  const tot=groupBy(F,()=>'all').get('all')||new Map();
+  const cur=tot.get(ST.focus), prv=pv?tot.get(pv):null;
+  const tileG=(a,b)=>pv? grTxt(a,b)+` vs ${pv}`:'';
+  const byC=groupBy(F,r=>r.c);
+  const rp=retPct(cur), rpp=retPct(prv);
+  const avg = activeCust(cur)? val(cur)/activeCust(cur):0, avgp=activeCust(prv)? val(prv)/activeCust(prv):0;
+  let h=`<div class="tiles">
+    <div class="tile"><div class="k">Net ${ST.metric==='val'?'Sales':'Qty'} · ${ST.focus}</div><div class="v">${big(val(cur))}</div><div class="d">${tileG(val(cur),val(prv))}</div></div>
+    <div class="tile"><div class="k">Gross billing</div><div class="v">${big(cur?(ST.metric==='val'?cur.bill:cur.billKg):0)}</div><div class="d">ZCFC + ZMFC</div></div>
+    <div class="tile"><div class="k">Returns</div><div class="v">${big(cur?-(ST.metric==='val'?cur.ret:cur.retKg):0)}</div><div class="d">${rp==null?'–':inr(rp,1)+'% of billing'}${rpp!=null?` · ${inr(rpp,1)}% in ${pv}`:''}</div></div>
+    <div class="tile"><div class="k">Active customers</div><div class="v">${activeCust(cur).toLocaleString('en-IN')}</div><div class="d">${tileG(activeCust(cur),activeCust(prv))}</div></div>
+    <div class="tile"><div class="k">Avg per customer</div><div class="v">${big(avg)}</div><div class="d">${tileG(avg,avgp)}</div></div>
+    <div class="tile"><div class="k">Discount given</div><div class="v">${bigVal(cur?cur.disc:0)}</div><div class="d">${cur&&cur.base? inr(cur.disc/cur.base*100,1)+'% of base value':'–'}</div></div>
+    ${HAS_FOC?`<div class="tile"><div class="k">Focus product share${info('focus')}</div><div class="v">${pctTxt(focPct(cur))}</div><div class="d">${pv?'vs '+(focPct(prv)==null?'–':inr(focPct(prv),1)+'%')+' in '+pv:''}</div></div>`:''}
+    <div class="tile"><div class="k">Avg hybrid breadth${info('breadth')}</div><div class="v">${inr(avgBr(byC,ST.focus),1)}</div><div class="d">hybrids per active customer${pv?' · '+inr(avgBr(byC,pv),1)+' in '+pv:''}</div></div>
+    <div class="tile"><div class="k">POG · Liquidation %${info('liq')}</div><div class="v">${pctTxt(liqPct(cur))}</div><div class="d">POG ${inr(pogKg(cur)/1000,1)} MT of ${inr(billKgNet(cur)/1000,1)} MT billed${pv?' · '+pctTxt(liqPct(prv))+' in '+pv:''}</div></div>
+  </div>`;
+  // season trend (all seasons, every type)
+  const bySeason=new Map(); for(const r of F){ if(!r.s) continue; bySeason.set(r.s,(bySeason.get(r.s)||0)+mv(r)); }
+  const types=[...new Set(SEASONS.map(s=>s.type))];
+  const sItems=SEASONS.filter(s=>bySeason.has(s.code)).map(s=>({label:s.code,value:bySeason.get(s.code),color:stColor(s.type),tip:`<b>${s.code}</b><br>${fmt(bySeason.get(s.code))} ${unit()}`}));
+  // concentration
+  const cm=cur?[...cur.cust.values()].filter(v=>v>0).sort((a,b)=>b-a):[];
+  const totc=cm.reduce((a,b)=>a+b,0), top20=cm.slice(0,Math.max(1,Math.ceil(cm.length*0.2))).reduce((a,b)=>a+b,0);
+  const n80=(()=>{let s=0;for(let i=0;i<cm.length;i++){s+=cm[i];if(s>=0.8*totc) return i+1;} return cm.length;})();
+  h+=`<div class="grid2"><div class="card"><h3>Season-wise trend</h3><div class="note">Net ${ST.metric==='val'?'value':'quantity'} by season code (${unit()}), current filters applied</div>
+      <div class="legend">${types.map(t=>`<span><i style="background:${stColor(t)}"></i>${STYPE_NAME[t]||t}</span>`).join('')}</div>${vbars(sItems)}</div>
+    <div class="card"><h3>Customer concentration · ${ST.focus}${info('conc')}</h3><div class="note">How dependent the business is on a few customers</div>
+      <div class="tiles" style="grid-template-columns:1fr 1fr">
+        <div class="tile"><div class="k">Top 20% customers</div><div class="v">${totc?inr(top20/totc*100,1):0}%</div><div class="d">share of net ${ST.metric==='val'?'sales':'qty'}</div></div>
+        <div class="tile"><div class="k">Customers making 80%</div><div class="v">${n80.toLocaleString('en-IN')}</div><div class="d">of ${cm.length.toLocaleString('en-IN')} active</div></div>
+      </div>
+      <h3 style="margin-top:6px">Top 10 customers</h3>
+      ${hbars(topCustomers(cur,10))}
+    </div></div>`;
+  // geography table
+  h+=`<div class="card"><h3>Geography performance</h3><div class="note">${unit()} · click a region to see its territories · growth is ${ST.focus} vs ${pv||'–'}</div>${geoTable(F,P,pv)}</div>`;
+  m.innerHTML=h;
+}
+function avgBr(byC,per){ let n=0,s=0; for(const m of byC.values()){ const a=m.get(per); if(val(a)>0){n++; s+=breadth(a);} } return n?s/n:0; }
+function topCustomers(a,n){
+  if(!a) return [];
+  return [...a.cust.entries()].sort((x,y)=>y[1]-x[1]).slice(0,n).map(([c,v])=>{const ci=CUST.get(c)||{}; return {label:ci.name||c,value:v,tip:`<b>${esc(ci.name)}</b><br>${esc(ci.t)} · ${c}<br>${fmt(v)} ${unit()}`,click:`open360('${c}')`};});
+}
+let OPENREG=new Set();
+function geoTable(F,P,pv){
+  const byZ=groupBy(F,r=>r.z), byR=groupBy(F,r=>r.z+'¦'+r.r), byT=groupBy(F,r=>r.z+'¦'+r.r+'¦'+r.t);
+  const byZC=groupBy(F,r=>r.z+'¦'+r.c), byRC=groupBy(F,r=>r.z+'¦'+r.r+'¦'+r.c), byTC=groupBy(F,r=>r.z+'¦'+r.r+'¦'+r.t+'¦'+r.c), byAC=groupBy(F,r=>r.c);
+  const brOf=(M,prefix)=>{ let n=0,s=0; for(const [k,m] of M){ if(prefix!=null&&!k.startsWith(prefix+'¦')) continue; const a=m.get(ST.focus); if(val(a)>0){n++;s+=breadth(a);} } return n?inr(s/n,1):'–'; };
+  const hdr=`<tr><th class="l">Zone / Region / Territory</th>${P.map(p=>`<th>${perTh(p)}</th>`).join('')}<th>Growth${info('growth')}</th><th>Active cust.</th><th>Avg breadth${info('breadth')}</th>${HAS_FOC?`<th>Focus %${info('focus')}</th>`:''}<th>Return %${info('ret')}</th><th>Liquidation %${info('liq')}</th></tr>`;
+  const line=(cls,label,m,attr,key,pm,brM)=>{ const c=m.get(ST.focus), p=pv?m.get(pv):null, rp=retPct(c);
+    return `<tr class="${cls}" ${attr||''}><td>${label}</td>${P.map(x=>`<td>${fmt(val(m.get(x)))}</td>`).join('')}<td>${grTxt(val(c),val(p))}</td><td>${activeCust(c)}</td><td>${brOf(brM,key==='a'?null:key)}</td>${HAS_FOC?`<td>${pctTxt(focPct(c))}</td>`:''}<td>${rp==null?'–':inr(rp,1)+'%'}</td><td>${pctTxt(liqPct(c))}</td></tr>`; };
+  let b='', zs=[...byZ.keys()].sort();
+  const all=groupBy(F,()=>'a').get('a')||new Map();
+  for(const z of zs){
+    b+=line('zone',esc(z),byZ.get(z),'',z,null,byZC);
+    const rs=[...byR.keys()].filter(k=>k.startsWith(z+'¦')).sort((a,b)=>val(byR.get(b).get(ST.focus))-val(byR.get(a).get(ST.focus)));
+    for(const rk of rs){
+      const open=OPENREG.has(rk);
+      b+=line('reg click',(open?'▾ ':'▸ ')+esc(rk.split('¦')[1]),byR.get(rk),`onclick="toggleReg('${rk.replace(/'/g,"\\'")}')"`,rk,null,byRC);
+      if(open){ const ts=[...byT.keys()].filter(k=>k.startsWith(rk+'¦')).sort((a,b)=>val(byT.get(b).get(ST.focus))-val(byT.get(a).get(ST.focus)));
+        for(const tk of ts) b+=line('ter',esc(tk.split('¦')[2]),byT.get(tk),'',tk,null,byTC); }
+    }
+  }
+  b+=line('tot','Total',all,'','a',null,byAC);
+  return `<div class="scroll"><table>${hdr}${b}</table></div>`;
+}
+function toggleReg(k){ OPENREG.has(k)?OPENREG.delete(k):OPENREG.add(k); render(); }
+
+/* ---------- CUSTOMERS ---------- */
+const STATUS = {
+  grow:{t:'Growing',c:'c-grow',i:'▲'}, stab:{t:'Stable',c:'c-stab',i:'●'}, decl:{t:'Declining',c:'c-decl',i:'▼'},
+  new:{t:'New',c:'c-new',i:'★'}, react:{t:'Reactivated',c:'c-react',i:'↺'}, lost:{t:'Lost',c:'c-lost',i:'✕'}, dorm:{t:'Dormant',c:'c-dorm',i:'…'}
+};
+const chip = k => `<span class="chip ${STATUS[k].c}">${STATUS[k].i} ${STATUS[k].t}</span>`;
+function customerTable(){
+  const F=filtered(), Pall=periodList(), fi=Pall.indexOf(ST.focus), pv=prevPeriod(), P=shownPeriods();
+  const byC=groupBy(F,r=>r.c);
+  const out=[];
+  for(const [c,m] of byC){
+    const cur=val(m.get(ST.focus)), prev=pv?val(m.get(pv)):0;
+    let earlier=false; for(let i=0;i<fi-1;i++){ if(val(m.get(Pall[i]))>0){earlier=true;break;} }
+    let st;
+    if(cur>0&&prev>0){ const g=(cur-prev)/prev; st=g>=0.1?'grow':g<=-0.1?'decl':'stab'; }
+    else if(cur>0) st=earlier?'react':'new';
+    else if(prev>0) st='lost';
+    else if(earlier) st='dorm';
+    else continue;
+    const a=m.get(ST.focus);
+    const ci=CUST.get(c)||{};
+    out.push({c,name:ci.name||c,z:ci.z,r:ci.r,t:ci.t,st,cur,prev,vals:P.map(p=>val(m.get(p))),g:gr(cur,prev),rp:retPct(a),
+              br:breadth(a), brp:pv?breadth(m.get(pv)):0, fp:focPct(a), lq:liqPct(a), h:health(a,prev),
+              life:[...m.values()].reduce((s,x)=>s+val(x),0)});
+  }
+  // last invoice date per customer (filtered)
+  const lastD=new Map(); for(const r of F){ if(r.net>0 && (lastD.get(r.c)||0)<r.d) lastD.set(r.c,r.d); }
+  out.forEach(o=>o.last=lastD.get(o.c)||0);
+  return {out,P,pv};
+}
+function renderCustomers(m){
+  const {out,P,pv}=customerTable();
+  const cnt={}; const sum={};
+  out.forEach(o=>{cnt[o.st]=(cnt[o.st]||0)+1; sum[o.st]=(sum[o.st]||0)+(o.st==='lost'||o.st==='dorm'?o.prev:o.cur-(o.st==='new'||o.st==='react'?0:o.prev));});
+  const lostVal=out.filter(o=>o.st==='lost').reduce((s,o)=>s+o.prev,0);
+  const declVal=out.filter(o=>o.st==='decl').reduce((s,o)=>s+(o.prev-o.cur),0);
+  const newVal=out.filter(o=>o.st==='new'||o.st==='react').reduce((s,o)=>s+o.cur,0);
+  const growVal=out.filter(o=>o.st==='grow').reduce((s,o)=>s+(o.cur-o.prev),0);
+  let h=`<div class="note" style="margin-bottom:8px">Status of each customer in <b>${ST.focus}</b> compared with <b>${pv||'– (no earlier period)'}</b>. Growing/Declining = change of ±10% or more. Lost = bought in ${pv||'previous'} but not in ${ST.focus}. Dormant = inactive in both, bought earlier. Click a customer to open Customer 360.</div>
+  <div class="tiles">
+    <div class="tile"><div class="k">Gained from new / reactivated</div><div class="v up">+${big(newVal)}</div></div>
+    <div class="tile"><div class="k">Gained from growing</div><div class="v up">+${big(growVal)}</div></div>
+    <div class="tile"><div class="k">Lost from declining</div><div class="v dn">−${big(declVal)}</div></div>
+    <div class="tile"><div class="k">Lost from lost customers</div><div class="v dn">−${big(lostVal)}</div><div class="d">${ST.metric==='val'?'value':'qty'} they bought in ${pv||'–'}</div></div>
+  </div>
+  <div class="statusbar">${['','grow','stab','decl','new','react','lost','dorm'].map(k=>`<div class="stat ${ST.custStatus===k?'on':''}" onclick="ST.custStatus='${k}';render()">
+     <div class="s">${k?chip(k):'<b>All customers</b>'}</div><div class="n">${(k?cnt[k]||0:out.length).toLocaleString('en-IN')}</div></div>`).join('')}</div>
+  <div class="row"><input type="search" id="cuSearch" placeholder="Search customer name / no / territory" value="${esc(ST.custSearch)}" style="min-width:300px;max-width:100%">
+   <button class="btn" onclick="exportCustomers()">⬇ Export CSV</button><button class="btn" onclick="sharePng(document.getElementById('cuWrap'),'Customers'+(ST.custStatus?' – '+STATUS[ST.custStatus].t:''))">📷 PNG</button><button class="btn" onclick="shareHtml(document.getElementById('cuWrap'),'Customers'+(ST.custStatus?' – '+STATUS[ST.custStatus].t:''))">🌐 HTML</button><span class="muted" id="cuCount"></span></div>
+  <div id="cuWrap"><div class="scroll" style="max-height:560px" id="cuTbl"></div></div>`;
+  m.innerHTML=h;
+  $('cuSearch').addEventListener('input',e=>{ST.custSearch=e.target.value; drawCuTable(out,P,pv);});
+  drawCuTable(out,P,pv);
+}
+let CU_VIEW=[];
+function drawCuTable(out,P,pv){
+  const q=ST.custSearch.toLowerCase();
+  let rows=out.filter(o=>(!ST.custStatus||o.st===ST.custStatus)&&(!q||(o.name+' '+o.c+' '+o.t+' '+o.r).toLowerCase().includes(q)));
+  const k=ST.sortCu.k, d=ST.sortCu.d;
+  const key=o=> k==='name'?o.name : k==='terr'?o.t : k==='st'?o.st : k==='g'?(o.g??-1e9) : k==='rp'?(o.rp??-1) : k==='last'?o.last : k==='life'?o.life : k==='br'?o.br : k==='fp'?(o.fp??-1) : k==='lq'?(o.lq??-1) : k==='hs'?(o.h?o.h.s:-1) : k.startsWith('p')?o.vals[+k.slice(1)] : o.cur;
+  rows.sort((a,b)=>{const x=key(a),y=key(b); return (x>y?1:x<y?-1:0)*d;});
+  CU_VIEW=rows;
+  const th=(k,l,cls='')=>`<th class="${cls}" onclick="sortCu('${k}')">${l}${ST.sortCu.k===k?(ST.sortCu.d>0?' ▲':' ▼'):''}</th>`;
+  let h=`<table><tr>${th('name','Customer','l')}${th('terr','Region / Territory','l')}${P.map((p,i)=>th('p'+i,perTh(p))).join('')}${th('g','Growth')}${th('st','Status'+info('status'),'l')}${th('br','Hybrid breadth'+info('breadth'))}${HAS_FOC?th('fp','Focus %'+info('focus')):''}${th('rp','Return %'+info('ret'))}${POG_HAS_CUST?th('lq','Liquidation %'+info('liq')):''}${th('hs','Health'+info('health'),'l')}${th('last','Last billed')}</tr>`;
+  const lim=MODE==='phone'?300:1000;
+  for(const o of rows.slice(0,lim)){
+    h+=`<tr class="click" onclick="open360('${o.c}')"><td>${esc(o.name)} <span class="muted">${o.c}</span></td><td class="l">${esc(o.r)} / ${esc(o.t)}</td>${o.vals.map(v=>`<td>${v?fmt(v):'<span class="muted">–</span>'}</td>`).join('')}<td>${grTxt(o.cur,o.prev)}</td><td class="l">${chip(o.st)}</td><td title="${pv?o.brp+' in '+pv:''}">${o.br||'<span class="muted">–</span>'}</td>${HAS_FOC?`<td>${pctTxt(o.fp)}</td>`:''}<td>${o.rp==null?'–':inr(o.rp,1)+'%'}</td>${POG_HAS_CUST?`<td>${pctTxt(o.lq)}</td>`:''}<td class="l">${gradeChip(o.h)}</td><td>${fmtDate(o.last)}</td></tr>`;
+  }
+  h+='</table>';
+  $('cuTbl').innerHTML=h;
+  $('cuCount').textContent=`${rows.length.toLocaleString('en-IN')} customers${rows.length>lim?` (showing first ${lim.toLocaleString('en-IN')} – use search or export)`:''} · values in ${unit()}`;
+}
+function sortCu(k){ if(ST.sortCu.k===k) ST.sortCu.d*=-1; else ST.sortCu={k,d:(k==='name'||k==='terr'||k==='st')?1:-1}; const {out,P,pv}=customerTable(); drawCuTable(out,P,pv); }
+function exportCustomers(){
+  const P=shownPeriods();
+  const lines=[['Customer No','Customer Name','Zone','Region','Territory',...P.map(p=>p+' ('+unit()+')'),'Growth %','Status','Hybrid breadth','Focus %','Return %','Liquidation %','Health score','Grade','Last billed'].join(',')];
+  for(const o of CU_VIEW) lines.push([o.c,'"'+String(o.name).replace(/"/g,'""')+'"',o.z,o.r,o.t,...o.vals.map(v=>(ST.metric==='val'?v/1e5:v/1000).toFixed(2)),o.g==null?'':o.g.toFixed(1),STATUS[o.st].t,o.br,o.fp==null?'':o.fp.toFixed(1),o.rp==null?'':o.rp.toFixed(1),o.lq==null?'':o.lq.toFixed(1),o.h?o.h.s:'',o.h?o.h.grade:'',o.last?new Date(o.last).toISOString().slice(0,10):''].join(','));
+  saveFile(`Customers_${ST.focus}_${ST.custStatus||'all'}.csv`, lines.join('\n'));
+}
+
+// Save a CSV: uses the claude.ai link's download service when opened from the link, otherwise a normal browser download
+async function saveFile(name,text){
+  try{ if(window.claude&&typeof window.claude.use==='function'){ const d=await window.claude.use('downloads'); if(d){ await d.save({filename:name,data:'\uFEFF'+text}); return; } } }
+  catch(e){ console.log('download cancelled or unavailable',e); return; }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\uFEFF'+text],{type:'text/csv'})); a.download=name; document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ---------- SHARE AS PNG ---------- */
+const TAB_NAME={ov:'Overview',hs:'Dealer Health',cu:'Customers',c360:'Customer 360',pr:'Products',rt:'Returns'};
+function toast(msg,ms){ const t=$('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(toast._t); if(ms!==0) toast._t=setTimeout(()=>t.style.display='none',ms||2600); }
+function snapTitle(h){ const c=h.cloneNode(true); c.querySelectorAll('.info,button').forEach(n=>n.remove()); return c.textContent.replace(/\s+/g,' ').trim(); }
+function addShotBtns(){
+  document.querySelectorAll('#main .card').forEach(c=>{
+    if(c.querySelector(':scope>.pngbtn')) return; const h=c.querySelector(':scope>h3'); if(!h) return;
+    const b=document.createElement('button'); b.className='pngbtn'; b.title='Share as PNG image, HTML page or CSV'; b.innerHTML='📤<span class="pc-only"> Share</span>';
+    b.onclick=e=>{ e.stopPropagation(); shareMenu(b,c,snapTitle(h),{csv:!!c.querySelector('table')}); }; c.prepend(b);
+  });
+}
+new MutationObserver(()=>{ clearTimeout(addShotBtns._t); addShotBtns._t=setTimeout(addShotBtns,50); }).observe(document.getElementById('main'),{childList:true,subtree:true});
+document.addEventListener('click',e=>{ const v=e.target.closest&&e.target.closest('#shotView'); if(v){ e.stopPropagation(); shareMenu(v,$('main'),TAB_NAME[ST.tab]||'View',{csv:false,rows:60}); } },true);
+/* small pop-up menu: PNG / HTML / CSV */
+function shareMenu(btn,el,title,o){
+  closeShareMenu(); o=o||{};
+  const m=document.createElement('div'); m.id='shareMenu';
+  m.innerHTML=`<div class="smh">Share “${esc(title.length>40?title.slice(0,40)+'…':title)}”</div>
+    <button data-k="png">📷 <b>PNG image</b><span>picture for WhatsApp / mail</span></button>
+    <button data-k="html">🌐 <b>HTML page</b><span>opens in any browser, full table</span></button>
+    ${o.csv?'<button data-k="csv">⬇ <b>CSV</b><span>open in Excel</span></button>':''}`;
+  document.body.appendChild(m);
+  const r=btn.getBoundingClientRect(), w=m.offsetWidth, hh=m.offsetHeight;
+  m.style.left=Math.max(8,Math.min(r.right-w,innerWidth-w-8))+'px';
+  m.style.top=(r.bottom+6+hh>innerHeight? Math.max(8,r.top-hh-6) : r.bottom+6)+'px';
+  m.addEventListener('click',ev=>{ const b=ev.target.closest('button'); if(!b) return; ev.stopPropagation(); closeShareMenu();
+    if(b.dataset.k==='png') sharePng(el,title,o.rows); else if(b.dataset.k==='html') shareHtml(el,title); else shareCsvDom(el,title); });
+  setTimeout(()=>document.addEventListener('click',closeShareMenu,{once:true}),0);
+}
+function closeShareMenu(){ const m=document.getElementById('shareMenu'); if(m) m.remove(); }
+function cssVar(v){ return getComputedStyle(document.body).getPropertyValue(v).trim()||'#888'; }
+function filtText(){ return [ST.zone||'All zones',ST.region,ST.terr,ST.crop,ST.hyb,ST.foc,ST.stype==='FY'?'FY':(STYPE_NAME[ST.stype]||ST.stype),ST.focus,ST.metric==='val'?'₹ Net Value':'Qty (MT)'].filter(Boolean).join(' · '); }
+const stamp = () => new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+const fileBase = title => ('Rasi360_'+title+(title.includes(ST.focus)?'':'_'+ST.focus)).replace(/[^\w\-]+/g,'_').replace(/_+/g,'_').replace(/_$/,'').slice(0,90);
+// clean copy of a card/table: no buttons, inputs as text, chart colours fixed, full height
+function snapClone(el,rowLimit){
+  const clone=el.cloneNode(true);
+  clone.querySelectorAll('.pngbtn,.shotview,button,datalist,#cuSearch,#c360s,.linkbtn,.noshot,.info').forEach(n=>n.remove());
+  clone.querySelectorAll('input').forEach(i=>{ const sp=document.createElement('b'); sp.textContent=i.value; i.replaceWith(sp); });
+  clone.querySelectorAll('select').forEach(sel=>{ const sp=document.createElement('b'); sp.textContent=sel.options[sel.selectedIndex]?.text||''; sel.replaceWith(sp); });
+  clone.querySelectorAll('[fill^="var("],[stroke^="var("]').forEach(n=>{ ['fill','stroke'].forEach(a=>{ const v=n.getAttribute(a); if(v&&v.startsWith('var(')) n.setAttribute(a,cssVar(v.slice(4,-1))); }); });
+  clone.querySelectorAll('[onclick]').forEach(n=>n.removeAttribute('onclick'));
+  clone.querySelectorAll('.scroll').forEach(n=>{ n.style.setProperty('max-height','none','important'); n.style.setProperty('overflow','visible','important'); });
+  clone.querySelectorAll('td:first-child,th:first-child').forEach(n=>{ n.style.setProperty('max-width','none','important'); n.style.setProperty('overflow','visible','important'); });
+  if(rowLimit!==Infinity){ const lim=rowLimit||(MODE==='phone'?80:150);
+    clone.querySelectorAll('table').forEach(t=>{ const rows=[...t.querySelectorAll('tr')].slice(1); if(rows.length>lim){ rows.slice(lim).forEach(r=>r.remove());
+      const tr=document.createElement('tr'); tr.innerHTML=`<td colspan="40" style="text-align:left;color:#8a8984;font-style:italic">… showing first ${lim} of ${rows.length} rows · use HTML or CSV for the full list</td>`; t.appendChild(tr); } }); }
+  clone.style.margin='0'; clone.style.maxWidth='none'; clone.style.border='0'; clone.style.minHeight='0';
+  return clone;
+}
+const snapHead = title => `<div class="snaphead"><div><div class="t">Rasi Customer 360 · ${esc(title)}</div><div class="s">${esc(filtText())}</div></div><div class="s">${stamp()}</div></div>`;
+async function snapBlob(el,title,rowLimit){
+  const clone=snapClone(el,rowLimit);
+  const tables=[...el.querySelectorAll('table')].map(t=>t.scrollWidth+48);
+  const W=Math.round(Math.min(1800,Math.max(el.getBoundingClientRect().width,...tables,MODE==='phone'?760:600)));
+  const wrap=document.createElement('div'); wrap.className='snapwrap';
+  wrap.style.cssText=`position:fixed;left:-30000px;top:0;width:${W}px;background:#fff;padding:18px 20px;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;font-size:13px;color:#0b0b0b`;
+  wrap.innerHTML=snapHead(title); wrap.appendChild(clone); document.body.appendChild(wrap);
+  try{
+    const opt={pixelRatio:Math.min(2,Math.max(1.5,devicePixelRatio||1)),backgroundColor:'#ffffff',skipFonts:true,cacheBust:false,width:wrap.offsetWidth,height:wrap.offsetHeight,style:{position:'static',left:'0',top:'0',margin:'0'}};
+    if(/iPad|iPhone|Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>0){ try{ await htmlToImage.toBlob(wrap,opt); }catch(e){} } // Safari needs a warm-up pass
+    const blob=await htmlToImage.toBlob(wrap,opt);
+    if(!blob) throw new Error('Image could not be created');
+    return blob;
+  } finally { wrap.remove(); }
+}
+// hand a file to the user: share sheet (phone/iPad) → claude.ai link download → normal download
+async function deliverFile(blob,name,mime,label){
+  const file=new File([blob],name,{type:mime});
+  if(MODE!=='pc' && navigator.canShare){ try{ if(navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:'Rasi Customer 360 – '+label}); toast('Shared ✓'); return 'shared'; } }
+    catch(e){ if(e&&e.name==='AbortError'){ toast('Share cancelled'); return 'cancelled'; } } }
+  try{ if(window.claude&&typeof window.claude.use==='function'){ const d=await window.claude.use('downloads'); if(d){ await d.save({filename:name,data:blob}); toast(label+' saved ✓'); return 'saved'; } } }
+  catch(e){ if(e&&e.code==='declined'){ toast('Save cancelled'); return 'cancelled'; } }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  return 'downloaded';
+}
+async function sharePng(el,title,rowLimit){
+  if(!el) return; if(!window.htmlToImage){ toast('Image tool not available in this browser'); return; }
+  toast('Preparing image…',0);
+  let blob; try{ blob=await snapBlob(el,title,rowLimit); }catch(err){ console.error(err); toast('Could not create the image: '+(err.message||err)); return; }
+  const name=fileBase(title)+'.png';
+  if(MODE==='pc' && !(window.claude&&window.claude.use)){
+    let copied=false; try{ if(navigator.clipboard&&window.ClipboardItem){ await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]); copied=true; } }catch(e){}
+    await deliverFile(blob,name,'image/png','Image'); toast(copied?'Image downloaded and copied – paste it with Ctrl+V':'Image downloaded ✓',3500); return;
+  }
+  const r=await deliverFile(blob,name,'image/png','Image'); if(r==='downloaded') toast('Image saved to Downloads ✓',3500);
+}
+// standalone HTML page: same look, full table, works offline in any browser
+async function shareHtml(el,title){
+  if(!el) return; toast('Preparing HTML page…',0);
+  const clone=snapClone(el,Infinity);
+  clone.querySelectorAll('.scroll').forEach(n=>{ n.style.setProperty('overflow','auto','important'); });
+  const css=[...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');
+  const doc=`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rasi Customer 360 · ${esc(title)}</title><style>${css}
+body{background:#fff;margin:0} .snapwrap{padding:16px 18px;max-width:1800px;margin:0 auto}
+.snapwrap .scroll{overflow:auto !important} .snapwrap table{min-width:100%}
+.snapwrap th{position:sticky !important;top:0;z-index:2}
+@media (max-width:700px){ .snapwrap{padding:10px} .snaphead{flex-direction:column;align-items:flex-start} .tiles{grid-template-columns:1fr 1fr} .grid2{grid-template-columns:1fr} .card{overflow-x:auto} }
+.foot{margin-top:14px;font-size:11px;color:#8a8984}
+</style></head><body><div class="snapwrap">${snapHead(title)}${clone.outerHTML}<div class="foot">Snapshot from Rasi Customer 360 · ${esc(filtText())} · ${stamp()} · values as on the date of export</div></div></body></html>`;
+  const name=fileBase(title)+'.html';
+  const r=await deliverFile(new Blob([doc],{type:'text/html'}),name,'text/html','HTML page');
+  if(r==='downloaded') toast('HTML page downloaded ✓ – open it in any browser or attach it to mail / WhatsApp',4000);
+}
+// CSV of the table(s) shown in a card (what you see on screen)
+async function shareCsvDom(el,title){
+  const clone=snapClone(el,Infinity); const out=[];
+  const q=v=>{ v=String(v).replace(/\s+/g,' ').replace(/[▲▼⚠▸▾]/g,'').trim(); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+  clone.querySelectorAll('table').forEach((t,ti)=>{ if(ti) out.push(''); t.querySelectorAll('tr').forEach(tr=>{ out.push([...tr.children].map(c=>q(c.textContent)).join(',')); }); });
+  if(!out.length){ toast('No table in this card'); return; }
+  const name=fileBase(title)+'.csv';
+  const r=await deliverFile(new Blob(['﻿'+out.join('\n')],{type:'text/csv'}),name,'text/csv','CSV');
+  if(r==='downloaded') toast('CSV downloaded ✓',3000);
+}
+
+/* ---------- CUSTOMER 360 ---------- */
+function open360(c){ ST.cust=c; ST.tab='c360'; [...$('tabs').children].forEach(b=>b.classList.toggle('on',b.dataset.t==='c360')); render(); scrollTo(0,0); }
+function render360(m){
+  const list=[...CUST.entries()].sort((a,b)=>a[1].name.localeCompare(b[1].name));
+  let h=`<div class="row"><b>Customer</b><input type="search" id="c360s" list="custlist" placeholder="Type customer name or number…" style="min-width:380px;max-width:100%" value="${ST.cust?esc((CUST.get(ST.cust)||{}).name+' | '+ST.cust):''}">
+    <datalist id="custlist">${list.map(([c,i])=>`<option value="${esc(i.name)} | ${c}">${esc(i.t)}</option>`).join('')}</datalist>
+    <span class="muted">Shows the customer's full history (Zone/Region/Territory/Crop filters are not applied here).</span></div><div id="c360body"></div>`;
+  m.innerHTML=h;
+  $('c360s').addEventListener('change',e=>{ const c=e.target.value.split('|').pop().trim(); if(CUST.has(c)){ST.cust=c; draw360();} });
+  draw360();
+}
+function draw360(){
+  const el=$('c360body'), c=ST.cust;
+  if(!c||!CUST.has(c)){ el.innerHTML='<div class="empty">Pick a customer above, or click any customer in the Overview or Customers tab.</div>'; return; }
+  const ci=CUST.get(c), R=ROWS.filter(r=>r.c===c);
+  const life=blank(); R.forEach(r=>add(life,r));
+  const bills=R.filter(r=>ORDER_TYPES[r.ty].grp==='Billing');
+  const first=Math.min(...bills.map(r=>r.d)), last=Math.max(...bills.map(r=>r.d));
+  const days=isFinite(last)?Math.max(0,Math.round((Date.now()-last)/864e5)):null;
+  const byP=groupBy(R,()=>'x').get('x')||new Map();
+  const P=shownPeriods(), pv=prevPeriod(), cur=byP.get(ST.focus), prv=pv?byP.get(pv):null;
+  // season chart
+  const bySeason=new Map(); R.forEach(r=>{ if(r.s) bySeason.set(r.s,(bySeason.get(r.s)||0)+mv(r)); });
+  const types=[...new Set(SEASONS.map(s=>s.type))];
+  const sItems=SEASONS.filter(s=>bySeason.has(s.code)).map(s=>({label:s.code,value:bySeason.get(s.code),color:stColor(s.type),tip:`<b>${s.code}</b><br>${fmt(bySeason.get(s.code))} ${unit()}`}));
+  // hybrid table
+  const byH=groupBy(R,r=>r.crop+'¦'+r.hyb);
+  const hRows=[...byH.entries()].sort((a,b)=>val(b[1].get(ST.focus))-val(a[1].get(ST.focus))||P.reduce((s,p)=>s+val(b[1].get(p))-val(a[1].get(p)),0));
+  // flags
+  const flags=[];
+  const vc=val(cur), vp=val(prv);
+  const hs=health(cur,vp), lq=liqPct;
+  { const l=lq(cur); if(l!=null&&l<90) flags.push([l<80?'bad':'warn',`Liquidation ${inr(l,1)}% in ${ST.focus}: ${inr((billKgNet(cur)-pogKg(cur))/1000,2)} MT of ${inr(billKgNet(cur)/1000,2)} MT billed came back as returns`]); }
+  if(vp>0&&vc<=0) flags.push(['bad',`No purchase in ${ST.focus} after buying ${fmt(vp)} ${unit()} in ${pv} – lost customer`]);
+  else if(vp>0&&vc<vp*0.9) flags.push(['warn',`Down ${inr((1-vc/vp)*100,1)}% in ${ST.focus} vs ${pv}`]);
+  else if(vp>0&&vc>=vp*1.1) flags.push(['good',`Up ${inr((vc/vp-1)*100,1)}% in ${ST.focus} vs ${pv}`]);
+  else if(vp<=0&&vc>0) flags.push(['info',`Bought in ${ST.focus} but not in ${pv||'the previous period'}`]);
+  const rp=retPct(life); if(rp!=null&&rp>=10) flags.push(['bad',`High returns: ${inr(rp,1)}% of billing returned over the full history`]);
+  else if(rp!=null&&rp>=5) flags.push(['warn',`Returns at ${inr(rp,1)}% of billing over the full history`]);
+  if(days!=null&&days>180) flags.push(['warn',`Last billed ${days} days ago (${fmtDate(last)})`]);
+  if(pv){ const dropped=hRows.filter(([k,m])=>val(m.get(pv))>0&&val(m.get(ST.focus))<=0).map(([k])=>k.split('¦')[1]);
+    if(dropped.length) flags.push(['warn',`Stopped buying in ${ST.focus}: ${dropped.slice(0,6).map(esc).join(', ')}${dropped.length>6?'…':''}`]);
+    const added=hRows.filter(([k,m])=>val(m.get(pv))<=0&&val(m.get(ST.focus))>0).map(([k])=>k.split('¦')[1]);
+    if(added.length) flags.push(['info',`New hybrids in ${ST.focus}: ${added.slice(0,6).map(esc).join(', ')}`]); }
+  if(!flags.length) flags.push(['good','No alerts']);
+  // order type summary
+  const byT=new Map(); R.forEach(r=>{let o=byT.get(r.ty); if(!o){o={n:new Set(),kg:0,net:0};byT.set(r.ty,o);} o.n.add(r.inv); o.kg+=r.kg; o.net+=r.net;});
+  // invoices
+  const byInv=new Map(); R.forEach(r=>{let o=byInv.get(r.inv+'¦'+r.ty); if(!o){o={inv:r.inv,ty:r.ty,d:r.d,s:r.s,items:new Set(),kg:0,net:0};byInv.set(r.inv+'¦'+r.ty,o);} o.items.add(r.hyb); o.kg+=r.kg; o.net+=r.net;});
+  const invs=[...byInv.values()].sort((a,b)=>b.d-a.d).slice(0,40);
+
+  el.innerHTML=`<div class="prof"><div><h2>${esc(ci.name)}</h2><div class="muted">Customer No ${c} · ${esc(ci.z)} › ${esc(ci.r)} › ${esc(ci.t)}</div></div></div>
+  <div class="tiles">
+    <div class="tile"><div class="k">${ST.focus}</div><div class="v">${big(vc)}</div><div class="d">${pv?grTxt(vc,vp)+' vs '+pv:''}</div></div>
+    <div class="tile"><div class="k">Lifetime net (loaded data)</div><div class="v">${big(val(life))}</div><div class="d">${life.inv.size} documents</div></div>
+    <div class="tile"><div class="k">Customer since</div><div class="v" style="font-size:16px">${fmtDate(first)}</div><div class="d">first billing in data</div></div>
+    <div class="tile"><div class="k">Last billed</div><div class="v" style="font-size:16px">${fmtDate(last)}</div><div class="d">${days!=null?days+' days ago':''}</div></div>
+    <div class="tile"><div class="k">Return %</div><div class="v">${rp==null?'–':inr(rp,1)+'%'}</div><div class="d">returns ÷ billing, full history</div></div>
+    <div class="tile"><div class="k">Avg discount</div><div class="v">${life.base?inr(life.disc/life.base*100,1)+'%':'–'}</div><div class="d">${bigVal(life.disc)} total</div></div>
+    <div class="tile"><div class="k">Hybrid breadth · ${ST.focus}${info('breadth')}</div><div class="v">${breadth(cur)}</div><div class="d">${pv?breadth(prv)+' in '+pv+' · ':''}${breadth(life)} in all data</div></div>
+    ${HAS_FOC?`<div class="tile"><div class="k">Focus share · ${ST.focus}</div><div class="v">${pctTxt(focPct(cur))}</div><div class="d">${pv?pctTxt(focPct(prv))+' in '+pv:''}</div></div>`:''}
+    <div class="tile"><div class="k">POG · Liquidation % · ${ST.focus}${info('liq')}</div><div class="v">${pctTxt(lq(cur))}</div><div class="d">POG ${inr(pogKg(cur)/1000,2)} MT of ${inr(billKgNet(cur)/1000,2)} MT billed${pv?' · '+pctTxt(lq(prv))+' in '+pv:''}</div></div>
+  </div>
+  ${(()=>{ if(!hs) return `<div class="card"><h3>Dealer Health Score · ${ST.focus}</h3><div class="note">Not scored – no net purchase in ${ST.focus}.</div></div>`;
+    const b=bandOf(hs);
+    return `<div class="card"><h3>Dealer Health Score · ${ST.focus}${info('health')} &nbsp;<span class="chip g-${hs.grade}" style="font-size:13px">Grade ${hs.grade} · ${hs.s} / 100</span></h3>
+    <div class="note">See the Dealer Health tab for the full criteria</div>
+    <table style="max-width:760px"><tr><th class="l">Criterion</th><th>Actual</th><th class="l">Band applied</th><th>Points</th></tr>
+    <tr><td>Growth (${ST.focus} vs ${pv||'–'})${info('growth')}</td><td>${hs.g==null?'New':inr(hs.g,1)+'%'}</td><td class="l">${b.g}</td><td>${hs.gp} / ${Math.max(HC.gNew,...HC.gPts)}</td></tr>
+    ${HAS_FOC?`<tr><td>Focus product share${info('focus')}</td><td>${inr(hs.fs,1)}%</td><td class="l">${b.f}</td><td>${hs.fpP} / ${Math.max(...HC.fPts)}</td></tr>`:''}
+    <tr><td>Return %${info('ret')}</td><td>${inr(hs.rp,1)}%</td><td class="l">${b.r}</td><td>${hs.rpP} / ${Math.max(...HC.rPts)}</td></tr>
+    <tr><td>Hybrid breadth${info('breadth')}</td><td>${hs.br}</td><td class="l">${b.b}</td><td>${hs.bp} / ${Math.max(...HC.bPts)}</td></tr>
+    <tr class="tot"><td>Total</td><td></td><td class="l">Grade ${hs.grade}</td><td>${hs.raw} / ${maxScore()}${maxScore()!==100?' → '+hs.s+' / 100':''}</td></tr></table></div>`; })()}
+  <div class="grid2">
+    <div class="card"><h3>Season history</h3><div class="note">Net ${unit()} by season</div><div class="legend">${types.map(t=>`<span><i style="background:${stColor(t)}"></i>${STYPE_NAME[t]||t}</span>`).join('')}</div>${vbars(sItems,{h:200})}</div>
+    <div class="card"><h3>Alerts</h3><div class="note">${ST.focus} vs ${pv||'–'}</div><div class="flags">${flags.map(([k,t])=>`<div class="flag ${k}">${t}</div>`).join('')}</div></div>
+  </div>
+  <div class="card"><h3>Crop & hybrid mix</h3><div class="note">${unit()}</div><div class="scroll" style="max-height:340px"><table>
+    <tr><th class="l">Crop</th><th class="l">Hybrid</th>${P.map(p=>`<th>${perTh(p)}</th>`).join('')}<th>Growth</th></tr>
+    ${hRows.map(([k,mm])=>{const [cr,hy]=k.split('¦'); return `<tr><td>${esc(cr)}</td><td class="l">${esc(hy)} ${(HYB_INFO.get(hy)||{}).foc==='Focus'?'<span class="ftag">FOCUS</span>':''}</td>${P.map(p=>`<td>${val(mm.get(p))?fmt(val(mm.get(p))):'<span class="muted">–</span>'}</td>`).join('')}<td>${pv?grTxt(val(mm.get(ST.focus)),val(mm.get(pv))):''}</td></tr>`;}).join('')}
+  </table></div></div>
+  <div class="grid2">
+    <div class="card"><h3>By order type</h3><div class="note">Full history</div><table><tr><th class="l">Type</th><th class="l">Description</th><th>Docs</th><th>Qty (MT)</th><th>Value (₹ L)</th></tr>
+      ${Object.keys(ORDER_TYPES).filter(t=>byT.has(t)).map(t=>{const o=byT.get(t);return `<tr><td>${t}</td><td class="l">${ORDER_TYPES[t].desc}</td><td>${o.n.size}</td><td>${inr(o.kg/1000,2)}</td><td>${inr(o.net/1e5,2)}</td></tr>`;}).join('')}</table></div>
+    <div class="card"><h3>Recent documents</h3><div class="note">Latest 40</div><div class="scroll" style="max-height:300px"><table><tr><th class="l">Date</th><th class="l">Doc no</th><th class="l">Type</th><th class="l">Season</th><th class="l">Hybrids</th><th>Kg</th><th>₹</th></tr>
+      ${invs.map(o=>`<tr><td>${fmtDate(o.d)}</td><td class="l">${esc(o.inv)}</td><td class="l">${o.ty}</td><td class="l">${esc(o.s)}</td><td class="l">${esc([...o.items].join(', '))}</td><td>${inr(o.kg)}</td><td>${inr(o.net)}</td></tr>`).join('')}</table></div></div>
+  </div>`;
+}
+
+/* ---------- DEALER HEALTH ---------- */
+const GRADE_TXT={A:'Healthy',B:'Good',C:'Watch',D:'At risk'};
+function critInput(path){ const [k,i]=path.split('.'); const v=i==null?HC[k]:HC[k][+i]; return `<input type="number" step="any" value="${v}" data-p="${path}">`; }
+function criteriaHTML(){
+  const gc=HC.gCut, rc=HC.rCut, bc=HC.bCut;
+  const gRows=gc.map((x,i)=>`<tr><td class="l band">${i===0?'Growth ≥':'Growth ≥'} ${critInput('gCut.'+i)} %${i>0?` <span class="muted">and &lt; ${gc[i-1]}%</span>`:''}</td><td>${critInput('gPts.'+i)}</td></tr>`).join('')
+    +`<tr><td class="l band">Growth below ${gc[gc.length-1]}%</td><td>${critInput('gPts.'+gc.length)}</td></tr>`
+    +`<tr><td class="l band">New dealer (nothing bought in previous period)</td><td>${critInput('gNew')}</td></tr>`;
+  const rRows=rc.map((x,i)=>`<tr><td class="l band">Return % ≤ ${critInput('rCut.'+i)} %${i>0?` <span class="muted">and &gt; ${rc[i-1]}%</span>`:''}</td><td>${critInput('rPts.'+i)}</td></tr>`).join('')
+    +`<tr><td class="l band">Return % above ${rc[rc.length-1]}%</td><td>${critInput('rPts.'+rc.length)}</td></tr>`;
+  const fc=HC.fCut;
+  const fRows=fc.map((x,i)=>`<tr><td class="l band">Focus share ≥ ${critInput('fCut.'+i)} %${i>0?` <span class="muted">and &lt; ${fc[i-1]}%</span>`:''}</td><td>${critInput('fPts.'+i)}</td></tr>`).join('')
+    +`<tr><td class="l band">Focus share below ${fc[fc.length-1]}%</td><td>${critInput('fPts.'+fc.length)}</td></tr>`;
+  const bRows=bc.map((x,i)=>`<tr><td class="l band">Hybrids bought ≥ ${critInput('bCut.'+i)}${i>0?` <span class="muted">and &lt; ${bc[i-1]}</span>`:''}</td><td>${critInput('bPts.'+i)}</td></tr>`).join('');
+  return `<div class="card"><h3>Criteria applied${info('health')}</h3>
+   <div class="note">Score = Growth + <b>Focus share</b> + Return % + Hybrid Breadth points (maximum ${maxScore()}${maxScore()!==100?', shown out of 100':''}). Focus share carries the highest weight because business from Focus products is critical.${HAS_FOC?'':' <b>The loaded file has no Product Category column, so Focus share is left out and the score is rescaled to 100.</b>'} Every dealer who bought in <b>${ST.focus}</b> is scored, comparing ${ST.focus} with <b>${prevPeriod()||'–'}</b>, using the filters and the ₹/MT measure selected above. You can change any number; your changes are remembered in this browser.</div>
+   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(440px,100%),1fr));gap:18px 28px">
+    <div><b>1 · Growth %</b>${info('growth')} <span class="muted">(${ST.focus} vs ${prevPeriod()||'prev'})</span><table class="crit"><tr><th class="l">Band</th><th>Points</th></tr>${gRows}</table></div>
+    <div><b>2 · Focus product share</b>${info('focus')} <span class="muted">(Focus ÷ total business, column N “Product Category”)</span><table class="crit"><tr><th class="l">Band</th><th>Points</th></tr>${fRows}</table></div>
+    <div><b>3 · Return %</b>${info('ret')} <span class="muted">(returns ÷ gross billing)</span><table class="crit"><tr><th class="l">Band</th><th>Points</th></tr>${rRows}</table></div>
+    <div><b>4 · Hybrid breadth</b>${info('breadth')} <span class="muted">(no. of hybrids bought)</span><table class="crit"><tr><th class="l">Band</th><th>Points</th></tr>${bRows}</table></div>
+    <div><b>Grade</b><table class="crit"><tr><th class="l">Grade</th><th>Min score</th></tr>
+      <tr><td class="l"><span class="chip g-A">A · Healthy</span></td><td>${critInput('grade.0')}</td></tr>
+      <tr><td class="l"><span class="chip g-B">B · Good</span></td><td>${critInput('grade.1')}</td></tr>
+      <tr><td class="l"><span class="chip g-C">C · Watch</span></td><td>${critInput('grade.2')}</td></tr>
+      <tr><td class="l"><span class="chip g-D">D · At risk</span></td><td class="muted">below ${HC.grade[2]}</td></tr></table>
+      <button class="btn" style="margin-top:8px" onclick="HC=JSON.parse(JSON.stringify(HC_DEFAULT));saveHC();render()">Reset to default</button></div>
+   </div></div>`;
+}
+function renderHealth(m){
+  const {out}=customerTable(), pv=prevPeriod();
+  const scored=out.filter(o=>o.h), totV=scored.reduce((s,o)=>s+o.cur,0);
+  const G={A:[],B:[],C:[],D:[]}; scored.forEach(o=>G[o.h.grade].push(o));
+  const notScored=out.filter(o=>!o.h&&o.st==='lost').length;
+  let h=`<div class="statusbar">${['','A','B','C','D'].map(g=>{ const L=g?G[g]:scored, v=L.reduce((s,o)=>s+o.cur,0);
+    return `<div class="stat ${ST.hsGrade===g?'on':''}" onclick="ST.hsGrade='${g}';render()" style="min-width:160px">
+      <div class="s">${g?`<span class="chip g-${g}">${g} · ${GRADE_TXT[g]}</span>`:'<b>All scored dealers</b>'}</div>
+      <div class="n">${L.length.toLocaleString('en-IN')} <span class="muted" style="font-size:12px;font-weight:400">${g&&scored.length?inr(L.length/scored.length*100,0)+'% of dealers':''}</span></div>
+      <div class="s">${totV?inr(v/totV*100,1):0}% of ${ST.focus} ${ST.metric==='val'?'sales':'qty'}</div></div>`;}).join('')}
+    <div class="stat" style="cursor:default"><div class="s"><b>Not scored</b></div><div class="n">${notScored}</div><div class="s">lost in ${ST.focus} (see Customers tab)</div></div></div>`;
+  // grade mix by region
+  // grade mix: region rows expand to territories; clicking a territory filters the scorecard
+  const mix=()=>({A:0,B:0,C:0,D:0,n:0,s:0}), addMix=(M,k,o)=>{ let a=M.get(k); if(!a){a=mix();M.set(k,a);} a[o.h.grade]++; a.n++; a.s+=o.h.s; };
+  const byR=new Map(), byT=new Map(), tot=mix();
+  scored.forEach(o=>{ addMix(byR,o.z+'¦'+o.r,o); addMix(byT,o.z+'¦'+o.r+'¦'+o.t,o); tot[o.h.grade]++; tot.n++; tot.s+=o.h.s; });
+  const gcol={A:'var(--good)',B:'var(--s1)',C:'var(--s4)',D:'var(--bad)'};
+  const mixRow=(cls,label,a,attr)=>`<tr class="${cls}" ${attr||''}><td>${label}</td><td>${a.n}</td>${['A','B','C','D'].map(g=>`<td>${a[g]||'<span class="muted">0</span>'}</td>`).join('')}
+     <td style="width:28%"><div style="display:flex;height:12px;gap:2px" data-tip="${['A','B','C','D'].map(g=>g+' · '+GRADE_TXT[g]+': '+a[g]+' ('+inr(a[g]/a.n*100,0)+'%)').join('<br>')}">${['A','B','C','D'].filter(g=>a[g]).map(g=>`<div style="flex:${a[g]};background:${gcol[g]};border-radius:2px"></div>`).join('')}</div></td><td><b>${inr(a.s/a.n,0)}</b></td></tr>`;
+  const avg=a=>a.s/a.n;
+  let regRows='';
+  for(const [rk,a] of [...byR.entries()].sort((x,y)=>avg(y[1])-avg(x[1]))){
+    const open=HS_OPEN.has(rk);
+    regRows+=mixRow('reg click'+(ST.hsTerr&&ST.hsTerr.startsWith(rk+'¦')?' sel':''),`${open?'▾':'▸'} ${esc(rk.replace('¦',' › '))}`,a,`onclick="hsToggle('${rk.replace(/'/g,"\\'")}')"`);
+    if(open) for(const [tk,ta] of [...byT.entries()].filter(([k])=>k.startsWith(rk+'¦')).sort((x,y)=>avg(y[1])-avg(x[1])))
+      regRows+=mixRow('ter click'+(ST.hsTerr===tk?' sel':''),`${esc(tk.split('¦')[2])}${ST.hsTerr===tk?' <span class="chip g-B" style="font-size:10.5px">showing below</span>':''}`,ta,`onclick="hsTerr('${tk.replace(/'/g,"\\'")}')" title="Show this territory's dealers in the scorecard"`);
+  }
+  if(byR.size>1) regRows+=mixRow('tot','Total',tot);
+  h+=criteriaHTML()+`<div class="card"><h3>Grade mix by region · ${ST.focus}</h3><div class="note">Sorted by average score · <b>tap a region to see its territories</b>, then tap a territory to list its dealers in the scorecard · bar shows A / B / C / D share of dealers</div>
+     <div class="legend">${['A','B','C','D'].map(g=>`<span><i style="background:${gcol[g]}"></i>${g} · ${GRADE_TXT[g]}</span>`).join('')}
+       <span class="noshot" style="margin-left:auto"><button class="linkbtn" onclick="hsAll(true)">Expand all</button> · <button class="linkbtn" onclick="hsAll(false)">Collapse all</button></span></div>
+     <div class="scroll" style="max-height:${MODE==='phone'?'70vh':'460px'}"><table><tr><th class="l">Zone › Region › Territory</th><th>Dealers</th><th>A</th><th>B</th><th>C</th><th>D</th><th class="l">Mix</th><th>Avg score</th></tr>${regRows}</table></div></div>`;
+  HS_REGIONS=[...byR.keys()];
+  // dealer table
+  const base=ST.hsTerr? scored.filter(o=>o.z+'¦'+o.r+'¦'+o.t===ST.hsTerr) : scored;
+  const list=(ST.hsGrade?base.filter(o=>o.h.grade===ST.hsGrade):base).slice().sort((a,b)=>b.h.s-a.h.s||b.cur-a.cur);
+  HS_VIEW=list;
+  h+=`<div class="card" id="hsCard"><h3>Dealer scorecard · ${ST.focus}${ST.hsTerr?' · '+esc(ST.hsTerr.split('¦').slice(1).join(' › ')):''}${ST.hsGrade?' · Grade '+ST.hsGrade:''}
+      ${ST.hsTerr?` <button class="btn" style="margin-left:8px;padding:3px 10px;min-height:0;font-size:12px" onclick="hsTerr('')">✕ Show all territories</button>`:''}</h3>
+    <div class="row"><span class="note" style="margin:0">${list.length.toLocaleString('en-IN')} dealers · ${unit()} · click a dealer to open Customer 360</span><button class="btn" onclick="exportHealth()">⬇ Export CSV</button><button class="btn" onclick="sharePng(document.getElementById('hsCard'),'Dealer scorecard')">📷 PNG</button><button class="btn" onclick="shareHtml(document.getElementById('hsCard'),'Dealer scorecard')">🌐 HTML</button></div>
+    <div class="scroll" style="max-height:560px"><table><tr><th class="l">Dealer</th><th class="l">Region / Territory</th><th>${pv?perTh(pv):'Prev'}</th><th>${perTh(ST.focus)}</th>
+     <th>Growth %${info('growth')}</th><th>Pts</th>${HAS_FOC?`<th>Focus %${info('focus')}</th><th>Pts</th>`:''}<th>Return %${info('ret')}</th><th>Pts</th><th>Hybrid breadth${info('breadth')}</th><th>Pts</th><th>Liquidation %${info('liq')}</th><th>Score</th><th class="l">Grade</th></tr>
+    ${list.slice(0,MODE==='phone'?300:1000).map(o=>`<tr class="click" onclick="open360('${o.c}')"><td>${esc(o.name)} <span class="muted">${o.c}</span></td><td class="l">${esc(o.r)} / ${esc(o.t)}</td>
+      <td>${o.prev?fmt(o.prev):'<span class="muted">–</span>'}</td><td>${fmt(o.cur)}</td>
+      <td>${o.h.g==null?'<span class="up">New</span>':grTxt(o.cur,o.prev)}</td><td class="muted">${o.h.gp}</td>
+      ${HAS_FOC?`<td>${pctTxt(o.h.fs)}</td><td class="muted">${o.h.fpP}</td>`:''}
+      <td>${inr(o.h.rp,1)}%</td><td class="muted">${o.h.rpP}</td><td>${o.h.br}</td><td class="muted">${o.h.bp}</td>${POG_HAS_CUST?`<td>${pctTxt(o.lq)}</td>`:''}<td><b>${o.h.s}</b></td><td class="l"><span class="chip g-${o.h.grade}">${o.h.grade} · ${GRADE_TXT[o.h.grade]}</span></td></tr>`).join('')}
+    </table></div></div>`;
+  m.innerHTML=h;
+  m.querySelectorAll('.crit input').forEach(inp=>inp.addEventListener('change',e=>{
+    const [k,i]=e.target.dataset.p.split('.'); const v=parseFloat(e.target.value); if(isNaN(v)) return;
+    if(i==null) HC[k]=v; else HC[k][+i]=v; saveHC(); render(); }));
+}
+let HS_VIEW=[], HS_OPEN=new Set(), HS_REGIONS=[];
+function hsToggle(k){ HS_OPEN.has(k)?HS_OPEN.delete(k):HS_OPEN.add(k); render(); }
+function hsAll(open){ HS_OPEN=open?new Set(HS_REGIONS):new Set(); render(); }
+function hsTerr(k){ ST.hsTerr=(ST.hsTerr===k?'':k); render(); if(ST.hsTerr){ const c=document.getElementById('hsCard'); if(c) c.scrollIntoView({behavior:'smooth',block:'start'}); } }
+function exportHealth(){
+  const lines=[['Customer No','Customer Name','Zone','Region','Territory',(prevPeriod()||'Prev')+' ('+unit()+')',ST.focus+' ('+unit()+')','Growth %','Growth pts','Focus %','Focus pts','Return %','Return pts','Hybrid breadth','Breadth pts','Liquidation %','Score','Grade'].join(',')];
+  const sc=v=>(ST.metric==='val'?v/1e5:v/1000).toFixed(2);
+  for(const o of HS_VIEW) lines.push([o.c,'"'+String(o.name).replace(/"/g,'""')+'"',o.z,o.r,o.t,sc(o.prev),sc(o.cur),o.h.g==null?'New':o.h.g.toFixed(1),o.h.gp,o.h.fs==null?'':o.h.fs.toFixed(1),o.h.fpP,o.h.rp.toFixed(1),o.h.rpP,o.h.br,o.h.bp,o.lq==null?'':o.lq.toFixed(1),o.h.s,o.h.grade].join(','));
+  saveFile(`Dealer_Health_${ST.focus}_${ST.hsTerr?ST.hsTerr.split('¦')[2]+'_':''}${ST.hsGrade||'all'}.csv`, lines.join('\n'));
+}
+
+/* ---------- PRODUCTS ---------- */
+function renderProducts(m){
+  const F=filtered(), P=shownPeriods(), pv=prevPeriod();
+  const byCrop=groupBy(F,r=>r.crop), byH=groupBy(F,r=>r.crop+'¦'+r.hyb);
+  const tbl=(M,isH)=>{ const rows=[...M.entries()].sort((a,b)=>val(b[1].get(ST.focus))-val(a[1].get(ST.focus)));
+    return `<div class="scroll"><table><tr>${isH?'<th class="l">Crop</th><th class="l">Hybrid</th>':'<th class="l">Crop</th>'}${P.map(p=>`<th>${perTh(p)}</th>`).join('')}<th>Growth</th><th>Customers ${ST.focus}</th><th>Cust. ${pv||'prev'}</th><th>Avg / customer</th><th>Return %</th></tr>
+    ${rows.map(([k,mm])=>{const c=mm.get(ST.focus), p=pv?mm.get(pv):null, ac=activeCust(c), rp=retPct(c);
+      const lab=isH?(([cr,hy])=>`<td class="l">${esc(cr)}</td><td class="l">${esc(hy)} ${(HYB_INFO.get(hy)||{}).foc==='Focus'?'<span class="ftag">FOCUS</span>':''}</td>`)(k.split('¦')):`<td>${esc(k)}</td>`;
+      return `<tr>${lab}${P.map(x=>`<td>${val(mm.get(x))?fmt(val(mm.get(x))):'<span class="muted">–</span>'}</td>`).join('')}<td>${pv?grTxt(val(c),val(p)):''}</td><td>${ac}</td><td>${activeCust(p)}</td><td>${ac?fmt(val(c)/ac):'–'}</td><td>${rp==null?'–':inr(rp,1)+'%'}</td></tr>`;}).join('')}</table></div>`; };
+  const byF=HAS_FOC?groupBy(F,r=>r.foc||'(blank)'):null;
+  m.innerHTML=(HAS_FOC?`<div class="card"><h3>Focus vs Non Focus</h3><div class="note">${unit()} · from the Focus / Non Focus column in the data file</div>${tbl(byF,false).replace('<th class="l">Crop</th>','<th class="l">Category</th>')}</div>`:'')+`<div class="card"><h3>Crop performance</h3><div class="note">${unit()} · customer counts show reach (how many customers bought it)</div>${tbl(byCrop,false)}</div>
+  <div class="card"><h3>Hybrid performance</h3><div class="note">${unit()} · sorted by ${ST.focus}</div>${tbl(byH,true)}</div>`;
+}
+
+/* ---------- RETURNS ---------- */
+function renderReturns(m){
+  const F=filtered(), pv=prevPeriod();
+  const Ff=F.filter(r=>periodKey(r)===ST.focus);
+  const byT=new Map(); Ff.forEach(r=>{let o=byT.get(r.ty); if(!o){o={n:new Set(),c:new Set(),kg:0,net:0};byT.set(r.ty,o);} o.n.add(r.inv); o.c.add(r.c); o.kg+=r.kg; o.net+=r.net;});
+  const tot=blank(); Ff.forEach(r=>add(tot,r));
+  // by territory
+  const byTer=groupBy(F,r=>r.r+'¦'+r.t);
+  const terRows=[...byTer.entries()].map(([k,mm])=>{const c=mm.get(ST.focus); return {k,c,ret:c?-(ST.metric==='val'?c.ret:c.retKg):0,rp:retPct(c),rpp:pv?retPct(mm.get(pv)):null};}).filter(o=>o.c).sort((a,b)=>b.ret-a.ret);
+  // by customer
+  const byC=new Map(); Ff.forEach(r=>{let a=byC.get(r.c); if(!a){a=blank();byC.set(r.c,a);} add(a,r);});
+  const cRows=[...byC.entries()].map(([c,a])=>({c,a,ret:-(ST.metric==='val'?a.ret:a.retKg),rp:retPct(a)})).filter(o=>o.ret>0).sort((a,b)=>b.ret-a.ret);
+  const nRetCust=cRows.length; cRows.length=Math.min(cRows.length,50);
+  const rp=retPct(tot);
+  m.innerHTML=`<div class="tiles">
+    <div class="tile"><div class="k">Gross billing · ${ST.focus}</div><div class="v">${big(ST.metric==='val'?tot.bill:tot.billKg)}</div></div>
+    <div class="tile"><div class="k">Returns</div><div class="v dn">${big(-(ST.metric==='val'?tot.ret:tot.retKg))}</div><div class="d">${rp==null?'–':inr(rp,1)+'% of billing'}</div></div>
+    <div class="tile"><div class="k">Cancellations (ZS1 + ZS2)</div><div class="v">${bigVal(tot.canc)}</div></div>
+    <div class="tile"><div class="k">Customers with returns</div><div class="v">${nRetCust.toLocaleString('en-IN')}</div></div>
+  </div>
+  <div class="card"><h3>By order type · ${ST.focus}</h3><div class="note">Signs per order-type table: billing +ve, returns & invoice cancellations −ve</div><table>
+    <tr><th class="l">Order type</th><th class="l">Description</th><th class="l">Group</th><th>Documents</th><th>Customers</th><th>Qty (MT)</th><th>Value (₹ Lakh)</th></tr>
+    ${Object.keys(ORDER_TYPES).filter(t=>byT.has(t)).map(t=>{const o=byT.get(t);return `<tr><td>${t}</td><td class="l">${ORDER_TYPES[t].desc}</td><td class="l">${ORDER_TYPES[t].grp}</td><td>${o.n.size.toLocaleString('en-IN')}</td><td>${o.c.size.toLocaleString('en-IN')}</td><td>${inr(o.kg/1000,2)}</td><td>${inr(o.net/1e5,2)}</td></tr>`;}).join('')}
+    <tr class="tot"><td>Net</td><td></td><td></td><td></td><td></td><td>${inr(tot.kg/1000,2)}</td><td>${inr(tot.net/1e5,2)}</td></tr></table></div>
+  <div class="grid2">
+    <div class="card"><h3>Returns by territory</h3><div class="note">${unit()} returned in ${ST.focus}</div><div class="scroll" style="max-height:420px"><table>
+      <tr><th class="l">Region / Territory</th><th>Returned</th><th>Return %${info('ret')}</th><th>Return % ${pv||''}</th></tr>
+      ${terRows.map(o=>`<tr><td>${esc(o.k.replace('¦',' / '))}</td><td>${fmt(o.ret)}</td><td>${o.rp==null?'–':inr(o.rp,1)+'%'}</td><td>${o.rpp==null?'–':inr(o.rpp,1)+'%'}</td></tr>`).join('')}</table></div></div>
+    <div class="card"><h3>Top customers by returns</h3><div class="note">${unit()} returned in ${ST.focus} · click to open Customer 360</div><div class="scroll" style="max-height:420px"><table>
+      <tr><th class="l">Customer</th><th class="l">Territory</th><th>Returned</th><th>Return %</th></tr>
+      ${cRows.map(o=>{const ci=CUST.get(o.c)||{};return `<tr class="click" onclick="open360('${o.c}')"><td>${esc(ci.name)}</td><td class="l">${esc(ci.t)}</td><td>${fmt(o.ret)}</td><td>${o.rp==null?'<span class="muted">no billing</span>':inr(o.rp,1)+'%'}</td></tr>`;}).join('')}</table></div></div>
+  </div>`;
+}
+setMode(MODE,false);
+addEventListener('orientationchange',()=>setTimeout(()=>{ if(ROWS.length) render(); },300));
+</script>
+</body>
+</html>
