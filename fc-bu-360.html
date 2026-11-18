@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#123d24">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Rasi FC BU 360</title>
+<style>
+:root{
+  --bg:#f4f3ef; --surface:#fcfcfb; --line:#e3e1da; --line2:#efeee9;
+  --text:#0b0b0b; --text2:#52514e; --muted:#8a8984;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --good:#0f7b3f; --goodbg:#e3f3e8; --warn:#9a6200; --warnbg:#fbf0d9;
+  --bad:#b42323; --badbg:#fbe4e2; --info:#1f5fae; --infobg:#e2edfa; --neutralbg:#ecebe6;
+  --accent:#14532d;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:13px}
+header{background:linear-gradient(90deg,#123d24,#1f6b3a);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{font-size:18px;margin:0;font-weight:600;letter-spacing:.2px}
+header .sub{font-size:12px;opacity:.85}
+header .sp{flex:1}
+.btn{border:1px solid var(--line);background:#fff;color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12.5px}
+.btn:hover{border-color:#b9b7ae}
+.btn.primary{background:#fff;color:#123d24;font-weight:600;border-color:#fff}
+.btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
+#filters{background:var(--surface);border-bottom:1px solid var(--line);padding:10px 20px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;position:sticky;top:0;z-index:5}
+.f{display:flex;flex-direction:column;gap:3px}
+.f label{font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+select,input[type=search]{border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12.5px;background:#fff;min-width:120px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:6px 10px;font-size:12px;cursor:pointer;color:var(--text2)}
+.seg button.on{background:#1f6b3a;color:#fff}
+nav{display:flex;gap:4px;padding:10px 20px 0}
+nav button{border:1px solid var(--line);border-bottom:0;background:#ecebe6;padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--text2)}
+nav button.on{background:var(--surface);color:var(--text);font-weight:600}
+main{background:var(--surface);margin:0 20px 20px;border:1px solid var(--line);border-radius:0 8px 8px 8px;padding:16px;min-height:60vh}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:14px}
+.tile{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fff}
+.tile .k{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;font-weight:600}
+.tile .v{font-size:20px;font-weight:600;margin-top:4px}
+.tile .d{font-size:11.5px;color:var(--text2);margin-top:2px}
+.up{color:var(--good)} .dn{color:var(--bad)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:1100px){.grid2{grid-template-columns:1fr}}
+.card{border:1px solid var(--line);border-radius:8px;padding:12px;background:#fff;margin-bottom:14px;min-width:0}
+.card h3{margin:0 0 2px;font-size:14px}
+.card .note{font-size:11.5px;color:var(--text2);margin-bottom:8px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{background:#f1f0eb;text-align:right;padding:6px 8px;font-weight:600;color:var(--text2);border-bottom:1px solid var(--line);position:sticky;top:0;cursor:pointer;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th.l,td.l{text-align:left}
+td{padding:5px 8px;border-bottom:1px solid var(--line2);text-align:right;white-space:nowrap}
+tr.zone td{background:#f6f5f1;font-weight:600}
+tr.reg td:first-child{padding-left:20px;cursor:pointer}
+tr.ter td:first-child{padding-left:40px;color:var(--text2)}
+tr.click{cursor:pointer} tr.click:hover td{background:#f3f8f4} tr.sel td{background:#eef5ff !important}
+tr.tot td{font-weight:700;border-top:2px solid var(--line)}
+.scroll{max-height:520px;overflow:auto;border:1px solid var(--line2);border-radius:6px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.c-grow{background:var(--goodbg);color:var(--good)} .c-stab{background:var(--neutralbg);color:var(--text2)}
+.c-decl{background:var(--warnbg);color:var(--warn)} .c-lost{background:var(--badbg);color:var(--bad)}
+.c-new{background:var(--infobg);color:var(--info)} .c-react{background:#efe9fb;color:#5a3fc0}
+.c-dorm{background:var(--neutralbg);color:var(--muted)}
+.g-A{background:var(--goodbg);color:var(--good)} .g-B{background:var(--infobg);color:var(--info)} .g-C{background:var(--warnbg);color:var(--warn)} .g-D{background:var(--badbg);color:var(--bad)}
+.ftag{font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:4px;background:#e6efe8;color:#14532d}
+.crit td,.crit th{padding:4px 8px} .crit input{width:64px;border:1px solid var(--line);border-radius:4px;padding:3px 5px;text-align:right;font-size:12.5px}
+.crit .band{color:var(--text2)}
+.statusbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.stat{border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:#fff;cursor:pointer;min-width:130px}
+.stat.on{outline:2px solid #1f6b3a}
+.stat .n{font-size:18px;font-weight:600;margin-top:3px}
+.stat .s{font-size:11px;color:var(--text2)}
+.empty{text-align:center;padding:70px 20px;color:var(--text2)}
+.empty h2{color:var(--text);font-weight:600}
+.drop{border:2px dashed #b9b7ae;border-radius:10px;padding:30px;max-width:620px;margin:20px auto;background:#fff}
+#tip{position:fixed;pointer-events:none;background:#1c1c1a;color:#fff;padding:6px 9px;border-radius:6px;font-size:12px;display:none;z-index:50;line-height:1.45;max-width:280px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--text2);margin:4px 0 6px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.prof{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-bottom:12px}
+.prof h2{margin:0;font-size:20px}
+.flags{display:flex;flex-direction:column;gap:6px}
+.flag{padding:6px 10px;border-radius:6px;font-size:12.5px}
+.flag.bad{background:var(--badbg);color:var(--bad)} .flag.warn{background:var(--warnbg);color:var(--warn)} .flag.good{background:var(--goodbg);color:var(--good)} .flag.info{background:var(--infobg);color:var(--info)}
+.muted{color:var(--muted)}
+.loadinfo{font-size:12px;color:#e7f3ea}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+svg text{font-family:inherit}
+/* ===== org review ===== */
+table.cmp{border-collapse:separate;border-spacing:0}
+table.cmp th.chd{text-align:right;cursor:pointer;min-width:120px;vertical-align:bottom;font-size:13px;color:var(--text)}
+table.cmp th.chd:hover{background:#e7efe9}
+table.cmp td{text-align:right;padding:7px 10px}
+table.cmp td.cl{text-align:left;color:var(--text2);white-space:nowrap;position:sticky;left:0;background:#fff;z-index:1;box-shadow:1px 0 0 var(--line2)}
+table.cmp th:first-child{position:sticky;left:0;z-index:3}
+table.cmp tr.csec td{background:#f1f0eb;font-weight:700;font-size:11px;letter-spacing:.4px;text-transform:uppercase;color:var(--text2);text-align:left;padding:6px 10px}
+table.cmp tr.csec td:first-child{position:sticky;left:0}
+table.cmp .ctot{background:#f6f5f1;font-weight:600;border-left:2px solid var(--line)}
+table.cmp td.cbest,.cbest{background:#e3f3e8} table.cmp td.cworst,.cworst{background:#fbe4e2}
+.cmark{color:#0f7b3f;font-size:11px;margin-right:4px}
+.cbar{height:4px;background:#f1f0eb;border-radius:2px;margin-top:4px} .cbar div{height:4px;background:var(--s1);border-radius:2px;margin-left:auto}
+table.cmp tr.csum td{border-top:2px solid var(--line);font-size:12px}
+.wbar{display:flex;height:26px;gap:2px;border-radius:6px;overflow:hidden;margin:6px 0 12px}
+.wbar div{display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;min-width:0}
+.wbar span{overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+.tggrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:14px 22px}
+.tggrid .crit td,.tggrid .crit th{padding:3px 6px} .tggrid .crit input,#tgCrit .note input{width:56px;border:1px solid var(--line);border-radius:4px;padding:2px 4px;text-align:right}
+table.rv tr.grp th.g-grade{background:#fff3d6}
+.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 12px;font-size:15px}
+.crumbs button{background:#eef5ef;border:1px solid #cfe3d5;color:#14532d;border-radius:16px;padding:4px 12px;cursor:pointer;font-size:14px}
+.crumbs button:hover{background:#dcefe1} .crumbs b{font-size:16px;color:#123d24} .crumbs .sep{color:var(--muted)}
+.crumbs .lvl{margin-left:auto;font-size:12px;color:var(--text2)}
+body.touch .crumbs button{padding:7px 14px;font-size:14.5px}
+td.gd,span.gd,.gd{background:#e3f3e8 !important} td.bd,span.bd,.bd{background:#fbe4e2 !important}
+table.rv tr.grp th{background:#e9e7e0;text-align:center;font-size:11px;letter-spacing:.4px;text-transform:uppercase;color:var(--text2);border-left:2px solid #fff;cursor:default}
+table.rv tr.grp th.g-business{background:#e6eef9} table.rv tr.grp th.g-quality{background:#f6ece0} table.rv tr.grp th.g-customers{background:#e8f2ea} table.rv tr.grp th.g-health{background:#efe9f8}
+table.rv tr:nth-child(2) th{top:27px}
+.drill{color:#1f6b3a;font-weight:700}
+body.m-phone .crumbs .lvl{margin-left:0;width:100%}
+#seasonWarn{margin:10px 20px 0;padding:9px 12px;border-radius:8px;background:var(--warnbg);color:var(--warn);font-size:12.5px;border:1px solid #f0d9a8}
+#seasonWarn b{color:#6b4500} body.m-phone #seasonWarn{margin:8px 8px 0}
+#seasonWarn .x{float:right;background:none;border:0;color:var(--warn);font-size:14px;cursor:pointer}
+.card{position:relative}
+.card>h3{padding-right:44px}
+.pngbtn{position:absolute;top:8px;right:8px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer;color:var(--text2);z-index:2}
+.pngbtn:hover{border-color:#1f6b3a;color:#1f6b3a}
+.card>h3{padding-right:90px} body.m-phone .card>h3{padding-right:44px}
+#shareMenu{position:fixed;z-index:70;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:6px;min-width:230px}
+#shareMenu .smh{font-size:11.5px;color:var(--text2);padding:4px 8px 6px;border-bottom:1px solid var(--line2);margin-bottom:4px}
+#shareMenu button{display:grid;grid-template-columns:22px 1fr;column-gap:6px;width:100%;text-align:left;background:none;border:0;padding:8px;border-radius:6px;cursor:pointer;font-size:13px}
+#shareMenu button:hover{background:#f1f6f2} #shareMenu button span{grid-column:2;font-size:11.5px;color:var(--text2)}
+body.touch #shareMenu button{padding:11px 10px;font-size:14.5px}
+body.touch .pngbtn{padding:6px 10px;font-size:15px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1c1c1a;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;display:none;z-index:60;max-width:90vw;text-align:center}
+.shotview{margin-left:auto;align-self:center;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;font-size:12.5px;cursor:pointer;white-space:nowrap}
+body.touch .shotview{padding:8px 12px;font-size:13.5px}
+.snapwrap th,.snapwrap td{position:static !important;box-shadow:none !important}
+.snapwrap .scroll{max-height:none !important;overflow:visible !important;border:0}
+.snapwrap .card{overflow:visible !important}
+.snaphead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:3px solid #1f6b3a;padding-bottom:8px;margin-bottom:12px}
+.snaphead .t{font-size:18px;font-weight:700;color:#123d24} .snaphead .s{font-size:12px;color:var(--text2)}
+/* ===== device modes ===== */
+.modesw{display:inline-flex;border:1px solid rgba(255,255,255,.5);border-radius:6px;overflow:hidden}
+.modesw button{background:transparent;color:#fff;border:0;padding:6px 9px;font-size:12px;cursor:pointer;opacity:.75}
+.modesw button.on{background:#fff;color:#123d24;opacity:1;font-weight:600}
+#fltBtn{display:none}
+.mob-only{display:none}
+/* touch modes (phone + iPad) */
+body.touch .btn, body.touch select, body.touch input[type=search], body.touch .seg button{min-height:40px;font-size:14px}
+body.touch nav{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+body.touch nav::-webkit-scrollbar{display:none}
+body.touch nav button{white-space:nowrap;flex:0 0 auto;padding:10px 16px}
+body.touch .card{overflow-x:auto}
+body.touch .scroll{-webkit-overflow-scrolling:touch}
+body.touch .scroll td:first-child, body.touch .scroll th:first-child{position:sticky;left:0;z-index:1;background:#fff;box-shadow:1px 0 0 var(--line2)}
+body.touch .scroll th:first-child{z-index:3;background:#f1f0eb}
+body.touch tr.zone td:first-child{background:#f6f5f1} body.touch tr.click:hover td{background:inherit}
+body.touch .info{width:20px;height:20px;font-size:12px}
+body.touch td, body.touch th{padding:8px 8px}
+body.touch #guide{padding:0}
+body.touch #guide .box{border-radius:0;min-height:100%;max-width:none}
+/* iPad */
+body.m-tab #filters{display:grid !important;grid-template-columns:repeat(4,1fr);gap:10px}
+body.m-tab #filters select{width:100%;min-width:0}
+body.m-tab .tiles{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+@media (orientation:portrait){ body.m-tab .grid2{grid-template-columns:1fr} }
+body.m-tab main{margin:0 12px 16px} body.m-tab nav{padding:10px 12px 0}
+/* Phone (Pixel 10 Pro, ~412px) */
+body.m-phone{font-size:14px;-webkit-text-size-adjust:100%}
+body.m-phone header{padding:10px 12px calc(10px) 12px;gap:8px;padding-top:max(10px,env(safe-area-inset-top))}
+body.m-phone header h1{font-size:17px} body.m-phone header .sub{font-size:11px}
+body.m-phone header .sp{display:none}
+body.m-phone #loadinfo{order:10;width:100%;font-size:11.5px}
+body.m-phone .pc-only{display:none !important} body.m-phone .mob-only{display:inline}
+body.m-phone header .btn{padding:6px 10px}
+body.m-phone #fltBtn{display:flex;width:calc(100% - 24px);margin:8px 12px 0;justify-content:space-between;align-items:center;background:#fff;text-align:left;font-size:13.5px}
+body.m-phone #filters{display:none !important;grid-template-columns:1fr 1fr;gap:10px;padding:10px 12px;position:static}
+body.m-phone #filters.open{display:grid !important}
+body.m-phone #filters .f{min-width:0} body.m-phone #filters select{width:100%;min-width:0}
+body.m-phone #filters .f:last-child{grid-column:1/-1} body.m-phone #filters .seg{display:flex} body.m-phone #filters .seg button{flex:1}
+body.m-phone nav{padding:8px 8px 0;gap:3px} body.m-phone nav button{padding:9px 13px;font-size:13.5px}
+body.m-phone main{margin:0 0 12px;border-radius:0;border-left:0;border-right:0;padding:10px}
+body.m-phone .tiles{grid-template-columns:1fr 1fr;gap:8px}
+body.m-phone .tile{padding:9px 10px} body.m-phone .tile .v{font-size:17px} body.m-phone .tile .k{font-size:10.5px}
+body.m-phone .grid2{grid-template-columns:1fr;gap:10px}
+body.m-phone .card{padding:10px}
+body.m-phone .statusbar{gap:6px} body.m-phone .stat{min-width:0;flex:1 1 calc(50% - 6px);padding:7px 9px}
+body.m-phone .row input[type=search]{min-width:0 !important;width:100%}
+body.m-phone .scroll{max-height:70vh !important}
+body.m-phone .scroll td:first-child{max-width:150px;overflow:hidden;text-overflow:ellipsis}
+body.m-phone table{font-size:12.5px}
+body.m-phone #status{padding:8px 12px} body.m-phone header .modesw button{padding:6px 7px} body.m-phone #status .top{font-size:12px} body.m-phone #stDetail{width:100%;order:5}
+body.m-phone .crit input{width:56px}
+body.m-phone #guide table, body.m-phone #guide tbody, body.m-phone #guide tr, body.m-phone #guide td{display:block;width:100%}
+body.m-phone #guide tr:first-child{display:none} body.m-phone #guide tr{border-bottom:1px solid var(--line);padding:6px 0}
+body.m-phone #guide td{border:0;padding:3px 4px} body.m-phone #guide td:last-child{color:var(--text2);font-size:12px}
+body.m-phone .prof h2{font-size:18px} body.m-phone .empty{padding:30px 12px} body.m-phone .drop{padding:18px}
+body.m-phone .legend{gap:10px}
+.info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#e2edfa;color:#1f5fae;font-size:10px;font-weight:700;cursor:help;margin-left:4px;vertical-align:1px;font-style:normal;text-transform:none;letter-spacing:0}
+#guide{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:40;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+#guide .box{background:#fff;border-radius:10px;max-width:980px;width:100%;padding:18px 22px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+#guide h2{margin:0 0 4px;font-size:18px} #guide table td{white-space:normal;vertical-align:top;text-align:left;line-height:1.45}
+#guide table th{text-align:left;position:static} #guide td:first-child{font-weight:600;white-space:nowrap}
+#guide .ex{color:var(--text2);font-size:12px}
+#status{background:#fff;border-bottom:1px solid var(--line);padding:10px 20px;display:none}
+#status .top{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+#status .top b{font-size:13px}
+#status .pct{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums}
+.pbar{height:8px;background:#ecebe6;border-radius:4px;overflow:hidden;margin:7px 0 4px}
+.pbar div{height:100%;width:0;background:#1f6b3a;border-radius:4px;transition:width .15s}
+#status.done .pbar div{background:#1baf7a}
+#status.err .pbar div{background:var(--bad)}
+#stFiles{display:none;margin-top:6px} #status.open #stFiles{display:block}
+#stFiles table{font-size:12px} #stFiles td{padding:3px 8px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid #cfe3d5;border-top-color:#1f6b3a;border-radius:50%;animation:sp 0.8s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.linkbtn{background:none;border:0;color:#1f5fae;cursor:pointer;font-size:12px;padding:0}
+
+/* ===================== THEME · Rasi FC BU 360 ===================== */
+:root{ --brand:#14532d; --brand2:#1f6b3a; --gold:#eda100; --bg:#eef2ec; --surface:#ffffff; --line:#dfe5dc; --line2:#edf1ea; }
+body{background:linear-gradient(180deg,#e9f0e6 0,#f3f5f0 260px,#f4f3ef 100%);}
+header{background:linear-gradient(115deg,#0d2e1b 0%,#14532d 45%,#1f6b3a 80%,#2c7a45 100%);box-shadow:0 2px 14px rgba(13,46,27,.25);position:relative;overflow:hidden}
+header::after{content:"";position:absolute;right:-60px;top:-80px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(237,161,0,.22),rgba(237,161,0,0) 70%);pointer-events:none}
+.brand{display:flex;align-items:center;gap:12px} .logo{flex:0 0 auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
+header h1{font-size:20px;letter-spacing:.3px} header h1 .fc{color:#ffd166}
+header .sub{opacity:.85}
+.btn.primary{background:#ffd166;border-color:#ffd166;color:#0d2e1b} .btn.primary:hover{background:#ffdd85}
+#filters{background:rgba(255,255,255,.92);backdrop-filter:blur(6px);box-shadow:0 1px 0 var(--line)}
+.f label{color:var(--brand)}
+select,input[type=search]{border-color:#cfd9cc;border-radius:8px}
+select:focus,input:focus{outline:2px solid #9fd0ae;outline-offset:0}
+.seg{border-radius:8px} .seg button.on{background:var(--brand2)}
+nav{gap:6px}
+nav button{border-radius:10px 10px 0 0;background:#e3e9df;border-color:#d5ddd1;font-weight:500;transition:background .15s}
+nav button:hover{background:#d8e3d4}
+nav button.on{background:#fff;color:var(--brand);font-weight:700;box-shadow:inset 0 3px 0 var(--gold)}
+main{border-radius:0 12px 12px 12px;border-color:#dbe3d7;box-shadow:0 6px 24px rgba(20,83,45,.07)}
+.card{border-radius:12px;border-color:#e2e8de;box-shadow:0 1px 3px rgba(20,83,45,.06);transition:box-shadow .15s}
+.card:hover{box-shadow:0 4px 14px rgba(20,83,45,.10)}
+.card h3{color:#0f3d22}
+/* KPI tiles with coloured accents */
+.tile{border-radius:12px;border-color:#e2e8de;box-shadow:0 1px 3px rgba(20,83,45,.06);position:relative;overflow:hidden;transition:transform .12s, box-shadow .12s}
+.tile::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--brand2)}
+.tile:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(20,83,45,.12)}
+.tiles .tile:nth-child(8n+1)::before{background:#1f6b3a} .tiles .tile:nth-child(8n+2)::before{background:#2a78d6}
+.tiles .tile:nth-child(8n+3)::before{background:#1baf7a} .tiles .tile:nth-child(8n+4)::before{background:#eb6834}
+.tiles .tile:nth-child(8n+5)::before{background:#0e8a7b} .tiles .tile:nth-child(8n+6)::before{background:#eda100}
+.tiles .tile:nth-child(8n+7)::before{background:#8a5cf6} .tiles .tile:nth-child(8n+8)::before{background:#c2410c}
+.tile .k{color:#4f5d52} .tile .v{color:#0d2e1b;font-size:22px}
+body.m-phone .tile .v{font-size:18px}
+/* tables */
+th{background:linear-gradient(180deg,#f4f7f2,#e9efe6);color:#3f4b42;border-bottom-color:#d5ddd1}
+table tr:nth-child(even) td{background-color:#fbfcfa}
+tr.click:hover td{background:#eef7f0 !important}
+tr.tot td{background:#f1f5ef !important;color:#0d2e1b}
+.chip{border:1px solid rgba(0,0,0,.04)}
+.g-A{background:#d9f2e1;color:#0b6b33} .g-B{background:#dbe9fb;color:#1a56a8} .g-C{background:#fcefcf;color:#8a5700} .g-D{background:#fbdcd9;color:#a61b1b}
+.crumbs button{background:#e6f2e9;border-color:#c4dfcb}
+.crumbs b{background:linear-gradient(90deg,#0f3d22,#1f6b3a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat{border-radius:12px;box-shadow:0 1px 3px rgba(20,83,45,.06)} .stat.on{outline:2px solid var(--gold)}
+.pngbtn,.shotview{border-radius:8px}
+.shotview{background:linear-gradient(180deg,#fff,#f4f7f2)}
+#status{background:#fff}
+.pbar div{background:linear-gradient(90deg,#1f6b3a,#1baf7a)}
+.empty h2{color:var(--brand)} .drop{border-color:#b9cdb7;background:#fbfdf9;border-radius:14px}
+/* compare tab polish */
+table.cmp th.chd{background:linear-gradient(180deg,#f4f7f2,#e6eee2)}
+table.cmp tr.csec td{background:linear-gradient(90deg,#14532d,#1f6b3a);color:#fff}
+table.cmp tr.csec td:first-child{background:#14532d}
+table.cmp td.cbest{background:#d9f2e1} table.cmp td.cworst{background:#fbdcd9}
+table.cmp .ctot{background:#f3f6f0}
+
+body.m-phone table.cmp td.cl{white-space:normal;min-width:0;max-width:118px;width:118px;font-size:12px;line-height:1.25;padding:6px 6px}
+body.m-phone table.cmp th:first-child{max-width:118px;width:118px}
+body.m-phone table.cmp th.chd{min-width:84px;font-size:12px;padding:6px 6px}
+body.m-phone table.cmp td{padding:6px 6px;font-size:12.5px}
+body.m-phone table.cmp td .muted{display:block;font-size:10.5px}
+body.m-phone table.cmp .info{width:16px;height:16px;font-size:10px}
+body.m-tab table.cmp th.chd{min-width:100px}
+
+body.m-phone table.cmp td > div{flex-wrap:wrap;justify-content:flex-end !important;gap:3px !important}
+body.m-phone table.cmp td div[style*="min-width:90px"]{min-width:64px !important;width:100%}
+body.m-phone table.cmp td{white-space:normal}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="brand"><div class="logo" aria-hidden="true"><svg viewBox="0 0 40 40" width="40" height="40"><circle cx="20" cy="20" r="19" fill="#eda100"/><path d="M20 31c0-8 0-13 0-19" stroke="#123d24" stroke-width="2.4" stroke-linecap="round"/><path d="M20 18c-5-1-8-4-8.5-8 4.5 0 7.6 2.6 8.5 8zM20 22c5-1 8-4 8.5-8-4.5 0-7.6 2.6-8.5 8zM20 27c-4.3-.7-7-3.3-7.6-6.8 4 0 6.8 2.2 7.6 6.8z" fill="#123d24"/></svg></div>
+    <div><h1>Rasi <span class="fc">FC BU</span> 360</h1>
+    <div class="sub">Field Crops BU · Division › Region › Territory review</div></div></div>
+  </div>
+  <div class="sp"></div>
+  <span class="loadinfo" id="loadinfo">No data loaded</span>
+  <input type="file" id="file" accept=".csv,.xlsx,.xls,.xlsb" multiple hidden>
+  <button class="btn primary" id="loadBtn" onclick="document.getElementById('file').click()" title="Select one or more CSV files (Ctrl / Shift + click to pick several). Files are added to what is already loaded.">📂 Load CSV<span class="pc-only"> File(s)</span></button>
+  <button class="btn ghost" onclick="openGuide()" title="How each measure is calculated and where it is shown">❓<span class="pc-only"> Guide</span></button>
+  <div class="modesw" id="modeSw" title="Layout: PC, Smartphone (Pixel) or iPad"><button data-mode="pc">🖥 PC</button><button data-mode="phone">📱 Phone</button><button data-mode="tab">iPad</button></div>
+  <button class="btn ghost" id="clearBtn" onclick="clearData()" style="display:none" title="Clear loaded data">🗑<span class="pc-only"> Clear</span></button>
+</header>
+
+<div id="status">
+  <div class="top"><span id="stIcon"></span><b id="stTitle"></b><span id="stDetail" class="muted"></span><span class="pct" id="stPct"></span>
+    <button class="linkbtn" id="stToggle" onclick="$('status').classList.toggle('open');this.textContent=$('status').classList.contains('open')?'Hide files':'Show files'">Show files</button>
+    <button class="linkbtn" id="stClose" onclick="$('status').style.display='none'" style="display:none">✕</button></div>
+  <div class="pbar"><div id="stBar"></div></div>
+  <div id="stFiles"></div>
+</div>
+
+<button class="btn" id="fltBtn" style="display:none" onclick="$('filters').classList.toggle('open');fltSummary()"></button>
+<div id="filters" style="display:none">
+  <div class="f"><label>Division</label><select id="fZone"></select></div>
+  <div class="f"><label>Region</label><select id="fRegion"></select></div>
+  <div class="f" style="display:none"><label>Territory</label><select id="fTerr"></select></div>
+  <div class="f"><label>Crop</label><select id="fCrop"></select></div>
+  <div class="f"><label>Hybrid</label><select id="fHyb"></select></div>
+  <div class="f"><label>Focus</label><select id="fFoc"></select></div>
+  <div class="f"><label>Compare by</label><select id="fStype"></select></div>
+  <div class="f"><label>Focus period</label><select id="fFocus"></select></div>
+  <div class="f"><label>Measure</label>
+    <div class="seg" id="fMetric"><button data-m="val" class="on">₹ Net Value</button><button data-m="qty">Qty (MT)</button></div>
+  </div>
+</div>
+
+<nav id="tabs" style="display:none">
+  <button data-t="rv" class="on">🧭 Review</button>
+  <button data-t="cmp">⚖️ Division Compare</button>
+  <button data-t="lg">🏆 League Table</button>
+  <button data-t="gr">🅰️ Grades</button>
+  <button data-t="pm">🌽 Product Mix</button>
+  <button class="shotview" id="shotView" title="Share the whole current tab as PNG image or HTML page">📤 Share view</button>
+</nav>
+
+<div id="seasonWarn" style="display:none"></div>
+<main id="main">
+  <div class="empty">
+    <h2>Welcome to Rasi FC BU 360</h2><p style="margin:-6px 0 10px;color:var(--text2)">Load your customer transaction file(s) to start</p>
+    <p class="muted" style="max-width:620px;margin:0 auto">Reviews the business by <b>Division › Region › Territory › Customer</b>. Division is taken from the <b>Zone</b> column.</p>
+    <div class="drop" id="drop">
+      Click <b>Load CSV File(s)</b> or drop CSV files here (same columns as the sample file).<br><br>
+      <b>Several files at once:</b> in the file window, hold <b>Ctrl</b> (or <b>Shift</b>) and click each file – e.g. one file per year.
+      You can also load more files later; they are added to what is already loaded. Duplicate rows across files are skipped.<br><br>
+      A status bar shows progress while large files are read.<br><br>
+      <span class="muted">Order-type signs: ZCFC, ZMFC, ZS2 = +ve · ZCRF, ZMRF, ZS1, ZRFC = −ve. Other order types are ignored.</span>
+    </div>
+  </div>
+</main>
+<div id="tip"></div>
+<div id="toast"></div>
+<script>/* html-to-image 1.11.13 (MIT) – used for Share PNG */
+!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeof define&&define.amd?define(["exports"],e):e((t="undefined"!=typeof globalThis?globalThis:t||self).htmlToImage={})}(this,(function(t){"use strict";function e(t,e,n,r){return new(n||(n=Promise))((function(i,o){function u(t){try{a(r.next(t))}catch(t){o(t)}}function c(t){try{a(r.throw(t))}catch(t){o(t)}}function a(t){var e;t.done?i(t.value):(e=t.value,e instanceof n?e:new n((function(t){t(e)}))).then(u,c)}a((r=r.apply(t,e||[])).next())}))}function n(t,e){var n,r,i,o,u={label:0,sent:function(){if(1&i[0])throw i[1];return i[1]},trys:[],ops:[]};return o={next:c(0),throw:c(1),return:c(2)},"function"==typeof Symbol&&(o[Symbol.iterator]=function(){return this}),o;function c(c){return function(a){return function(c){if(n)throw new TypeError("Generator is already executing.");for(;o&&(o=0,c[0]&&(u=0)),u;)try{if(n=1,r&&(i=2&c[0]?r.return:c[0]?r.throw||((i=r.return)&&i.call(r),0):r.next)&&!(i=i.call(r,c[1])).done)return i;switch(r=0,i&&(c=[2&c[0],i.value]),c[0]){case 0:case 1:i=c;break;case 4:return u.label++,{value:c[1],done:!1};case 5:u.label++,r=c[1],c=[0];continue;case 7:c=u.ops.pop(),u.trys.pop();continue;default:if(!(i=u.trys,(i=i.length>0&&i[i.length-1])||6!==c[0]&&2!==c[0])){u=0;continue}if(3===c[0]&&(!i||c[1]>i[0]&&c[1]<i[3])){u.label=c[1];break}if(6===c[0]&&u.label<i[1]){u.label=i[1],i=c;break}if(i&&u.label<i[2]){u.label=i[2],u.ops.push(c);break}i[2]&&u.ops.pop(),u.trys.pop();continue}c=e.call(t,u)}catch(t){c=[6,t],r=0}finally{n=i=0}if(5&c[0])throw c[1];return{value:c[0]?c[1]:void 0,done:!0}}([c,a])}}}var r,i=(r=0,function(){return r+=1,"u".concat("0000".concat((Math.random()*Math.pow(36,4)<<0).toString(36)).slice(-4)).concat(r)});function o(t){for(var e=[],n=0,r=t.length;n<r;n++)e.push(t[n]);return e}var u=null;function c(t){return void 0===t&&(t={}),u||(u=t.includeStyleProperties?t.includeStyleProperties:o(window.getComputedStyle(document.documentElement)))}function a(t,e){var n=(t.ownerDocument.defaultView||window).getComputedStyle(t).getPropertyValue(e);return n?parseFloat(n.replace("px","")):0}function s(t,e){void 0===e&&(e={});var n,r,i,o=e.width||(r=a(n=t,"border-left-width"),i=a(n,"border-right-width"),n.clientWidth+r+i),u=e.height||function(t){var e=a(t,"border-top-width"),n=a(t,"border-bottom-width");return t.clientHeight+e+n}(t);return{width:o,height:u}}var l=16384;function f(t,e){return void 0===e&&(e={}),t.toBlob?new Promise((function(n){t.toBlob(n,e.type?e.type:"image/png",e.quality?e.quality:1)})):new Promise((function(n){for(var r=window.atob(t.toDataURL(e.type?e.type:void 0,e.quality?e.quality:void 0).split(",")[1]),i=r.length,o=new Uint8Array(i),u=0;u<i;u+=1)o[u]=r.charCodeAt(u);n(new Blob([o],{type:e.type?e.type:"image/png"}))}))}function h(t){return new Promise((function(e,n){var r=new Image;r.onload=function(){r.decode().then((function(){requestAnimationFrame((function(){return e(r)}))}))},r.onerror=n,r.crossOrigin="anonymous",r.decoding="async",r.src=t}))}function d(t){return e(this,void 0,void 0,(function(){return n(this,(function(e){return[2,Promise.resolve().then((function(){return(new XMLSerializer).serializeToString(t)})).then(encodeURIComponent).then((function(t){return"data:image/svg+xml;charset=utf-8,".concat(t)}))]}))}))}function v(t,r,i){return e(this,void 0,void 0,(function(){var e,o,u;return n(this,(function(n){return e="http://www.w3.org/2000/svg",o=document.createElementNS(e,"svg"),u=document.createElementNS(e,"foreignObject"),o.setAttribute("width","".concat(r)),o.setAttribute("height","".concat(i)),o.setAttribute("viewBox","0 0 ".concat(r," ").concat(i)),u.setAttribute("width","100%"),u.setAttribute("height","100%"),u.setAttribute("x","0"),u.setAttribute("y","0"),u.setAttribute("externalResourcesRequired","true"),o.appendChild(u),u.appendChild(t),[2,d(o)]}))}))}var p=function(t,e){if(t instanceof e)return!0;var n=Object.getPrototypeOf(t);return null!==n&&(n.constructor.name===e.name||p(n,e))};function g(t,e,n,r){var i=".".concat(t,":").concat(e),o=n.cssText?function(t){var e=t.getPropertyValue("content");return"".concat(t.cssText," content: '").concat(e.replace(/'|"/g,""),"';")}(n):function(t,e){return c(e).map((function(e){var n=t.getPropertyValue(e),r=t.getPropertyPriority(e);return"".concat(e,": ").concat(n).concat(r?" !important":"",";")})).join(" ")}(n,r);return document.createTextNode("".concat(i,"{").concat(o,"}"))}function m(t,e,n,r){var o=window.getComputedStyle(t,n),u=o.getPropertyValue("content");if(""!==u&&"none"!==u){var c=i();try{e.className="".concat(e.className," ").concat(c)}catch(t){return}var a=document.createElement("style");a.appendChild(g(c,n,o,r)),e.appendChild(a)}}var w="application/font-woff",y="image/jpeg",b={woff:w,woff2:w,ttf:"application/font-truetype",eot:"application/vnd.ms-fontobject",png:"image/png",jpg:y,jpeg:y,gif:"image/gif",tiff:"image/tiff",svg:"image/svg+xml",webp:"image/webp"};function S(t){var e=function(t){var e=/\.([^./]*?)$/g.exec(t);return e?e[1]:""}(t).toLowerCase();return b[e]||""}function E(t){return-1!==t.search(/^(data:)/)}function x(t,e){return"data:".concat(e,";base64,").concat(t)}function C(t,r,i){return e(this,void 0,void 0,(function(){var e,o;return n(this,(function(n){switch(n.label){case 0:return[4,fetch(t,r)];case 1:if(404===(e=n.sent()).status)throw new Error('Resource "'.concat(e.url,'" not found'));return[4,e.blob()];case 2:return o=n.sent(),[2,new Promise((function(t,n){var r=new FileReader;r.onerror=n,r.onloadend=function(){try{t(i({res:e,result:r.result}))}catch(t){n(t)}},r.readAsDataURL(o)}))]}}))}))}var P={};function R(t,r,i){return e(this,void 0,void 0,(function(){var e,o,u,c,a;return n(this,(function(n){switch(n.label){case 0:if(e=function(t,e,n){var r=t.replace(/\?.*/,"");return n&&(r=t),/ttf|otf|eot|woff2?/i.test(r)&&(r=r.replace(/.*\//,"")),e?"[".concat(e,"]").concat(r):r}(t,r,i.includeQueryParams),null!=P[e])return[2,P[e]];i.cacheBust&&(t+=(/\?/.test(t)?"&":"?")+(new Date).getTime()),n.label=1;case 1:return n.trys.push([1,3,,4]),[4,C(t,i.fetchRequestInit,(function(t){var e=t.res,n=t.result;return r||(r=e.headers.get("Content-Type")||""),function(t){return t.split(/,/)[1]}(n)}))];case 2:return u=n.sent(),o=x(u,r),[3,4];case 3:return c=n.sent(),o=i.imagePlaceholder||"",a="Failed to fetch resource: ".concat(t),c&&(a="string"==typeof c?c:c.message),a&&console.warn(a),[3,4];case 4:return P[e]=o,[2,o]}}))}))}function T(t){return e(this,void 0,void 0,(function(){var e;return n(this,(function(n){return"data:,"===(e=t.toDataURL())?[2,t.cloneNode(!1)]:[2,h(e)]}))}))}function A(t,r){return e(this,void 0,void 0,(function(){var e,i,o,u;return n(this,(function(n){switch(n.label){case 0:return t.currentSrc?(e=document.createElement("canvas"),i=e.getContext("2d"),e.width=t.clientWidth,e.height=t.clientHeight,null==i||i.drawImage(t,0,0,e.width,e.height),[2,h(e.toDataURL())]):(o=t.poster,u=S(o),[4,R(o,u,r)]);case 1:return[2,h(n.sent())]}}))}))}function k(t,r){var i;return e(this,void 0,void 0,(function(){return n(this,(function(e){switch(e.label){case 0:return e.trys.push([0,3,,4]),(null===(i=null==t?void 0:t.contentDocument)||void 0===i?void 0:i.body)?[4,I(t.contentDocument.body,r,!0)]:[3,2];case 1:return[2,e.sent()];case 2:return[3,4];case 3:return e.sent(),[3,4];case 4:return[2,t.cloneNode(!1)]}}))}))}var L=function(t){return null!=t.tagName&&"SVG"===t.tagName.toUpperCase()};function N(t,e,n){return p(e,Element)&&(function(t,e,n){var r=e.style;if(r){var i=window.getComputedStyle(t);i.cssText?(r.cssText=i.cssText,r.transformOrigin=i.transformOrigin):c(n).forEach((function(n){var o=i.getPropertyValue(n);if("font-size"===n&&o.endsWith("px")){var u=Math.floor(parseFloat(o.substring(0,o.length-2)))-.1;o="".concat(u,"px")}p(t,HTMLIFrameElement)&&"display"===n&&"inline"===o&&(o="block"),"d"===n&&e.getAttribute("d")&&(o="path(".concat(e.getAttribute("d"),")")),r.setProperty(n,o,i.getPropertyPriority(n))}))}}(t,e,n),function(t,e,n){m(t,e,":before",n),m(t,e,":after",n)}(t,e,n),function(t,e){p(t,HTMLTextAreaElement)&&(e.innerHTML=t.value),p(t,HTMLInputElement)&&e.setAttribute("value",t.value)}(t,e),function(t,e){if(p(t,HTMLSelectElement)){var n=e,r=Array.from(n.children).find((function(e){return t.value===e.getAttribute("value")}));r&&r.setAttribute("selected","")}}(t,e)),e}function I(t,r,i){return e(this,void 0,void 0,(function(){return n(this,(function(u){return i||!r.filter||r.filter(t)?[2,Promise.resolve(t).then((function(t){return function(t,r){return e(this,void 0,void 0,(function(){return n(this,(function(e){return p(t,HTMLCanvasElement)?[2,T(t)]:p(t,HTMLVideoElement)?[2,A(t,r)]:p(t,HTMLIFrameElement)?[2,k(t,r)]:[2,t.cloneNode(L(t))]}))}))}(t,r)})).then((function(i){return function(t,r,i){var u,c;return e(this,void 0,void 0,(function(){var e;return n(this,(function(n){switch(n.label){case 0:return L(r)?[2,r]:(e=[],0===(e=null!=(a=t).tagName&&"SLOT"===a.tagName.toUpperCase()&&t.assignedNodes?o(t.assignedNodes()):p(t,HTMLIFrameElement)&&(null===(u=t.contentDocument)||void 0===u?void 0:u.body)?o(t.contentDocument.body.childNodes):o((null!==(c=t.shadowRoot)&&void 0!==c?c:t).childNodes)).length||p(t,HTMLVideoElement)?[2,r]:[4,e.reduce((function(t,e){return t.then((function(){return I(e,i)})).then((function(t){t&&r.appendChild(t)}))}),Promise.resolve())]);case 1:return n.sent(),[2,r]}var a}))}))}(t,i,r)})).then((function(e){return N(t,e,r)})).then((function(t){return function(t,r){return e(this,void 0,void 0,(function(){var e,i,o,u,c,a,s,l,f,h,d,v,p;return n(this,(function(n){switch(n.label){case 0:if(0===(e=t.querySelectorAll?t.querySelectorAll("use"):[]).length)return[2,t];i={},p=0,n.label=1;case 1:return p<e.length?(o=e[p],(u=o.getAttribute("xlink:href"))?(c=t.querySelector(u),a=document.querySelector(u),c||!a||i[u]?[3,3]:(s=i,l=u,[4,I(a,r,!0)])):[3,3]):[3,4];case 2:s[l]=n.sent(),n.label=3;case 3:return p++,[3,1];case 4:if((f=Object.values(i)).length){for(h="http://www.w3.org/1999/xhtml",(d=document.createElementNS(h,"svg")).setAttribute("xmlns",h),d.style.position="absolute",d.style.width="0",d.style.height="0",d.style.overflow="hidden",d.style.display="none",v=document.createElementNS(h,"defs"),d.appendChild(v),p=0;p<f.length;p++)v.appendChild(f[p]);t.appendChild(d)}return[2,t]}}))}))}(t,r)}))]:[2,null]}))}))}var D=/url\((['"]?)([^'"]+?)\1\)/g,H=/url\([^)]+\)\s*format\((["']?)([^"']+)\1\)/g,M=/src:\s*(?:url\([^)]+\)\s*format\([^)]+\)[,;]\s*)+/g;function F(t,r,i,o,u){return e(this,void 0,void 0,(function(){var e,c,a,s;return n(this,(function(n){switch(n.label){case 0:return n.trys.push([0,5,,6]),e=i?function(t,e){if(t.match(/^[a-z]+:\/\//i))return t;if(t.match(/^\/\//))return window.location.protocol+t;if(t.match(/^[a-z]+:/i))return t;var n=document.implementation.createHTMLDocument(),r=n.createElement("base"),i=n.createElement("a");return n.head.appendChild(r),n.body.appendChild(i),e&&(r.href=e),i.href=t,i.href}(r,i):r,c=S(r),a=void 0,u?[4,u(e)]:[3,2];case 1:return s=n.sent(),a=x(s,c),[3,4];case 2:return[4,R(e,c,o)];case 3:a=n.sent(),n.label=4;case 4:return[2,t.replace((l=r,f=l.replace(/([.*+?^${}()|\[\]\/\\])/g,"\\$1"),new RegExp("(url\\(['\"]?)(".concat(f,")(['\"]?\\))"),"g")),"$1".concat(a,"$3"))];case 5:return n.sent(),[3,6];case 6:return[2,t]}var l,f}))}))}function V(t){return-1!==t.search(D)}function q(t,r,i){return e(this,void 0,void 0,(function(){var e,o;return n(this,(function(n){return V(t)?(e=function(t,e){var n=e.preferredFontFormat;return n?t.replace(M,(function(t){for(;;){var e=H.exec(t)||[],r=e[0],i=e[2];if(!i)return"";if(i===n)return"src: ".concat(r,";")}})):t}(t,i),o=function(t){var e=[];return t.replace(D,(function(t,n,r){return e.push(r),t})),e.filter((function(t){return!E(t)}))}(e),[2,o.reduce((function(t,e){return t.then((function(t){return F(t,e,r,i)}))}),Promise.resolve(e))]):[2,t]}))}))}function U(t,r,i){var o;return e(this,void 0,void 0,(function(){var e,u;return n(this,(function(n){switch(n.label){case 0:return(e=null===(o=r.style)||void 0===o?void 0:o.getPropertyValue(t))?[4,q(e,null,i)]:[3,2];case 1:return u=n.sent(),r.style.setProperty(t,u,r.style.getPropertyPriority(t)),[2,!0];case 2:return[2,!1]}}))}))}function j(t,r){return e(this,void 0,void 0,(function(){var e,i;return n(this,(function(n){switch(n.label){case 0:return[4,U("background",t,r)];case 1:return n.sent()?[3,3]:[4,U("background-image",t,r)];case 2:n.sent(),n.label=3;case 3:return[4,U("mask",t,r)];case 4:return(i=n.sent())?[3,6]:[4,U("-webkit-mask",t,r)];case 5:i=n.sent(),n.label=6;case 6:return(e=i)?[3,8]:[4,U("mask-image",t,r)];case 7:e=n.sent(),n.label=8;case 8:return e?[3,10]:[4,U("-webkit-mask-image",t,r)];case 9:n.sent(),n.label=10;case 10:return[2]}}))}))}function O(t,r){return e(this,void 0,void 0,(function(){var e,i,o;return n(this,(function(n){switch(n.label){case 0:return(e=p(t,HTMLImageElement))&&!E(t.src)||p(t,SVGImageElement)&&!E(t.href.baseVal)?[4,R(i=e?t.src:t.href.baseVal,S(i),r)]:[2];case 1:return o=n.sent(),[4,new Promise((function(n,i){t.onload=n,t.onerror=r.onImageErrorHandler?function(){for(var t=[],e=0;e<arguments.length;e++)t[e]=arguments[e];try{n(r.onImageErrorHandler.apply(r,t))}catch(t){i(t)}}:i;var u=t;u.decode&&(u.decode=n),"lazy"===u.loading&&(u.loading="eager"),e?(t.srcset="",t.src=o):t.href.baseVal=o}))];case 2:return n.sent(),[2]}}))}))}function B(t,r){return e(this,void 0,void 0,(function(){var e,i;return n(this,(function(n){switch(n.label){case 0:return e=o(t.childNodes),i=e.map((function(t){return z(t,r)})),[4,Promise.all(i).then((function(){return t}))];case 1:return n.sent(),[2]}}))}))}function z(t,r){return e(this,void 0,void 0,(function(){return n(this,(function(e){switch(e.label){case 0:return p(t,Element)?[4,j(t,r)]:[3,4];case 1:return e.sent(),[4,O(t,r)];case 2:return e.sent(),[4,B(t,r)];case 3:e.sent(),e.label=4;case 4:return[2]}}))}))}var W={};function $(t){return e(this,void 0,void 0,(function(){var e,r;return n(this,(function(n){switch(n.label){case 0:return null!=(e=W[t])?[2,e]:[4,fetch(t)];case 1:return[4,n.sent().text()];case 2:return r=n.sent(),e={url:t,cssText:r},W[t]=e,[2,e]}}))}))}function G(t,r){return e(this,void 0,void 0,(function(){var i,o,u,c,a=this;return n(this,(function(s){return i=t.cssText,o=/url\(["']?([^"')]+)["']?\)/g,u=i.match(/url\([^)]+\)/g)||[],c=u.map((function(u){return e(a,void 0,void 0,(function(){var e;return n(this,(function(n){return(e=u.replace(o,"$1")).startsWith("https://")||(e=new URL(e,t.url).href),[2,C(e,r.fetchRequestInit,(function(t){var e=t.result;return i=i.replace(u,"url(".concat(e,")")),[u,e]}))]}))}))})),[2,Promise.all(c).then((function(){return i}))]}))}))}function _(t){if(null==t)return[];for(var e=[],n=t.replace(/(\/\*[\s\S]*?\*\/)/gi,""),r=new RegExp("((@.*?keyframes [\\s\\S]*?){([\\s\\S]*?}\\s*?)})","gi");;){if(null===(u=r.exec(n)))break;e.push(u[0])}n=n.replace(r,"");for(var i=/@import[\s\S]*?url\([^)]*\)[\s\S]*?;/gi,o=new RegExp("((\\s*?(?:\\/\\*[\\s\\S]*?\\*\\/)?\\s*?@media[\\s\\S]*?){([\\s\\S]*?)}\\s*?})|(([\\s\\S]*?){([\\s\\S]*?)})","gi");;){var u;if(null===(u=i.exec(n))){if(null===(u=o.exec(n)))break;i.lastIndex=o.lastIndex}else o.lastIndex=i.lastIndex;e.push(u[0])}return e}function J(t,r){return e(this,void 0,void 0,(function(){var e,i;return n(this,(function(n){return e=[],i=[],t.forEach((function(e){if("cssRules"in e)try{o(e.cssRules||[]).forEach((function(t,n){if(t.type===CSSRule.IMPORT_RULE){var o=n+1,u=$(t.href).then((function(t){return G(t,r)})).then((function(t){return _(t).forEach((function(t){try{e.insertRule(t,t.startsWith("@import")?o+=1:e.cssRules.length)}catch(e){console.error("Error inserting rule from remote css",{rule:t,error:e})}}))})).catch((function(t){console.error("Error loading remote css",t.toString())}));i.push(u)}}))}catch(o){var n=t.find((function(t){return null==t.href}))||document.styleSheets[0];null!=e.href&&i.push($(e.href).then((function(t){return G(t,r)})).then((function(t){return _(t).forEach((function(t){n.insertRule(t,n.cssRules.length)}))})).catch((function(t){console.error("Error loading remote stylesheet",t)}))),console.error("Error inlining remote css file",o)}})),[2,Promise.all(i).then((function(){return t.forEach((function(t){if("cssRules"in t)try{o(t.cssRules||[]).forEach((function(t){e.push(t)}))}catch(e){console.error("Error while reading CSS rules from ".concat(t.href),e)}})),e}))]}))}))}function Q(t){return t.filter((function(t){return t.type===CSSRule.FONT_FACE_RULE})).filter((function(t){return V(t.style.getPropertyValue("src"))}))}function X(t,r){return e(this,void 0,void 0,(function(){return n(this,(function(e){switch(e.label){case 0:if(null==t.ownerDocument)throw new Error("Provided element is not within a Document");return[4,J(o(t.ownerDocument.styleSheets),r)];case 1:return[2,Q(e.sent())]}}))}))}function K(t){return t.trim().replace(/["']/g,"")}function Y(t,r){return e(this,void 0,void 0,(function(){var e,i;return n(this,(function(n){switch(n.label){case 0:return[4,X(t,r)];case 1:return e=n.sent(),i=function(t){var e=new Set;return function t(n){(n.style.fontFamily||getComputedStyle(n).fontFamily).split(",").forEach((function(t){e.add(K(t))})),Array.from(n.children).forEach((function(e){e instanceof HTMLElement&&t(e)}))}(t),e}(t),[4,Promise.all(e.filter((function(t){return i.has(K(t.style.fontFamily))})).map((function(t){var e=t.parentStyleSheet?t.parentStyleSheet.href:null;return q(t.cssText,e,r)})))];case 2:return[2,n.sent().join("\n")]}}))}))}function Z(t,r){return e(this,void 0,void 0,(function(){var e,i,o,u,c;return n(this,(function(n){switch(n.label){case 0:return null==r.fontEmbedCSS?[3,1]:(i=r.fontEmbedCSS,[3,5]);case 1:return r.skipFonts?(o=null,[3,4]):[3,2];case 2:return[4,Y(t,r)];case 3:o=n.sent(),n.label=4;case 4:i=o,n.label=5;case 5:return(e=i)&&(u=document.createElement("style"),c=document.createTextNode(e),u.appendChild(c),t.firstChild?t.insertBefore(u,t.firstChild):t.appendChild(u)),[2]}}))}))}function tt(t,r){return void 0===r&&(r={}),e(this,void 0,void 0,(function(){var e,i,o,u;return n(this,(function(n){switch(n.label){case 0:return e=s(t,r),i=e.width,o=e.height,[4,I(t,r,!0)];case 1:return[4,Z(u=n.sent(),r)];case 2:return n.sent(),[4,z(u,r)];case 3:return n.sent(),function(t,e){var n=t.style;e.backgroundColor&&(n.backgroundColor=e.backgroundColor),e.width&&(n.width="".concat(e.width,"px")),e.height&&(n.height="".concat(e.height,"px"));var r=e.style;null!=r&&Object.keys(r).forEach((function(t){n[t]=r[t]}))}(u,r),[4,v(u,i,o)];case 4:return[2,n.sent()]}}))}))}function et(t,r){return void 0===r&&(r={}),e(this,void 0,void 0,(function(){var e,i,o,u,c,a,f,d,v;return n(this,(function(n){switch(n.label){case 0:return e=s(t,r),i=e.width,o=e.height,[4,tt(t,r)];case 1:return[4,h(n.sent())];case 2:return u=n.sent(),c=document.createElement("canvas"),a=c.getContext("2d"),f=r.pixelRatio||function(){var t,e;try{e=process}catch(t){}var n=e&&e.env?e.env.devicePixelRatio:null;return n&&(t=parseInt(n,10),Number.isNaN(t)&&(t=1)),t||window.devicePixelRatio||1}(),d=r.canvasWidth||i,v=r.canvasHeight||o,c.width=d*f,c.height=v*f,r.skipAutoScale||function(t){(t.width>l||t.height>l)&&(t.width>l&&t.height>l?t.width>t.height?(t.height*=l/t.width,t.width=l):(t.width*=l/t.height,t.height=l):t.width>l?(t.height*=l/t.width,t.width=l):(t.width*=l/t.height,t.height=l))}(c),c.style.width="".concat(d),c.style.height="".concat(v),r.backgroundColor&&(a.fillStyle=r.backgroundColor,a.fillRect(0,0,c.width,c.height)),a.drawImage(u,0,0,c.width,c.height),[2,c]}}))}))}t.getFontEmbedCSS=function(t,r){return void 0===r&&(r={}),e(this,void 0,void 0,(function(){return n(this,(function(e){return[2,Y(t,r)]}))}))},t.toBlob=function(t,r){return void 0===r&&(r={}),e(this,void 0,void 0,(function(){return n(this,(function(e){switch(e.label){case 0:return[4,et(t,r)];case 1:return[4,f(e.sent())];case 2:return[2,e.sent()]}}))}))},t.toCanvas=et,t.toJpeg=function(t,r){return void 0===r&&(r={}),e(this,void 0,void 0,(function(){return n(this,(function(e){switch(e.label){case 0:return[4,et(t,r)];case 1:return[2,e.sent().toDataURL("image/jpeg",r.quality||1)]}}))}))},t.toPixelData=function(t,r){return void 0===r&&(r={}),e(this,void 0,void 0,(function(){var e,i,o,u;return n(this,(function(n){switch(n.label){case 0:return e=s(t,r),i=e.width,o=e.height,[4,et(t,r)];case 1:return u=n.sent(),[2,u.getContext("2d").getImageData(0,0,i,o).data]}}))}))},t.toPng=function(t,r){return void 0===r&&(r={}),e(this,void 0,void 0,(function(){return n(this,(function(e){switch(e.label){case 0:return[4,et(t,r)];case 1:return[2,e.sent().toDataURL()]}}))}))},t.toSvg=tt}));
+//# sourceMappingURL=html-to-image.js.map
+
+</script>
+<div id="guide" onclick="if(event.target===this)this.style.display='none'"><div class="box" id="guideBox"></div></div>
+
+<script>
+/* ===================== CONFIG ===================== */
+const ORDER_TYPES = {
+  ZCFC:{sign: 1, desc:'C&F Invoice',            grp:'Billing'},
+  ZMFC:{sign: 1, desc:'Plant Invoice',          grp:'Billing'},
+  ZS1: {sign:-1, desc:'Cancel Invoice RSPL',    grp:'Cancellation'},
+  ZS2: {sign: 1, desc:'Cancel Cred. Memo RSPL', grp:'Cancellation'},
+  ZCRF:{sign:-1, desc:'C&F Returns',            grp:'Return'},
+  ZMRF:{sign:-1, desc:'Plant Returns',          grp:'Return'},
+  ZRFC:{sign:-1, desc:'Returns (Without Invoice Reference)', grp:'Return'}
+};
+const STYPE_COLOR = ['var(--s1)','var(--s2)','var(--s3)','var(--s4)'];
+const STYPE_NAME = {KH:'Kharif', RB:'Rabi', SU:'Summer', ZR:'Zaid'};
+const COLS = { // normalised header -> field
+  zone:'z', region:'r', territory:'t', customerno:'c', customername:'cn', seasoncode:'s',
+  invoiceplant:'pl', invoicetype:'ty', ordertype:'ty', invoiceno:'inv', invoicedate:'d', product:'crop',
+  actualitemid:'hyb', itemcode:'sku', lotno:'lot', qtyinkgs:'kg', basevalue:'base',
+  discountamount:'disc', netamount:'net',
+  productcategory:'foc', productcat:'foc', prodcategory:'foc', focus:'foc', focusnonfocus:'foc', focusnonfocusproduct:'foc', focuscategory:'foc', focusproduct:'foc', productfocus:'foc', category:'foc', focustype:'foc'
+};
+const REQUIRED = ['c','ty','d','net','kg'];
+
+/* ===================== STATE ===================== */
+let ROWS = [];            // cleaned rows
+let KEYS = new Set();     // dedupe across files
+let CUST = new Map();     // custNo -> {name,z,r,t}
+let FILES = [], IGNORED = {};
+let HAS_FOC = false;      // data file has a Focus / Non Focus column
+let HYB_INFO = new Map(); // hybrid -> {crop, foc}
+const ST = {zone:'',region:'',terr:'',crop:'',hyb:'',foc:'',hsGrade:'',hsTerr:'',stype:'',focus:'',metric:'val',tab:'ov',
+            cust:'', custStatus:'', custSearch:'', sortCu:{k:'cur',d:-1}};
+
+/* ===================== DEVICE MODE ===================== */
+// auto: phone ≤ 600px wide (Pixel 10 Pro = 412px); touch screens up to 1400px = iPad; otherwise PC
+function autoMode(){ const w=Math.min(screen.width,screen.height), W=Math.max(screen.width,screen.height), touch=navigator.maxTouchPoints>0||'ontouchstart' in window;
+  if(w<=600) return 'phone'; if(touch&&W<=1400) return 'tab'; return 'pc'; }
+let MODE='pc'; try{ MODE=localStorage.getItem('rasi360_mode')||autoMode(); }catch(e){ MODE=autoMode(); }
+function setMode(m,save){
+  MODE=m; if(save){ try{ localStorage.setItem('rasi360_mode',m); }catch(e){} }
+  document.body.classList.toggle('m-phone',m==='phone'); document.body.classList.toggle('m-tab',m==='tab');
+  document.body.classList.toggle('touch',m!=='pc');
+  document.querySelectorAll('#modeSw button').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));
+  if(typeof ROWS!=='undefined'&&ROWS.length){ fltSummary(); render(); }
+}
+function fltSummary(){
+  const b=document.getElementById('fltBtn'); if(!b) return;
+  const parts=[ST.path&&ST.path.length?ST.path.join(' › '):'All Divisions',ST.crop,ST.hyb,ST.foc,ST.focus,ST.metric==='val'?'₹':'MT'].filter(Boolean);
+  b.innerHTML=`<span>⚙ <b>Filters:</b> ${esc(parts.join(' · '))}</span><span>${document.getElementById('filters').classList.contains('open')?'▲':'▼'}</span>`;
+  b.style.display=(MODE==='phone'&&ROWS.length)?'':'none';
+}
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('#modeSw button'); if(b) setMode(b.dataset.mode,true); });
+
+/* ===================== HELPERS ===================== */
+// Fixed Division order: North1, North2, Central, South – any other division follows alphabetically
+const DIV_ORDER=['north1','north2','central','south'];
+function divRank(z){ const n=String(z||'').toLowerCase().replace(/division/g,'').replace(/[^a-z0-9]/g,''); const i=DIV_ORDER.indexOf(n); return i<0? 100 : i; }
+function divSort(a,b){ return divRank(a)-divRank(b) || String(a).localeCompare(String(b)); }
+const $ = id => document.getElementById(id);
+const norm = s => String(s??'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const num = v => { if(v==null||v==='') return 0; if(typeof v==='number') return v; const n=parseFloat(String(v).replace(/,/g,'')); return isNaN(n)?0:n; };
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const inr = (v,d=0) => v.toLocaleString('en-IN',{minimumFractionDigits:d,maximumFractionDigits:d});
+function parseDate(v){
+  if(v instanceof Date) return isNaN(v)?null:v;
+  if(typeof v==='number'){ // excel serial
+    const d=new Date(Math.round((v-25569)*864e5)); return isNaN(d)?null:new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+  }
+  const s=String(v||'').trim(); if(!s) return null;
+  let m=s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/); if(m) return new Date(+m[1],m[2]-1,+m[3]);
+  m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/); // Indian dd-mm-yyyy
+  if(m){let y=+m[3]; if(y<100) y+=2000; return new Date(y,m[2]-1,+m[1]);}
+  m=s.match(/^(\d{1,2})[-\s]([A-Za-z]{3})[A-Za-z]*[-\s](\d{2,4})/);
+  if(m){let y=+m[3]; if(y<100) y+=2000; const mi='janfebmaraprmayjunjulaugsepoctnovdec'.indexOf(m[2].toLowerCase())/3; if(mi>=0) return new Date(y,mi,+m[1]);}
+  const d=new Date(s); return isNaN(d)?null:d;
+}
+function normFoc(v){ const n=norm(v); if(!n) return ''; if(n.includes('non')) return 'Non Focus'; if(n.includes('focus')||n==='yes'||n==='y') return 'Focus'; if(n==='no'||n==='n') return 'Non Focus'; return String(v).trim(); }
+const fmtDate = t => { if(!t) return '–'; const d=new Date(t); return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}); };
+// measure formatting
+function mv(r){ return ST.metric==='val' ? r.net : r.kg; }
+function fmt(v){ // table cells: ₹ Lakh or MT
+  if(ST.metric==='val') return inr(v/1e5,2);
+  return inr(v/1000,2);
+}
+const unit = () => ST.metric==='val' ? '₹ Lakh' : 'MT';
+function big(v){ // tiles
+  if(ST.metric==='val'){ const a=Math.abs(v); return a>=1e7? '₹ '+inr(v/1e7,2)+' Cr' : '₹ '+inr(v/1e5,2)+' L'; }
+  return inr(v/1000,1)+' MT';
+}
+const bigVal = v => { const a=Math.abs(v); return a>=1e7? '₹ '+inr(v/1e7,2)+' Cr' : '₹ '+inr(v/1e5,2)+' L'; };
+function gr(cur,prev){ if(prev>0) return (cur-prev)/prev*100; return null; }
+function grTxt(cur,prev){
+  const g=gr(cur,prev);
+  if(g==null) return cur>0?'<span class="up">New</span>':'<span class="muted">–</span>';
+  return `<span class="${g>=0?'up':'dn'}">${g>=0?'▲':'▼'} ${inr(Math.abs(g),1)}%</span>`;
+}
+
+/* ===================== LOADING ===================== */
+$('file').addEventListener('change', e=>{ loadFiles([...e.target.files]); e.target.value=''; });
+document.addEventListener('dragover', e=>e.preventDefault());
+document.addEventListener('drop', e=>{ e.preventDefault(); if(e.dataTransfer.files.length) loadFiles([...e.dataTransfer.files]); });
+
+let xlsxReady=null;
+function needXLSX(){
+  if(window.XLSX) return Promise.resolve();
+  if(xlsxReady) return xlsxReady;
+  xlsxReady=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.onload=res; s.onerror=()=>{xlsxReady=null;rej(new Error('Could not load the Excel reader (needs internet once). Save the file as CSV and load that instead.'));};
+    document.head.appendChild(s);
+  });
+  return xlsxReady;
+}
+function parseCSV(text){
+  const rows=[]; let row=[], f='', q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(q){ if(ch==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=ch; }
+    else if(ch==='"') q=true;
+    else if(ch===','){ row.push(f); f=''; }
+    else if(ch==='\n'||ch==='\r'){ if(ch==='\r'&&text[i+1]==='\n') i++; row.push(f); rows.push(row); row=[]; f=''; }
+    else f+=ch;
+  }
+  if(f!==''||row.length){row.push(f); rows.push(row);}
+  return rows;
+}
+async function readFile(file){ // Excel only (CSV is streamed)
+  await needXLSX();
+  const wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});
+  return wb.SheetNames.map(n=>XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:''}));
+}
+const tick=()=>new Promise(r=>setTimeout(r,0));
+/* Streams a file row by row without freezing the page.
+   onHeader(cells) -> true when the header row is found; onRow(cells) for each data row; prog(bytesDone) for progress. */
+async function streamRows(file,onHeader,onRow,prog){
+  let header=false, scanned=0, last=performance.now();
+  const handle=cells=>{ if(!header){ if(++scanned>30) return; if(onHeader(cells)) header=true; return; } onRow(cells); };
+  if(!/\.csv$/i.test(file.name)){            // Excel: read whole workbook, then process in batches
+    prog(0,'Opening Excel workbook (large Excel files are slow – CSV is faster)…');
+    const sheets=await readFile(file); const total=sheets.reduce((s,g)=>s+g.length,0)||1; let done=0;
+    for(const grid of sheets){ header=false; scanned=0;
+      for(let i=0;i<grid.length;i++){ handle(grid[i]); done++;
+        if(performance.now()-last>80){ prog(file.size*done/total); await tick(); last=performance.now(); } } }
+    return header;
+  }
+  const reader=file.stream().getReader(), dec=new TextDecoder('utf-8');
+  let row=[], f='', q=false, cr=false, read=0, first=true;
+  const end=()=>{ row.push(f); f=''; handle(row); row=[]; };
+  for(;;){
+    const {done,value}=await reader.read();
+    let t=done?dec.decode():dec.decode(value,{stream:true});
+    if(value) read+=value.length;
+    if(first&&t){ if(t.charCodeAt(0)===0xFEFF) t=t.slice(1); first=false; }
+    for(let i=0;i<t.length;i++){
+      const ch=t[i];
+      if(q){ if(ch==='"'){ if(t[i+1]==='"'){f+='"';i++;} else q=false; } else f+=ch; continue; }
+      if(ch==='\r'){ end(); cr=true; continue; }
+      if(ch==='\n'){ if(cr){cr=false; continue;} end(); continue; }
+      cr=false;
+      if(ch==='"') q=true; else if(ch===',') { row.push(f); f=''; } else f+=ch;
+    }
+    if(performance.now()-last>80||done){ prog(read); await tick(); last=performance.now(); }
+    if(done) break;
+  }
+  if(f!==''||row.length) end();
+  return header;
+}
+
+/* ---------- STATUS BAR ---------- */
+const STS={files:[],t0:0};
+const mb=b=>(b/1048576).toFixed(b<1048576*10?1:0)+' MB';
+const secs=ms=>{ const s=Math.round(ms/1000); return s<60? s+' s' : Math.floor(s/60)+' min '+(s%60)+' s'; };
+function stStart(files,kind){
+  STS.files=files.map(f=>({name:f.name,size:f.size,done:0,state:'Waiting',info:''})); STS.t0=performance.now(); STS.kind=kind;
+  const el=$('status'); el.style.display='block'; el.classList.remove('done','err'); $('stClose').style.display='none';
+  $('stIcon').innerHTML='<span class="spin"></span>'; $('loadBtn').disabled=true; stDraw();
+}
+function stDraw(msg){
+  const tot=STS.files.reduce((s,f)=>s+f.size,0)||1, done=STS.files.reduce((s,f)=>s+f.done,0), pct=Math.min(100,done/tot*100);
+  const cur=STS.files.find(f=>f.state==='Reading'), idx=cur?STS.files.indexOf(cur)+1:STS.files.length;
+  const el=performance.now()-STS.t0, rate=done/Math.max(el,1), eta=rate>0?(tot-done)/rate:0;
+  $('stBar').style.width=pct.toFixed(1)+'%'; $('stPct').textContent=pct.toFixed(0)+'%';
+  if(!$('status').classList.contains('done')&&!$('status').classList.contains('err')){
+    $('loadinfo').innerHTML=`<span class="spin" style="border-color:rgba(255,255,255,.35);border-top-color:#fff"></span> Loading ${STS.kind} file ${idx} of ${STS.files.length} · <b style="font-size:15px">${pct.toFixed(0)}%</b>`;
+    document.title=`${pct.toFixed(0)}% · Loading – Rasi FC BU 360`; }
+  if(cur){
+    $('stTitle').textContent=`Loading ${STS.kind} file ${idx} of ${STS.files.length}: ${cur.name}`;
+    $('stDetail').textContent=msg || `${mb(done)} of ${mb(tot)} · ${ROWS.length.toLocaleString('en-IN')} rows so far · ${secs(el)} elapsed${pct>3?' · about '+secs(eta)+' left':''}`;
+  }
+  $('stFiles').innerHTML=(STS.seasonInfo&&!STS.files.some(f=>f.state==='Reading')?`<div style="font-size:12px;color:var(--text2);margin:4px 0 6px">${esc(STS.seasonInfo)}</div>`:'')+`<table><tr><th class="l">File</th><th>Size</th><th class="l">Status</th><th class="l">Result</th></tr>${STS.files.map(f=>`<tr><td>${esc(f.name)}</td><td>${mb(f.size)}</td><td class="l">${f.state==='Reading'?'<span class="spin"></span> '+Math.round(f.done/(f.size||1)*100)+'%':f.state}</td><td class="l">${esc(f.info)}</td></tr>`).join('')}</table>`;
+}
+function stEnd(summary,isErr){
+  document.title=document.title.replace(/^.*Loading – /,'');
+  const el=$('status'); el.classList.add(isErr?'err':'done'); $('stBar').style.width='100%'; $('stPct').textContent=isErr?'':'100%';
+  $('stIcon').textContent=isErr?'⚠️':'✅'; $('stTitle').textContent=summary;
+  $('stDetail').textContent=`${STS.files.length} file(s) in ${secs(performance.now()-STS.t0)}`+(Object.keys(IGNORED).length?` · ignored order types: ${Object.entries(IGNORED).map(([k,v])=>k+' ('+v.toLocaleString('en-IN')+')').join(', ')}`:'');
+  $('stClose').style.display=''; $('loadBtn').disabled=false;
+  if(!isErr && MODE!=='pc' && !missingSeasons().length) setTimeout(()=>{ if($('status').classList.contains('done')) $('status').style.display='none'; },4000); stDraw(); 
+}
+
+async function loadFiles(files){
+  if(!files.length) return;
+  stStart(files,'data');
+  let errors=0;
+  for(const [fi,f] of files.entries()){
+    const S=STS.files[fi]; S.state='Reading'; stDraw();
+    let added=0, dup=0, map=null; const fileKeys=new Set();
+    try{
+      const ok=await streamRows(f, cells=>{
+          const n=cells.map(norm); if(!(n.includes('invoicetype')||n.includes('ordertype'))) return false;
+          map={}; cells.forEach((h,ix)=>{ const k=COLS[norm(h)]; if(k&&map[k]==null) map[k]=ix; });
+          if(map.foc==null){ const ix=cells.findIndex(h=>/focus/.test(norm(h))); if(ix>=0) map.foc=ix; else if(/categ/.test(norm(cells[13]))) map.foc=13; }
+          const miss=REQUIRED.filter(k=>map[k]==null);
+          if(miss.length) throw new Error('missing column(s): '+miss.map(k=>({c:'Customer No',ty:'Invoice Type',d:'Invoice Date',net:'Net Amount',kg:'Qty In Kgs'}[k])).join(', '));
+          return true;
+        }, g=>{
+          if(g.length<2) return;
+          const get=k=>map[k]==null?'':g[map[k]];
+          const ty=String(get('ty')).trim().toUpperCase(); if(!ty) return;
+          const ot=ORDER_TYPES[ty];
+          if(!ot){ IGNORED[ty]=(IGNORED[ty]||0)+1; return; }
+          const d=parseDate(get('d')); if(!d) return;
+          const c=String(get('c')).trim(); if(!c) return;
+          const sg=ot.sign;
+          const r={ z:String(get('z')).trim()||'(blank)', r:String(get('r')).trim()||'(blank)', t:String(get('t')).trim()||'(blank)',
+            c, s:normSeason(get('s')), ty, inv:String(get('inv')).trim(), d:d.getTime(),
+            crop:String(get('crop')).trim()||'(blank)', hyb:String(get('hyb')).trim()||'(blank)', sku:String(get('sku')).trim(),
+            kg:sg*Math.abs(num(get('kg'))), net:sg*Math.abs(num(get('net'))), base:sg*Math.abs(num(get('base'))), disc:sg*Math.abs(num(get('disc'))),
+            foc: map.foc!=null ? (normFoc(get('foc'))||'(blank)') : '' };
+          if(map.foc!=null) HAS_FOC=true;
+          if(!HYB_INFO.has(r.hyb) || (r.foc && r.foc!=='(blank)')) HYB_INFO.set(r.hyb,{crop:r.crop,foc:r.foc});
+          const key=r.inv+'|'+r.sku+'|'+String(get('lot')).trim()+'|'+r.ty+'|'+r.kg+'|'+r.net;
+          if(KEYS.has(key)){dup++; return;}
+          fileKeys.add(key);
+          ROWS.push(r); added++;
+          const cn=String(get('cn')).trim();
+          const prev=CUST.get(c);
+          if(!prev || r.d>=prev.d) CUST.set(c,{name:cn||(prev&&prev.name)||c, z:r.z, r:r.r, t:r.t, d:r.d});
+        }, (b,msg)=>{ S.done=b; stDraw(msg); });
+      if(!ok) throw new Error('header row with "Invoice Type" not found');
+      S.state='✅ Done'; S.info=`${added.toLocaleString('en-IN')} rows added${dup?`, ${dup.toLocaleString('en-IN')} duplicates skipped`:''}`;
+    }catch(err){ errors++; S.state='⚠️ Error'; S.info=err.message||String(err); }
+    fileKeys.forEach(k=>KEYS.add(k)); S.done=S.size;
+    FILES.push(`${f.name}: ${S.info}`); stDraw();
+  }
+  $('stTitle').textContent='Building dashboard…'; $('stDetail').textContent=`${ROWS.length.toLocaleString('en-IN')} rows`; await tick();
+  afterLoad();
+  stEnd(errors? `Loaded with ${errors} problem file(s) – see Show files` : `Loaded ${ROWS.length.toLocaleString('en-IN')} rows · ${CUST.size.toLocaleString('en-IN')} customers`, errors>0);
+  if(errors) $('status').classList.add('open'), $('stToggle').textContent='Hide files';
+}
+function clearData(){ SEAS_RAW.clear(); ROWS=[];KEYS=new Set();CUST=new Map();FILES=[];IGNORED={}; location.reload(); }
+
+/* ===================== POG & LIQUIDATION ===================== */
+// POG = Billing − Returns (from the transaction file itself, in Kg)
+//   Billing = ZCFC + ZMFC, less invoice cancellations (ZS1)
+//   Returns = ZCRF + ZMRF + ZRFC, less credit-memo cancellations (ZS2)
+// Liquidation % = POG ÷ Billing
+const POG_HAS_CUST=true;
+const billKgNet = a => a? a.billKg + a.zs1Kg : 0;
+const pogKg = a => a? a.kg : 0;
+const liqPct = a => { const b=billKgNet(a); return b>0 ? pogKg(a)/b*100 : null; };
+
+/* ===================== GUIDE ===================== */
+const GUIDE={
+ growth:{n:'Growth %',f:'(Focus period − previous period of the same kind) ÷ previous period × 100, e.g. KH26 vs KH25.',ex:'₹40 L in KH25 → ₹46 L in KH26 = +15%.',w:'Review & League tables, tiles'},
+ share:{n:'Share',f:'Unit’s net sales ÷ net sales of the level above (the unit being reviewed).',ex:'MP-Indore ₹12 Cr of Central ₹40 Cr = 30%.',w:'Review & League tables'},
+ avgc:{n:'Avg per customer',f:'Net sales ÷ active customers.',ex:'',w:'Review & League tables'},
+ active:{n:'Active / New / Lost customers',f:'Active = bought (net) in the focus period. New = first purchase ever; “back” = bought earlier but not last period. Lost = bought last period but not now.',ex:'',w:'Tiles, tables'},
+ retn:{n:'Retention %',f:'Customers who bought in both the previous and the focus period ÷ customers active in the previous period.',ex:'80 of 100 KH25 dealers bought again in KH26 = 80%.',w:'Tiles, tables'},
+ ret:{n:'Return %',f:'(ZCRF + ZMRF + ZRFC) ÷ gross billing (ZCFC + ZMFC) × 100.',ex:'₹2 L returned on ₹50 L billed = 4%.',w:'Tiles, tables, crop & hybrid mix'},
+ liq:{n:'Liquidation %',f:'POG ÷ billing on quantity. POG = billing − returns (billing less ZS1, returns less ZS2).',ex:'9.2 MT POG of 10 MT billed = 92%.',w:'Tiles, tables'},
+ disc:{n:'Discount %',f:'Discount amount ÷ base value × 100.',ex:'',w:'Tiles, tables'},
+ real:{n:'Realisation ₹/kg',f:'Net value ÷ net quantity (kg). Shows price/mix quality.',ex:'₹45 L for 15 MT = ₹300/kg.',w:'Tiles, tables, hybrid mix'},
+ focus:{n:'Focus share %',f:'Sales of products marked “Focus” in column N “Product Category” ÷ total sales.',ex:'₹12 L of ₹40 L = 30%.',w:'Tiles, tables, Product Mix'},
+ breadth:{n:'Hybrid breadth',f:'Number of different hybrids a customer bought (net qty > 0). Units show the average across active customers; the tile also shows total hybrids sold.',ex:'',w:'Tiles, tables'},
+ conc:{n:'Top 20% share',f:'Share of the unit’s sales coming from its top 20% of customers. High = dependent on a few dealers.',ex:'',w:'Tables'},
+ health:{n:'Dealer health score',f:'Per customer: Growth (max 30) + Focus share (max 35) + Return % (max 15) + Hybrid breadth (max 20) = 100. Grade A ≥80, B ≥60, C ≥40, D below 40. Units show the average score and the A/B/C/D count of their active customers.',ex:'',w:'Tiles, tables'},
+ status:{n:'Customer status',f:'Growing / Declining = ±10% or more vs previous period · Stable · New · Reactivated · Lost.',ex:'',w:'Customer level of Review'},
+ tgrade:{n:'Territory / unit grade (A–D)',f:'Score out of 100 for each Territory (and Region / Division): Focus share (20) + Focus business growth (15) + Total growth (20) + Return % (15) + Customer retention (15) + Avg hybrid breadth (8) + Discount % (7). Focus business = 35% of the score. A ≥80 Healthy, B ≥60 Good, C ≥40 Watch, D below 40 At risk. Bands are shown and editable in the Grades tab.',ex:'Focus 52% (20) + Focus growth +18% (11) + Growth +12% (15) + Return 1.5% (15) + Retention 82% (15) + Breadth 3.4 (6) + Discount 1.8% (5) = 87 → A.',w:'Grades tab, Review & League tables, Review tiles'},
+ quad:{n:'Focus vs Growth map',f:'Each unit is a bubble placed by Focus share (left→right) and growth (bottom→top). Dashed lines = average. Top-right = Stars (focus-led growth); bottom-left = Needs attention.',ex:'',w:'Grades tab'},
+ lever:{n:'Biggest lever',f:'The criterion where a unit loses the most points – improving it adds the most to the grade.',ex:'Retention 58% scores 5 of 15 → lever: Customer retention (+10 pts).',w:'Grades tab scorecard and summary'},
+ tint:{n:'Green / red cells',f:'Compare each unit with the unit above it (e.g. each Region with its Division). Green = clearly better, red = clearly worse. Thresholds: growth ±5 pts, return ±0.5 pt, liquidation ±1 pt, discount ±0.5 pt, ₹/kg ±3%, focus ±3 pts, retention ±5 pts, breadth ±0.3, health ±5.',ex:'',w:'Review & League tables'}
+};
+const info = k => `<i class="info" data-tip="${esc('<b>'+GUIDE[k].n+'</b><br>'+GUIDE[k].f+(GUIDE[k].ex?'<br><i>e.g. '+GUIDE[k].ex+'</i>':''))}" onclick="event.stopPropagation();openGuide('${k}')">i</i>`;
+function openGuide(k){ hideTip();
+  $('guideBox').innerHTML=`<div style="display:flex;align-items:center"><h2>Guide – measures used in this dashboard</h2><span style="flex:1"></span><button class="btn" onclick="$('guide').style.display='none'">Close ✕</button></div>
+   <div class="note" style="margin-bottom:10px">Hover any <i class="info">i</i> icon in the dashboard for a quick explanation; click it to open this guide.</div>
+   <table><tr><th>Measure</th><th>How it is calculated</th><th>Where it is shown</th></tr>
+   ${Object.entries(GUIDE).map(([key,g])=>`<tr id="g-${key}" style="${key===k?'background:#fff7e0':''}"><td>${g.n}</td><td>${g.f}${g.ex?`<div class="ex">e.g. ${g.ex}</div>`:''}${g.why?`<div class="ex">Why it matters: ${g.why}</div>`:''}</td><td>${g.w}</td></tr>`).join('')}</table>`;
+  $('guide').style.display='flex';
+  if(k){ const el=document.getElementById('g-'+k); if(el) el.scrollIntoView({block:'center'}); }
+}
+
+/* ===================== DEALER HEALTH SCORE ===================== */
+// Score out of 100 = Growth + Focus share + Return % + Hybrid Breadth points. Editable in the Dealer Health tab.
+// Focus share (business from Focus products, column N "Product Category") carries the highest weight.
+const HC_DEFAULT = {
+  gCut:[20,10,0,-10],   gPts:[30,22,15,8,0], gNew:15,   // 1. growth % vs previous period        (max 30)
+  fCut:[50,35,20,10],   fPts:[35,26,18,9,0],            // 2. focus product share % of business  (max 35)
+  rCut:[2,5,10],        rPts:[15,10,5,0],               // 3. return % of gross billing           (max 15)
+  bCut:[5,3,2,1],       bPts:[20,14,7,3],               // 4. no. of hybrids bought               (max 20)
+  grade:[80,60,40]                                        // A ≥80, B ≥60, C ≥40, else D
+};
+const HC_KEY='rasi360_health_v2';
+let HC = JSON.parse(JSON.stringify(HC_DEFAULT));
+try{ const s=localStorage.getItem(HC_KEY); if(s) HC=Object.assign(HC,JSON.parse(s)); }catch(e){}
+function saveHC(){ try{ localStorage.setItem(HC_KEY,JSON.stringify(HC)); }catch(e){} }
+function health(curA, prevV){
+  const cv=val(curA); if(!(cv>0)) return null;
+  const g=gr(cv,prevV), rp=retPct(curA)||0, br=breadth(curA), fs=HAS_FOC?(focPct(curA)||0):null;
+  let gp; if(g==null) gp=HC.gNew; else { const i=HC.gCut.findIndex(c=>g>=c); gp=HC.gPts[i<0?HC.gCut.length:i]; }
+  let ri=HC.rCut.findIndex(c=>rp<=c); const rpP=HC.rPts[ri<0?HC.rCut.length:ri];
+  let bi=HC.bCut.findIndex(c=>br>=c); const bp=bi<0?0:HC.bPts[bi];
+  let fpP=0; if(fs!=null){ const fi=HC.fCut.findIndex(c=>fs>=c); fpP=HC.fPts[fi<0?HC.fCut.length:fi]; }
+  const raw=gp+fpP+rpP+bp, s=Math.round(raw/maxScore()*100), gi=HC.grade.findIndex(c=>s>=c), grade=gi<0?'D':'ABC'[gi];
+  return {s,raw,g,rp,br,fs,gp,fpP,rpP,bp,grade};
+}
+const maxScore = () => Math.max(HC.gNew,...HC.gPts)+(HAS_FOC?Math.max(...HC.fPts):0)+Math.max(...HC.rPts)+Math.max(...HC.bPts);
+function gBands(){ const c=HC.gCut, out=[]; c.forEach((x,i)=>out.push({l: i===0?`≥ ${x}%`:`${x}% to < ${c[i-1]}%`, p:HC.gPts[i]})); out.push({l:`< ${c[c.length-1]}%`,p:HC.gPts[c.length]}); out.push({l:'New / no purchase in previous period',p:HC.gNew}); return out; }
+function rBands(){ const c=HC.rCut, out=[]; c.forEach((x,i)=>out.push({l: i===0?`≤ ${x}%`:`> ${c[i-1]}% to ${x}%`, p:HC.rPts[i]})); out.push({l:`> ${c[c.length-1]}%`,p:HC.rPts[c.length]}); return out; }
+function bBands(){ const c=HC.bCut; return c.map((x,i)=>({l: i===0?`≥ ${x} hybrids`:(c[i-1]-1===x?`${x} hybrid${x>1?'s':''}`:`${x} – ${c[i-1]-1} hybrids`), p:HC.bPts[i]})); }
+function fBands(){ const c=HC.fCut, out=[]; c.forEach((x,i)=>out.push({l: i===0?`≥ ${x}%`:`${x}% to < ${c[i-1]}%`, p:HC.fPts[i]})); out.push({l:`< ${c[c.length-1]}%`,p:HC.fPts[c.length]}); return out; }
+function bandOf(h){ // which band label applied
+  const gi = h.g==null ? HC.gCut.length+1 : (i=>i<0?HC.gCut.length:i)(HC.gCut.findIndex(c=>h.g>=c));
+  const ri = (i=>i<0?HC.rCut.length:i)(HC.rCut.findIndex(c=>h.rp<=c));
+  const bi = HC.bCut.findIndex(c=>h.br>=c);
+  const fi = h.fs==null?-1:(i=>i<0?HC.fCut.length:i)(HC.fCut.findIndex(c=>h.fs>=c));
+  return {g:gBands()[gi].l, f: fi<0?'–':fBands()[fi].l, r:rBands()[ri].l, b: bi<0?'below minimum':bBands()[bi].l};
+}
+const gradeChip = h => h? `<span class="chip g-${h.grade}" title="Growth ${h.gp} + Focus ${h.fpP} + Return ${h.rpP} + Breadth ${h.bp} = ${h.raw}${h.raw!==h.s?' → '+h.s+' / 100':''}">${h.grade} · ${h.s}</span>` : '<span class="muted">–</span>';
+
+/* ===================== PERIODS ===================== */
+let SEASONS=[]; // [{code,type,min}]
+// Season codes are cleaned so that RB24, RB-24, RB 24, RB2024, Rabi 24, RABI-2024 all become RB24
+const SEAS_RAW=new Map(); // original spelling -> cleaned code (shown in the status panel)
+function normSeason(v){
+  const raw=String(v??'').trim(); if(!raw) return '';
+  const u=raw.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  const m=u.match(/^([A-Z]+)(\d+)$/) || u.match(/^(\d+)([A-Z]+)$/)&&[null,u.match(/^(\d+)([A-Z]+)$/)[2],u.match(/^(\d+)([A-Z]+)$/)[1]];
+  if(!m) { SEAS_RAW.set(raw,u); return u; }
+  let L=m[1], D=m[2];
+  if(/^KHA/.test(L)) L='KH'; else if(/^RAB/.test(L)) L='RB'; else if(/^(SUM|SMR)/.test(L)) L='SU'; else if(/^ZAI/.test(L)) L='ZR';
+  let yy;
+  if(D.length===4) yy = D.startsWith('20') ? D.slice(2) : D.slice(0,2);   // 2024 -> 24 ; 2425 -> 24
+  else if(D.length===2) yy=D; else if(D.length===1) yy='0'+D; else yy = D.startsWith('20') ? D.slice(2,4) : D.slice(0,2);  // 202425 -> 24
+  const code=L+yy; if(raw!==code) SEAS_RAW.set(raw,code); return code;
+}
+function seasonType(code){ const m=String(code).match(/^[A-Z]+/); return m?m[0]:''; }
+function fyOf(t){ const d=new Date(t); const y=d.getMonth()>=3?d.getFullYear():d.getFullYear()-1; return 'FY'+String(y).slice(2)+'-'+String(y+1).slice(2); }
+function buildSeasons(){
+  const m=new Map();
+  for(const r of ROWS){ if(!r.s) continue; const o=m.get(r.s); if(!o) m.set(r.s,{code:r.s,type:seasonType(r.s),min:r.d,n:1}); else {o.n++; if(r.d<o.min) o.min=r.d;} }
+  // order seasons by the date most of their billing starts: use 10th percentile-ish -> simple: min date of positive billing
+  SEASONS=[...m.values()].sort((a,b)=>a.min-b.min||a.code.localeCompare(b.code));
+  const yr=c=>+(String(c).match(/\d+/)||[0])[0];
+  // tie-break by season year number if starts are messy
+  SEASONS.sort((a,b)=>yr(a.code)-yr(b.code)||a.min-b.min);
+}
+function periodKey(r){ return ST.stype==='FY' ? fyOf(r.d) : (seasonType(r.s)===ST.stype ? r.s : null); }
+function periodList(){
+  if(ST.stype==='FY'){ return [...new Set(ROWS.map(r=>fyOf(r.d)))].sort(); }
+  const have=SEASONS.filter(s=>s.type===ST.stype); if(!have.length) return [];
+  const ys=have.map(s=>+s.code.slice(ST.stype.length)).filter(n=>!isNaN(n)); const lo=Math.min(...ys), hi=Math.max(...ys);
+  const out=[]; for(let y=lo;y<=hi;y++) out.push(ST.stype+String(y).padStart(2,'0'));   // every year, even if missing in the data
+  return out;
+}
+// seasons with no rows at all, inside the range of the loaded data
+function missingSeasons(){
+  const have=new Set(SEASONS.map(s=>s.code)), out=[];
+  for(const t of new Set(SEASONS.map(s=>s.type))){ const ys=SEASONS.filter(s=>s.type===t).map(s=>+s.code.slice(t.length)).filter(n=>!isNaN(n));
+    for(let y=Math.min(...ys);y<=Math.max(...ys);y++){ const c=t+String(y).padStart(2,'0'); if(!have.has(c)) out.push(c); } }
+  return out;
+}
+const isMissing = p => ST.stype!=='FY' && !SEASONS.some(s=>s.code===p);
+const perTh = p => isMissing(p) ? `<span title="No ${p} rows in the loaded files" style="color:var(--bad)">${p} ⚠</span>` : p;
+
+/* ===================== FILTER UI ===================== */
+function afterLoad(){
+  if(!ROWS.length){ $('loadinfo').textContent='No usable rows found'; return; }
+  buildSeasons();
+  const types=[...new Set(SEASONS.map(s=>s.type))];
+  let latest=ROWS[0]; for(const r of ROWS) if(r.d>latest.d) latest=r;
+  $('fStype').innerHTML=types.map(t=>`<option value="${t}">${STYPE_NAME[t]||t} seasons (${t})</option>`).join('')+'<option value="FY">Financial year (Apr–Mar)</option>';
+  ST.stype=ST.stype||seasonType(latest.s)||'FY'; $('fStype').value=ST.stype;
+  $('filters').style.display='flex'; $('tabs').style.display='flex'; $('clearBtn').style.display='';
+  afterLoadInfo(); seasonCheck(); fillFilters(); render();
+}
+function seasonCheck(){
+  const cnt=new Map(); for(const r of ROWS) if(r.s) cnt.set(r.s,(cnt.get(r.s)||0)+1);
+  const found=SEASONS.map(x=>`${x.code} (${(cnt.get(x.code)||0).toLocaleString('en-IN')})`).join(' · ');
+  const miss=missingSeasons(), fixed=[...SEAS_RAW.entries()].filter(([a,b])=>a.toUpperCase()!==b);
+  const el=$('seasonWarn');
+  if(!miss.length){ el.style.display='none'; }
+  else { el.style.display='block';
+    el.innerHTML=`<button class="x" onclick="this.parentElement.style.display='none'" title="Hide">✕</button>⚠ <b>No rows found for ${miss.join(', ')}</b> in the loaded file(s), so ${miss.length>1?'these columns show':'this column shows'} “–”. Check that the file covering ${miss.length>1?'these seasons':'this season'} was selected and that its Season Code column is filled in.
+      <div style="margin-top:4px;color:var(--text2)">Seasons found (rows): ${found}</div>`; }
+  // also list in the status panel
+  STS.seasonInfo=`Seasons found (rows): ${found}`+(fixed.length?` · Season codes cleaned: ${fixed.slice(0,8).map(([a,b])=>`“${a}” → ${b}`).join(', ')}${fixed.length>8?'…':''}`:'')+(miss.length?` · Missing: ${miss.join(', ')}`:'');
+}
+function afterLoadInfo(){
+  let dmin=Infinity, dmax=-Infinity; for(const r of ROWS){ if(r.d<dmin) dmin=r.d; if(r.d>dmax) dmax=r.d; }
+  $('loadinfo').innerHTML=`${ROWS.length.toLocaleString('en-IN')} rows · ${CUST.size.toLocaleString('en-IN')} customers · ${fmtDate(dmin)} – ${fmtDate(dmax)}`;
+  $('loadinfo').title=FILES.join('\n')+(Object.keys(IGNORED).length?'\nIgnored order types: '+Object.entries(IGNORED).map(([k,v])=>k+' ('+v+')').join(', '):'');
+}
+function opts(el,vals,cur,all){ el.innerHTML=`<option value="">${all}</option>`+vals.map(v=>`<option${v===cur?' selected':''}>${esc(v)}</option>`).join(''); if(!vals.includes(cur)) el.value=''; return el.value; }
+function fillFilters(){
+  const uniq=(arr)=>[...new Set(arr)].sort();
+  if(typeof syncPath==='function'&&ST.path) syncPath();
+  ST.zone=opts($('fZone'),[...new Set(ROWS.map(r=>r.z))].sort(divSort),ST.zone,'All Divisions');
+  let R=ROWS.filter(r=>!ST.zone||r.z===ST.zone);
+  ST.region=opts($('fRegion'),uniq(R.map(r=>r.r)),ST.region,ST.zone?'All regions of '+ST.zone:'All regions');
+  R=R.filter(r=>!ST.region||r.r===ST.region);
+  ST.terr=opts($('fTerr'),uniq(R.map(r=>r.t)),ST.terr,'All territories');
+  ST.crop=opts($('fCrop'),uniq(ROWS.map(r=>r.crop)),ST.crop,'All crops');
+  ST.hyb=opts($('fHyb'),uniq(ROWS.filter(r=>(!ST.crop||r.crop===ST.crop)&&(!ST.foc||r.foc===ST.foc)).map(r=>r.hyb)),ST.hyb,'All hybrids');
+  $('fFoc').parentElement.style.display=HAS_FOC?'':'none';
+  ST.foc=HAS_FOC?opts($('fFoc'),uniq(ROWS.map(r=>r.foc).filter(Boolean)),ST.foc,'Focus + Non Focus'):'';
+  const P=periodList();
+  if(!P.includes(ST.focus)){ const ok=P.filter(p=>!isMissing(p)); ST.focus=ok[ok.length-1]||P[P.length-1]||''; }
+  $('fFocus').innerHTML=P.map(p=>`<option value="${p}"${p===ST.focus?' selected':''}>${p}${isMissing(p)?' (no data)':''}</option>`).join('');
+}
+$('fZone').addEventListener('change',e=>{ setGeo(e.target.value?[e.target.value]:[]); });
+$('fRegion').addEventListener('change',e=>{ const r=e.target.value; if(!r){ setGeo(ST.path.slice(0,1)); return; }
+  const z=ST.path[0]||(ROWS.find(x=>x.r===r)||{}).z; setGeo([z,r]); });
+function setGeo(path){ ST.path=path; ST.sortRv={k:'org',d:1}; ST.grGrade=''; fillFilters(); render(); }
+['fTerr','fCrop','fHyb','fFoc','fStype','fFocus'].forEach(id=>$(id).addEventListener('change',e=>{
+  const k={fZone:'zone',fRegion:'region',fTerr:'terr',fCrop:'crop',fHyb:'hyb',fFoc:'foc',fStype:'stype',fFocus:'focus'}[id];
+  ST[k]=e.target.value;
+  if(id==='fZone'){ST.region='';ST.terr='';} if(id==='fRegion') ST.terr=''; if(id==='fCrop'||id==='fFoc') ST.hyb='';
+  if(id==='fStype') ST.focus='';
+  if(['fZone','fRegion','fTerr'].includes(id)) ST.hsTerr='';
+  fillFilters(); render();
+}));
+$('fMetric').addEventListener('click',e=>{ const m=e.target.dataset.m; if(!m) return; ST.metric=m; [...$('fMetric').children].forEach(b=>b.classList.toggle('on',b.dataset.m===m)); render(); });
+$('tabs').addEventListener('click',e=>{ const t=e.target.dataset.t; if(!t) return; ST.tab=t; [...$('tabs').children].forEach(b=>b.classList.toggle('on',b.dataset.t===t)); render(); });
+
+function filtered(){
+  return ROWS.filter(r=>(!ST.zone||r.z===ST.zone)&&(!ST.region||r.r===ST.region)&&(!ST.terr||r.t===ST.terr)&&(!ST.crop||r.crop===ST.crop)&&(!ST.hyb||r.hyb===ST.hyb)&&(!ST.foc||r.foc===ST.foc));
+}
+// periods to show as columns: up to 4 ending at focus
+function shownPeriods(){ const P=periodList(); const i=P.indexOf(ST.focus); return P.slice(Math.max(0,i-3),i+1); }
+function prevPeriod(){ const P=periodList(); const i=P.indexOf(ST.focus); return i>0?P[i-1]:null; }
+
+/* ===================== AGGREGATION ===================== */
+function blank(){ return {zs1Kg:0,net:0,kg:0,bill:0,billKg:0,ret:0,retKg:0,canc:0,disc:0,base:0,foc:0,inv:new Set(),cust:new Map(),hk:new Map()}; }
+function add(a,r){
+  a.net+=r.net; a.kg+=r.kg; a.disc+=r.disc; a.base+=r.base;
+  const g=ORDER_TYPES[r.ty].grp;
+  if(g==='Billing'){a.bill+=r.net;a.billKg+=r.kg;} else if(g==='Return'){a.ret+=r.net;a.retKg+=r.kg;} else a.canc+=r.net;
+  a.inv.add(r.inv); a.cust.set(r.c,(a.cust.get(r.c)||0)+mv(r));
+  a.hk.set(r.hyb,(a.hk.get(r.hyb)||0)+r.kg);
+  if(r.foc==='Focus') a.foc+=mv(r);
+  if(r.ty==='ZS1') a.zs1Kg+=r.kg;
+}
+// Hybrid breadth = no. of different hybrids with net quantity > 0
+const breadth = a => a? [...a.hk.values()].filter(v=>v>0).length : 0;
+const focPct = a => { const v=val(a); return a&&HAS_FOC&&v>0 ? a.foc/v*100 : null; };
+const pctTxt = (v,d=1) => v==null?'<span class="muted">–</span>':inr(v,d)+'%';
+const val = a => a? (ST.metric==='val'?a.net:a.kg) : 0;
+const activeCust = a => a? [...a.cust.values()].filter(v=>v>0).length : 0;
+const retPct = a => { if(!a) return null; return ST.metric==='val' ? (a.bill>0? Math.max(0,-a.ret)/a.bill*100 : null) : (a.billKg>0? Math.max(0,-a.retKg)/a.billKg*100 : null); };
+function groupBy(rows,keyFn){ // -> Map key -> Map period -> agg
+  const M=new Map();
+  for(const r of rows){ const p=periodKey(r); if(p==null) continue; const k=keyFn(r); let m=M.get(k); if(!m){m=new Map();M.set(k,m);} let a=m.get(p); if(!a){a=blank();m.set(p,a);} add(a,r); }
+  return M;
+}
+
+/* ===================== CHARTS ===================== */
+const tip=$('tip');
+function showTip(e,html){ tip.innerHTML=html; tip.style.display='block'; const w=Math.min(280,innerWidth-16); tip.style.maxWidth=w+'px'; const x=Math.max(8,Math.min(e.clientX+14,innerWidth-w-8)); tip.style.left=x+'px'; const y=e.clientY+14; tip.style.top=(y+tip.offsetHeight>innerHeight-8? Math.max(8,e.clientY-tip.offsetHeight-10):y)+'px'; }
+function hideTip(){ tip.style.display='none'; }
+document.addEventListener('mousemove',e=>{ if(MODE!=='pc') return; const t=e.target.closest&&e.target.closest('[data-tip]'); if(t) showTip(e,t.dataset.tip); else hideTip(); });
+// touch: tap a bar / chip / ⓘ to show its tooltip, tap elsewhere to hide
+document.addEventListener('click',e=>{ if(MODE==='pc') return; const t=e.target.closest&&e.target.closest('[data-tip]');
+  if(t && !t.classList.contains('info')){ showTip(e,t.dataset.tip); } else if(!t) hideTip(); },true);
+// vertical bars: items [{label,value,color,tip}]
+function vbars(items,{h=220,fmtAxis=fmt}={}){
+  if(!items.length) return '<div class="muted">No data</div>';
+  const W=Math.max(420,items.length*58), pad={l:56,r:10,t:16,b:30}, iw=W-pad.l-pad.r, ih=h-pad.t-pad.b;
+  const dmax=Math.max(0,...items.map(i=>i.value)), dmin=Math.min(0,...items.map(i=>i.value));
+  const raw=((dmax-dmin)||1)/4, mag=Math.pow(10,Math.floor(Math.log10(raw))), step=[1,2,2.5,5,10].map(x=>x*mag).find(x=>x>=raw);
+  const max=Math.ceil(dmax/step)*step, min=Math.floor(dmin/step)*step;
+  const span=(max-min)||1, y=v=>pad.t+(max-v)/span*ih, bw=Math.min(34,iw/items.length*0.6);
+  let s=`<svg viewBox="0 0 ${W} ${h}" width="100%" style="max-height:${h+20}px">`;
+  for(let v=min;v<=max+step/2;v+=step){ const yy=y(v); s+=`<line x1="${pad.l}" x2="${W-pad.r}" y1="${yy}" y2="${yy}" stroke="#eceae4"/><text x="${pad.l-6}" y="${yy+4}" text-anchor="end" font-size="10.5" fill="#8a8984">${fmtAxis(v)}</text>`; }
+  items.forEach((it,i)=>{
+    const cx=pad.l+(i+0.5)*iw/items.length, y0=y(0), y1=y(it.value), top=Math.min(y0,y1), hh=Math.max(1,Math.abs(y1-y0));
+    const r=Math.min(4,hh/2);
+    // rounded data-end only
+    const path = it.value>=0
+      ? `M${cx-bw/2},${y0} V${top+r} Q${cx-bw/2},${top} ${cx-bw/2+r},${top} H${cx+bw/2-r} Q${cx+bw/2},${top} ${cx+bw/2},${top+r} V${y0} Z`
+      : `M${cx-bw/2},${y0} V${top+hh-r} Q${cx-bw/2},${top+hh} ${cx-bw/2+r},${top+hh} H${cx+bw/2-r} Q${cx+bw/2},${top+hh} ${cx+bw/2},${top+hh-r} V${y0} Z`;
+    s+=`<g data-tip="${esc(it.tip)}"><rect x="${cx-iw/items.length/2}" y="${pad.t}" width="${iw/items.length}" height="${ih}" fill="transparent"/><path d="${path}" fill="${it.color}"/></g>`;
+    s+=`<text x="${cx}" y="${h-pad.b+16}" text-anchor="middle" font-size="11" fill="#52514e">${esc(it.label)}</text>`;
+  });
+  s+=`<line x1="${pad.l}" x2="${W-pad.r}" y1="${y(0)}" y2="${y(0)}" stroke="#b9b7ae"/></svg>`;
+  return s;
+}
+// horizontal bars for rankings
+function hbars(items,{color='var(--s1)'}={}){
+  if(!items.length) return '<div class="muted">No data</div>';
+  const max=Math.max(...items.map(i=>Math.abs(i.value)))||1;
+  return '<div>'+items.map(it=>`<div data-tip="${esc(it.tip)}" style="display:grid;grid-template-columns:minmax(120px,38%) 1fr 70px;gap:8px;align-items:center;padding:3px 0;${it.click?'cursor:pointer':''}" ${it.click?`onclick="${it.click}"`:''}>
+     <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(it.label)}">${esc(it.label)}</div>
+     <div style="background:#f1f0eb;border-radius:3px;height:12px"><div style="width:${Math.max(1,Math.abs(it.value)/max*100)}%;height:12px;background:${it.color||color};border-radius:0 4px 4px 0"></div></div>
+     <div style="text-align:right">${fmt(it.value)}</div></div>`).join('')+'</div>';
+}
+
+/* ---------- SHARE AS PNG ---------- */
+const TAB_NAME={rv:'Review',cmp:'Division compare',lg:'League table',gr:'Grades',pm:'Product mix'};
+function toast(msg,ms){ const t=$('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(toast._t); if(ms!==0) toast._t=setTimeout(()=>t.style.display='none',ms||2600); }
+function snapTitle(h){ const c=h.cloneNode(true); c.querySelectorAll('.info,button').forEach(n=>n.remove()); return c.textContent.replace(/\s+/g,' ').trim(); }
+function addShotBtns(){
+  document.querySelectorAll('#main .card').forEach(c=>{
+    if(c.querySelector(':scope>.pngbtn')) return; const h=c.querySelector(':scope>h3'); if(!h) return;
+    const b=document.createElement('button'); b.className='pngbtn'; b.title='Share as PNG image, HTML page or CSV'; b.innerHTML='📤<span class="pc-only"> Share</span>';
+    b.onclick=e=>{ e.stopPropagation(); shareMenu(b,c,snapTitle(h),{csv:!!c.querySelector('table')}); }; c.prepend(b);
+  });
+}
+new MutationObserver(()=>{ clearTimeout(addShotBtns._t); addShotBtns._t=setTimeout(addShotBtns,50); }).observe(document.getElementById('main'),{childList:true,subtree:true});
+document.addEventListener('click',e=>{ const v=e.target.closest&&e.target.closest('#shotView'); if(v){ e.stopPropagation(); shareMenu(v,$('main'),TAB_NAME[ST.tab]||'View',{csv:false,rows:60}); } },true);
+/* small pop-up menu: PNG / HTML / CSV */
+function shareMenu(btn,el,title,o){
+  closeShareMenu(); o=o||{};
+  const m=document.createElement('div'); m.id='shareMenu';
+  m.innerHTML=`<div class="smh">Share “${esc(title.length>40?title.slice(0,40)+'…':title)}”</div>
+    <button data-k="png">📷 <b>PNG image</b><span>picture for WhatsApp / mail</span></button>
+    <button data-k="html">🌐 <b>HTML page</b><span>opens in any browser, full table</span></button>
+    ${o.csv?'<button data-k="csv">⬇ <b>CSV</b><span>open in Excel</span></button>':''}`;
+  document.body.appendChild(m);
+  const r=btn.getBoundingClientRect(), w=m.offsetWidth, hh=m.offsetHeight;
+  m.style.left=Math.max(8,Math.min(r.right-w,innerWidth-w-8))+'px';
+  m.style.top=(r.bottom+6+hh>innerHeight? Math.max(8,r.top-hh-6) : r.bottom+6)+'px';
+  m.addEventListener('click',ev=>{ const b=ev.target.closest('button'); if(!b) return; ev.stopPropagation(); closeShareMenu();
+    if(b.dataset.k==='png') sharePng(el,title,o.rows); else if(b.dataset.k==='html') shareHtml(el,title); else shareCsvDom(el,title); });
+  setTimeout(()=>document.addEventListener('click',closeShareMenu,{once:true}),0);
+}
+function closeShareMenu(){ const m=document.getElementById('shareMenu'); if(m) m.remove(); }
+function cssVar(v){ return getComputedStyle(document.body).getPropertyValue(v).trim()||'#888'; }
+function filtText(){ return [ST.path&&ST.path.length?ST.path.join(' › '):'All Divisions',ST.crop,ST.hyb,ST.foc,ST.stype==='FY'?'FY':(STYPE_NAME[ST.stype]||ST.stype),ST.focus,ST.metric==='val'?'₹ Net Value':'Qty (MT)'].filter(Boolean).join(' · '); }
+const stamp = () => new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+const fileBase = title => ('RasiFCBU360_'+title+(title.includes(ST.focus)?'':'_'+ST.focus)).replace(/[^\w\-]+/g,'_').replace(/_+/g,'_').replace(/_$/,'').slice(0,90);
+// clean copy of a card/table: no buttons, inputs as text, chart colours fixed, full height
+function snapClone(el,rowLimit){
+  const clone=el.cloneNode(true);
+  clone.querySelectorAll('.pngbtn,.shotview,button,datalist,#cuSearch,#c360s,.linkbtn,.noshot,.info').forEach(n=>n.remove());
+  clone.querySelectorAll('input').forEach(i=>{ const sp=document.createElement('b'); sp.textContent=i.value; i.replaceWith(sp); });
+  clone.querySelectorAll('select').forEach(sel=>{ const sp=document.createElement('b'); sp.textContent=sel.options[sel.selectedIndex]?.text||''; sel.replaceWith(sp); });
+  clone.querySelectorAll('[fill^="var("],[stroke^="var("]').forEach(n=>{ ['fill','stroke'].forEach(a=>{ const v=n.getAttribute(a); if(v&&v.startsWith('var(')) n.setAttribute(a,cssVar(v.slice(4,-1))); }); });
+  clone.querySelectorAll('[onclick]').forEach(n=>n.removeAttribute('onclick'));
+  clone.querySelectorAll('.scroll').forEach(n=>{ n.style.setProperty('max-height','none','important'); n.style.setProperty('overflow','visible','important'); });
+  clone.querySelectorAll('td:first-child,th:first-child').forEach(n=>{ n.style.setProperty('max-width','none','important'); n.style.setProperty('overflow','visible','important'); });
+  if(rowLimit!==Infinity){ const lim=rowLimit||(MODE==='phone'?80:150);
+    clone.querySelectorAll('table').forEach(t=>{ const rows=[...t.querySelectorAll('tr')].slice(1); if(rows.length>lim){ rows.slice(lim).forEach(r=>r.remove());
+      const tr=document.createElement('tr'); tr.innerHTML=`<td colspan="40" style="text-align:left;color:#8a8984;font-style:italic">… showing first ${lim} of ${rows.length} rows · use HTML or CSV for the full list</td>`; t.appendChild(tr); } }); }
+  clone.style.margin='0'; clone.style.maxWidth='none'; clone.style.border='0'; clone.style.minHeight='0';
+  return clone;
+}
+const snapHead = title => `<div class="snaphead"><div><div class="t">Rasi FC BU 360 · ${esc(title)}</div><div class="s">${esc(filtText())}</div></div><div class="s">${stamp()}</div></div>`;
+async function snapBlob(el,title,rowLimit){
+  const clone=snapClone(el,rowLimit);
+  const tables=[...el.querySelectorAll('table')].map(t=>t.scrollWidth+48);
+  const W=Math.round(Math.min(1800,Math.max(el.getBoundingClientRect().width,...tables,MODE==='phone'?760:600)));
+  const wrap=document.createElement('div'); wrap.className='snapwrap';
+  wrap.style.cssText=`position:fixed;left:-30000px;top:0;width:${W}px;background:#fff;padding:18px 20px;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;font-size:13px;color:#0b0b0b`;
+  wrap.innerHTML=snapHead(title); wrap.appendChild(clone); document.body.appendChild(wrap);
+  try{
+    const opt={pixelRatio:Math.min(2,Math.max(1.5,devicePixelRatio||1)),backgroundColor:'#ffffff',skipFonts:true,cacheBust:false,width:wrap.offsetWidth,height:wrap.offsetHeight,style:{position:'static',left:'0',top:'0',margin:'0'}};
+    if(/iPad|iPhone|Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>0){ try{ await htmlToImage.toBlob(wrap,opt); }catch(e){} } // Safari needs a warm-up pass
+    const blob=await htmlToImage.toBlob(wrap,opt);
+    if(!blob) throw new Error('Image could not be created');
+    return blob;
+  } finally { wrap.remove(); }
+}
+// hand a file to the user: share sheet (phone/iPad) → claude.ai link download → normal download
+async function deliverFile(blob,name,mime,label){
+  const file=new File([blob],name,{type:mime});
+  if(MODE!=='pc' && navigator.canShare){ try{ if(navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:'Rasi FC BU 360 – '+label}); toast('Shared ✓'); return 'shared'; } }
+    catch(e){ if(e&&e.name==='AbortError'){ toast('Share cancelled'); return 'cancelled'; } } }
+  try{ if(window.claude&&typeof window.claude.use==='function'){ const d=await window.claude.use('downloads'); if(d){ await d.save({filename:name,data:blob}); toast(label+' saved ✓'); return 'saved'; } } }
+  catch(e){ if(e&&e.code==='declined'){ toast('Save cancelled'); return 'cancelled'; } }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  return 'downloaded';
+}
+async function sharePng(el,title,rowLimit){
+  if(!el) return; if(!window.htmlToImage){ toast('Image tool not available in this browser'); return; }
+  toast('Preparing image…',0);
+  let blob; try{ blob=await snapBlob(el,title,rowLimit); }catch(err){ console.error(err); toast('Could not create the image: '+(err.message||err)); return; }
+  const name=fileBase(title)+'.png';
+  if(MODE==='pc' && !(window.claude&&window.claude.use)){
+    let copied=false; try{ if(navigator.clipboard&&window.ClipboardItem){ await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]); copied=true; } }catch(e){}
+    await deliverFile(blob,name,'image/png','Image'); toast(copied?'Image downloaded and copied – paste it with Ctrl+V':'Image downloaded ✓',3500); return;
+  }
+  const r=await deliverFile(blob,name,'image/png','Image'); if(r==='downloaded') toast('Image saved to Downloads ✓',3500);
+}
+// standalone HTML page: same look, full table, works offline in any browser
+async function shareHtml(el,title){
+  if(!el) return; toast('Preparing HTML page…',0);
+  const clone=snapClone(el,Infinity);
+  clone.querySelectorAll('.scroll').forEach(n=>{ n.style.setProperty('overflow','auto','important'); });
+  const css=[...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');
+  const doc=`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rasi FC BU 360 · ${esc(title)}</title><style>${css}
+body{background:#fff;margin:0} .snapwrap{padding:16px 18px;max-width:1800px;margin:0 auto}
+.snapwrap .scroll{overflow:auto !important} .snapwrap table{min-width:100%}
+.snapwrap th{position:sticky !important;top:0;z-index:2}
+@media (max-width:700px){ .snapwrap{padding:10px} .snaphead{flex-direction:column;align-items:flex-start} .tiles{grid-template-columns:1fr 1fr} .grid2{grid-template-columns:1fr} .card{overflow-x:auto} }
+.foot{margin-top:14px;font-size:11px;color:#8a8984}
+</style></head><body><div class="snapwrap">${snapHead(title)}${clone.outerHTML}<div class="foot">Snapshot from Rasi FC BU 360 · ${esc(filtText())} · ${stamp()} · values as on the date of export</div></div></body></html>`;
+  const name=fileBase(title)+'.html';
+  const r=await deliverFile(new Blob([doc],{type:'text/html'}),name,'text/html','HTML page');
+  if(r==='downloaded') toast('HTML page downloaded ✓ – open it in any browser or attach it to mail / WhatsApp',4000);
+}
+// CSV of the table(s) shown in a card (what you see on screen)
+async function shareCsvDom(el,title){
+  const clone=snapClone(el,Infinity); const out=[];
+  const q=v=>{ v=String(v).replace(/\s+/g,' ').replace(/[▲▼⚠▸▾]/g,'').trim(); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+  clone.querySelectorAll('table').forEach((t,ti)=>{ if(ti) out.push(''); t.querySelectorAll('tr').forEach(tr=>{ out.push([...tr.children].map(c=>q(c.textContent)).join(',')); }); });
+  if(!out.length){ toast('No table in this card'); return; }
+  const name=fileBase(title)+'.csv';
+  const r=await deliverFile(new Blob(['﻿'+out.join('\n')],{type:'text/csv'}),name,'text/csv','CSV');
+  if(r==='downloaded') toast('CSV downloaded ✓',3000);
+}
+
+/* ===================== ORG REVIEW ===================== */
+// Org hierarchy: Division (= Zone column) › Region › Territory › Customer
+const LEVEL=['Division','Region','Territory','Customer'];
+const LEVEL_PL=['Divisions','Regions','Territories','Customers'];
+const KEYF=[r=>r.z, r=>r.r, r=>r.t, r=>r.c];
+ST.path=[]; ST.tab='rv'; ST.sortRv={k:'org',d:1}; ST.lgLevel=2; ST.lgDiv=''; ST.sortLg={k:'cur',d:-1}; ST.rvMetric='cur';
+const STATUS = {
+  grow:{t:'Growing',c:'c-grow',i:'▲'}, stab:{t:'Stable',c:'c-stab',i:'●'}, decl:{t:'Declining',c:'c-decl',i:'▼'},
+  new:{t:'New',c:'c-new',i:'★'}, react:{t:'Reactivated',c:'c-react',i:'↺'}, lost:{t:'Lost',c:'c-lost',i:'✕'}, dorm:{t:'Dormant',c:'c-dorm',i:'…'}
+};
+const chip = k => `<span class="chip ${STATUS[k].c}">${STATUS[k].i} ${STATUS[k].t}</span>`;
+const GRADE_TXT={A:'Healthy',B:'Good',C:'Watch',D:'At risk'};
+const GCOL={A:'var(--good)',B:'var(--s1)',C:'var(--s4)',D:'var(--bad)'};
+function syncPath(){ ST.zone=ST.path[0]||''; ST.region=ST.path[1]||''; ST.terr=ST.path[2]||''; }
+function custName(c){ return (CUST.get(c)||{}).name||c; }
+
+/* ---------- review parameters for one org unit ---------- */
+// totMap: Map period -> agg for the unit; custs: [[custNo, Map period -> agg], ...] for the unit's customers
+function statsFor(totMap,custs){
+  const pv=prevPeriod(), Pall=periodList(), fi=Pall.indexOf(ST.focus);
+  const cur=totMap.get(ST.focus), prv=pv?totMap.get(pv):null;
+  const o={cur:val(cur), prev:val(prv), vals:shownPeriods().map(p=>val(totMap.get(p)))};
+  o.g=gr(o.cur,o.prev);
+  o.bill=cur?(ST.metric==='val'?cur.bill:cur.billKg):0;
+  o.rp=retPct(cur); o.lq=liqPct(cur); o.fp=focPct(cur);
+  o.disc=cur&&cur.base>0? cur.disc/cur.base*100 : null;
+  o.real=cur&&cur.kg>0? cur.net/cur.kg : null;           // ₹ per kg (net value ÷ net qty)
+  o.hyb=breadth(cur);
+  o.fc=cur?cur.foc:0; o.fpv=prv?prv.foc:0; o.fg=HAS_FOC?gr(o.fc,o.fpv):null;   // Focus business growth
+  let act=0,prevAct=0,kept=0,nw=0,re=0,lost=0,brS=0,hsS=0,hsN=0; const G={A:0,B:0,C:0,D:0}, vs=[];
+  for(const [c,m] of custs){
+    const a=m.get(ST.focus), cv=val(a), pvv=pv?val(m.get(pv)):0;
+    let earlier=false; for(let i=0;i<fi-1;i++) if(val(m.get(Pall[i]))>0){earlier=true;break;}
+    if(cv>0){ act++; vs.push(cv); brS+=breadth(a); const h=health(a,pvv); if(h){G[h.grade]++; hsS+=h.s; hsN++;}
+      if(pvv>0) kept++; else if(earlier) re++; else nw++; }
+    if(pvv>0){ prevAct++; if(!(cv>0)) lost++; }
+    if(custs.length===1){ // customer level: status + grade
+      if(cv>0&&pvv>0){ const g=(cv-pvv)/pvv; o.st=g>=0.1?'grow':g<=-0.1?'decl':'stab'; }
+      else if(cv>0) o.st=earlier?'react':'new'; else if(pvv>0) o.st='lost'; else o.st=earlier?'dorm':null;
+      o.h=health(a,pvv);
+    }
+  }
+  Object.assign(o,{act,prevAct,kept,nw,re,lost,G,hsN});
+  o.retn=prevAct? kept/prevAct*100 : null;
+  o.avgC=act? o.cur/act : null; o.avgBr=act? brS/act : null; o.hs=hsN? hsS/hsN : null;
+  vs.sort((a,b)=>b-a); const tv=vs.reduce((a,b)=>a+b,0);
+  o.top20=tv? vs.slice(0,Math.max(1,Math.ceil(vs.length*0.2))).reduce((a,b)=>a+b,0)/tv*100 : null;
+  return o;
+}
+// children of the current node (or of any level, for the league table)
+function unitsAt(F,depth,parentStats){
+  const kf=KEYF[depth];
+  if(depth===3){
+    const byC=groupBy(F,r=>r.c);
+    return [...byC.entries()].map(([c,m])=>Object.assign({k:c,label:custName(c),depth,terr:(CUST.get(c)||{}).t},statsFor(m,[[c,m]])));
+  }
+  const keyUp=r=>KEYF.slice(0,depth+1).map(f=>f(r)).join('¦');
+  const byK=groupBy(F,keyUp), byKC=groupBy(F,r=>keyUp(r)+'¦'+r.c), cm=new Map();
+  for(const [k,m] of byKC){ const i=k.lastIndexOf('¦'), u=k.slice(0,i); if(!cm.has(u)) cm.set(u,[]); cm.get(u).push([k.slice(i+1),m]); }
+  return [...byK.entries()].map(([k,m])=>{ const parts=k.split('¦'); return Object.assign({k,parts,label:parts[depth],depth},statsFor(m,cm.get(k)||[])); });
+}
+function nodeStats(F){
+  const tot=groupBy(F,()=>'a').get('a')||new Map();
+  return statsFor(tot,[...groupBy(F,r=>r.c).entries()]);
+}
+
+/* ---------- formatting helpers ---------- */
+const pctC = (v,d=1) => v==null?'<span class="muted">–</span>':inr(v,d)+'%';
+const numC = (v,d=1) => v==null?'<span class="muted">–</span>':inr(v,d);
+// green / red tint when a unit is clearly better / worse than its parent (the node being reviewed)
+const TINT={ g:{hi:true,t:5}, rp:{hi:false,t:0.5}, lq:{hi:true,t:1}, disc:{hi:false,t:0.5}, real:{hi:true,t:0.03,rel:true},
+  fp:{hi:true,t:3}, retn:{hi:true,t:5}, avgBr:{hi:true,t:0.3}, hs:{hi:true,t:5} };
+function tint(key,v,ref,refName){
+  const T=TINT[key]; if(!T||v==null||ref==null) return '';
+  const diff=T.rel? (ref? (v-ref)/Math.abs(ref):0) : v-ref;
+  const better=T.hi? diff>=T.t : diff<=-T.t, worse=T.hi? diff<=-T.t : diff>=T.t;
+  if(!better&&!worse) return '';
+  return ` class="${better?'gd':'bd'}" title="${better?'Better':'Worse'} than ${esc(refName)} (${key==='real'?'₹'+inr(ref,1):inr(ref,1)+(key==='avgBr'||key==='hs'?'':'%')})"`;
+}
+function mixBar(G,n){
+  if(!n) return '<span class="muted">–</span>';
+  return `<div style="display:flex;height:11px;gap:2px;min-width:90px" data-tip="${['A','B','C','D'].map(g=>g+' · '+GRADE_TXT[g]+': '+G[g]+' ('+inr(G[g]/n*100,0)+'%)').join('<br>')}">${['A','B','C','D'].filter(g=>G[g]).map(g=>`<div style="flex:${G[g]};background:${GCOL[g]};border-radius:2px"></div>`).join('')}</div>`;
+}
+
+/* ---------- column sets ---------- */
+function colsFor(depth,ref,refName){
+  const P=shownPeriods(), pv=prevPeriod();
+  const C=[];
+  P.forEach((p,i)=>C.push({k:'p'+i,grp:'Business',l:perTh(p),v:o=>o.vals[i],f:o=>o.vals[i]?fmt(o.vals[i]):'<span class="muted">–</span>'}));
+  C.push({k:'g',grp:'Business',l:'Growth'+info('growth'),v:o=>o.g??-1e9,f:o=>grTxt(o.cur,o.prev),t:o=>tint('g',o.g,ref.g,refName)});
+  C.push({k:'share',grp:'Business',l:'Share'+info('share'),v:o=>o.share??-1,f:o=>pctC(o.share)});
+  if(depth<3) C.push({k:'avgC',grp:'Business',l:'Avg / cust.'+info('avgc'),v:o=>o.avgC??-1,f:o=>o.avgC==null?'–':fmt(o.avgC)});
+  C.push({k:'rp',grp:'Quality',l:'Return %'+info('ret'),v:o=>o.rp??-1,f:o=>pctC(o.rp),t:o=>tint('rp',o.rp,ref.rp,refName)});
+  C.push({k:'lq',grp:'Quality',l:'Liquid. %'+info('liq'),v:o=>o.lq??-1,f:o=>pctC(o.lq),t:o=>tint('lq',o.lq,ref.lq,refName)});
+  C.push({k:'disc',grp:'Quality',l:'Disc. %'+info('disc'),v:o=>o.disc??-1,f:o=>pctC(o.disc),t:o=>tint('disc',o.disc,ref.disc,refName)});
+  C.push({k:'real',grp:'Quality',l:'₹ / kg'+info('real'),v:o=>o.real??-1,f:o=>o.real==null?'–':inr(o.real,1),t:o=>tint('real',o.real,ref.real,refName)});
+  if(HAS_FOC) C.push({k:'fp',grp:'Quality',l:'Focus %'+info('focus'),v:o=>o.fp??-1,f:o=>pctC(o.fp),t:o=>tint('fp',o.fp,ref.fp,refName)});
+  if(depth<3){
+    C.push({k:'act',grp:'Customers',l:'Active'+info('active'),v:o=>o.act,f:o=>o.act.toLocaleString('en-IN')});
+    C.push({k:'nw',grp:'Customers',l:'New',v:o=>o.nw+o.re,f:o=>(o.nw+o.re)?`<span class="up">+${o.nw+o.re}</span>`:'<span class="muted">0</span>'});
+    C.push({k:'lost',grp:'Customers',l:'Lost',v:o=>o.lost,f:o=>o.lost?`<span class="dn">−${o.lost}</span>`:'<span class="muted">0</span>'});
+    C.push({k:'retn',grp:'Customers',l:'Retention'+info('retn'),v:o=>o.retn??-1,f:o=>pctC(o.retn,0),t:o=>tint('retn',o.retn,ref.retn,refName)});
+    C.push({k:'avgBr',grp:'Customers',l:'Avg breadth'+info('breadth'),v:o=>o.avgBr??-1,f:o=>numC(o.avgBr),t:o=>tint('avgBr',o.avgBr,ref.avgBr,refName)});
+    C.push({k:'top20',grp:'Customers',l:'Top 20%'+info('conc'),v:o=>o.top20??-1,f:o=>pctC(o.top20,0)});
+    C.push({k:'hs',grp:'Health',l:'Avg score'+info('health'),v:o=>o.hs??-1,f:o=>o.hs==null?'–':`<b>${inr(o.hs,0)}</b>`,t:o=>tint('hs',o.hs,ref.hs,refName)});
+    C.push({k:'mix',grp:'Health',l:'A / B / C / D',v:o=>o.hsN?o.G.A/o.hsN:-1,f:o=>`<div style="display:flex;align-items:center;gap:6px"><span style="white-space:nowrap;font-size:11.5px">${o.G.A}/${o.G.B}/${o.G.C}/<b class="${o.G.D?'dn':''}">${o.G.D}</b></span>${mixBar(o.G,o.hsN)}</div>`,cls:'l'});
+    C.push({k:'tg',grp:'Grade',l:LEVEL[depth]+' grade'+info('tgrade'),v:o=>o.tg?o.tg.s:-1,f:o=>tgChip(o.tg),cls:'l'});
+    C.push({k:'tgm',grp:'Grade',l:'vs '+(pv||'prev'),v:o=>o.tg&&o.tgPrev?o.tg.s-o.tgPrev.s:-999,f:o=>moveTxt(o.tg,o.tgPrev),cls:'l'});
+  } else {
+    C.push({k:'hyb',grp:'Customers',l:'Hybrid breadth'+info('breadth'),v:o=>o.hyb,f:o=>o.hyb||'<span class="muted">–</span>'});
+    C.push({k:'st',grp:'Customers',l:'Status'+info('status'),v:o=>o.st||'',f:o=>o.st?chip(o.st):'',cls:'l'});
+    C.push({k:'hs',grp:'Health',l:'Health'+info('health'),v:o=>o.h?o.h.s:-1,f:o=>o.h?`<span class="chip g-${o.h.grade}">${o.h.grade} · ${o.h.s}</span>`:'<span class="muted">–</span>',cls:'l'});
+  }
+  return C;
+}
+function sortRows(rows,cols,S){
+  if(S.k==='org') return rows.slice().sort((a,b)=> a.depth===0&&b.depth===0 ? divSort(a.label,b.label) : b.cur-a.cur);
+  const c=cols.find(x=>x.k===S.k); const get=S.k==='name'?(o=>o.label):S.k==='cur'?(o=>o.cur):(c?c.v:(o=>o.cur));
+  return rows.slice().sort((a,b)=>{ const x=get(a),y=get(b); return (x>y?1:x<y?-1:0)*S.d; });
+}
+// generic review table: first column = unit name; grouped headers; optional total row
+function reviewTable(rows,cols,opt){
+  const S=opt.sort, th=(k,l,cls)=>`<th class="${cls||''}" onclick="${opt.sortFn}('${k}')">${l}${S.k===k?(S.d>0?' ▲':' ▼'):''}</th>`;
+  const groups=[]; cols.forEach(c=>{ const g=groups[groups.length-1]; if(g&&g.n===c.grp) g.c++; else groups.push({n:c.grp,c:1}); });
+  let h=`<table class="rv"><tr class="grp"><th class="l"></th>${opt.rank?'<th></th>':''}${opt.extra?'<th></th>':''}${groups.map(g=>`<th colspan="${g.c}" class="g-${g.n.toLowerCase()}">${g.n}</th>`).join('')}</tr>
+    <tr>${th('name',opt.nameLabel,'l')}${opt.rank?'<th>#</th>':''}${opt.extra?`<th class="l">${opt.extra.l}</th>`:''}${cols.map(c=>th(c.k,c.l,c.cls)).join('')}</tr>`;
+  rows.forEach((o,i)=>{
+    const click=opt.click&&opt.click(o);
+    h+=`<tr class="${click?'click':''}" ${click?`onclick="${click}"`:''}><td title="${esc(o.label)}">${click?'<span class="drill">▸</span> ':''}${esc(o.label)}${o.depth===3?` <span class="muted">${esc(o.k)}</span>`:''}</td>${opt.rank?`<td class="muted">${i+1}</td>`:''}${opt.extra?`<td class="l">${opt.extra.f(o)}</td>`:''}${cols.map(c=>`<td${c.t?c.t(o):''}${c.cls?` style="text-align:left"`:''}>${c.f(o)}</td>`).join('')}</tr>`;
+  });
+  if(opt.total) h+=`<tr class="tot"><td>${esc(opt.total.label)}</td>${opt.rank?'<td></td>':''}${opt.extra?'<td></td>':''}${cols.map(c=>`<td${c.cls?` style="text-align:left"`:''}>${c.f(opt.total)}</td>`).join('')}</tr>`;
+  return h+'</table>';
+}
+
+/* ---------- REVIEW (drill-down) ---------- */
+function goPath(n){ ST.path=ST.path.slice(0,n); ST.sortRv={k:'org',d:1}; fillFilters(); render(); scrollTo({top:0,behavior:'smooth'}); }
+function drill(k){ if(ST.path.length>=3) return; ST.path=k.split('¦'); ST.sortRv={k:'org',d:1}; fillFilters(); render(); scrollTo({top:0,behavior:'smooth'}); }
+function sortRv(k){ if(ST.sortRv.k===k) ST.sortRv.d*=-1; else ST.sortRv={k,d:k==='name'?1:(k==='rp'||k==='disc'||k==='lost')?-1:-1}; render(); }
+function crumbs(){
+  const parts=['All Divisions',...ST.path];
+  return `<div class="crumbs">${parts.map((p,i)=>i<parts.length-1?`<button onclick="goPath(${i})">${esc(p)}</button><span class="sep">›</span>`:`<b>${esc(p)}</b>`).join('')}
+    <span class="lvl">${ST.path.length? LEVEL[ST.path.length-1] : 'Company'} view · ${ST.path.length<3?'click a '+LEVEL[ST.path.length].toLowerCase()+' to drill down':'customer list'}</span></div>`;
+}
+function renderReview(m){
+  syncPath();
+  const F=filtered(), d=ST.path.length, pv=prevPeriod();
+  const nodeName=d?ST.path[d-1]:'Company';
+  const N=nodeStats(F);
+  const kids=d<3?gradedUnits(F,d):unitsAt(F,d); kids.forEach(o=>o.share=N.cur?o.cur/N.cur*100:null);
+  N.tg=unitGrade(N); const terrs=d<3?gradedUnits(F,2).filter(o=>o.tg):[]; const TGm={A:0,B:0,C:0,D:0}; terrs.forEach(o=>TGm[o.tg.grade]++);
+  const cols=colsFor(d,N,nodeName);
+  const rows=sortRows(kids.filter(o=>o.cur||o.prev||o.vals.some(Boolean)),cols,ST.sortRv);
+  const G=N.G;
+  let h=crumbs();
+  // headline tiles for the node
+  h+=`<div class="tiles">
+    <div class="tile"><div class="k">Net ${ST.metric==='val'?'Sales':'Qty'} · ${ST.focus}</div><div class="v">${big(N.cur)}</div><div class="d">${pv?grTxt(N.cur,N.prev)+' vs '+pv+' ('+big(N.prev)+')':''}</div></div>
+    <div class="tile"><div class="k">Active customers${info('active')}</div><div class="v">${N.act.toLocaleString('en-IN')}</div><div class="d"><span class="up">+${N.nw} new</span> · <span class="up">+${N.re} back</span> · <span class="dn">−${N.lost} lost</span></div></div>
+    <div class="tile"><div class="k">Retention${info('retn')}</div><div class="v">${pctC(N.retn,0)}</div><div class="d">${N.kept} of ${N.prevAct} ${pv||''} customers bought again</div></div>
+    <div class="tile"><div class="k">Return %${info('ret')}</div><div class="v">${pctC(N.rp)}</div><div class="d">of gross billing ${big(N.bill)}</div></div>
+    <div class="tile"><div class="k">Liquidation %${info('liq')}</div><div class="v">${pctC(N.lq)}</div><div class="d">POG ÷ billing (qty)</div></div>
+    ${HAS_FOC?`<div class="tile"><div class="k">Focus share${info('focus')}</div><div class="v">${pctC(N.fp)}</div><div class="d">business from Focus products</div></div>`:''}
+    <div class="tile"><div class="k">Discount %${info('disc')}</div><div class="v">${pctC(N.disc)}</div><div class="d">of base value</div></div>
+    <div class="tile"><div class="k">Realisation${info('real')}</div><div class="v">${N.real==null?'–':'₹ '+inr(N.real,1)}</div><div class="d">net ₹ per kg</div></div>
+    <div class="tile"><div class="k">Avg hybrid breadth${info('breadth')}</div><div class="v">${numC(N.avgBr)}</div><div class="d">${N.hyb} hybrids sold in total</div></div>
+    ${d<3?`<div class="tile" style="cursor:pointer" onclick="ST.grLevel=2;setTab('gr')" title="Open Grades"><div class="k">${d?LEVEL[d-1]+' grade':'Company grade'}${info('tgrade')}</div><div class="v">${tgChip(N.tg,true)}</div><div class="d">Territories: ${['A','B','C','D'].map(g=>`<span class="chip g-${g}" style="padding:0 6px">${g} ${TGm[g]}</span>`).join(' ')}</div></div>`:''}
+    <div class="tile"><div class="k">Dealer health${info('health')}</div><div class="v">${N.hs==null?'–':inr(N.hs,0)}<span style="font-size:12px;color:var(--text2)"> avg</span></div><div class="d">${['A','B','C','D'].map(g=>`<span class="chip g-${g}" style="padding:0 6px">${g} ${G[g]}</span>`).join(' ')}</div></div>
+  </div>`;
+  // main table
+  const childL=LEVEL_PL[d];
+  h+=`<div class="card" id="rvCard"><h3>${childL} of ${esc(nodeName)} · ${ST.focus}</h3>
+    <div class="note">${unit()} · growth vs ${pv||'–'} · ${d<3?`<b>click a ${LEVEL[d].toLowerCase()} to drill down</b> · `:''}click a column heading to sort ·
+      <span class="gd" style="padding:0 5px;border-radius:3px">green</span> / <span class="bd" style="padding:0 5px;border-radius:3px">red</span> = clearly better / worse than ${esc(nodeName)}${info('tint')}</div>
+    <div class="scroll" style="max-height:${MODE==='phone'?'72vh':'620px'}">${reviewTable(rows.slice(0,d===3?(MODE==='phone'?300:1000):10000),cols,{sort:ST.sortRv,sortFn:'sortRv',nameLabel:LEVEL[d],
+       click:d<3?(o=>`drill('${o.k.replace(/'/g,"\\'")}')`):null, total:Object.assign({label:'Total '+nodeName,share:100},N)})}</div>
+    ${d===3&&rows.length>(MODE==='phone'?300:1000)?`<div class="note">Showing first ${(MODE==='phone'?300:1000).toLocaleString('en-IN')} of ${rows.length.toLocaleString('en-IN')} customers – use Share › CSV for all.</div>`:''}</div>`;
+  // charts: comparison + trend
+  const top=d===0? rows.slice().sort((a,b)=>divSort(a.label,b.label)) : rows.slice().sort((a,b)=>b.cur-a.cur).slice(0,15);
+  const bySeason=new Map(); for(const r of F){ if(r.s) bySeason.set(r.s,(bySeason.get(r.s)||0)+mv(r)); }
+  const types=[...new Set(SEASONS.map(s=>s.type))];
+  const sItems=SEASONS.filter(s=>bySeason.has(s.code)).map(s=>({label:s.code,value:bySeason.get(s.code),color:stColor(s.type),tip:`<b>${s.code}</b><br>${fmt(bySeason.get(s.code))} ${unit()}`}));
+  h+=`<div class="grid2">
+    <div class="card"><h3>${d<3?LEVEL_PL[d]:'Top customers'} by ${ST.metric==='val'?'net sales':'net qty'} · ${ST.focus}</h3><div class="note">${unit()} · ${d<3?'click a bar to drill down':'top 15'} · hover/tap for growth</div>
+      ${hbars(top.map(o=>({label:o.label,value:o.cur,tip:`<b>${esc(o.label)}</b><br>${ST.focus}: ${fmt(o.cur)} ${unit()}<br>${pv||''}: ${fmt(o.prev)} · ${o.g==null?'new':(o.g>=0?'+':'')+inr(o.g,1)+'%'}<br>Share of ${esc(nodeName)}: ${o.share==null?'–':inr(o.share,1)+'%'}`,click:d<3?`drill('${o.k.replace(/'/g,"\\'")}')`:null})))}</div>
+    <div class="card"><h3>Season-wise trend · ${esc(nodeName)}</h3><div class="note">Net ${ST.metric==='val'?'value':'quantity'} by season (${unit()})</div>
+      <div class="legend">${types.map(t=>`<span><i style="background:${stColor(t)}"></i>${STYPE_NAME[t]||t}</span>`).join('')}</div>${vbars(sItems)}</div>
+  </div>`;
+  // crop mix of node
+  const byCrop=groupBy(F,r=>r.crop), cropRows=[...byCrop.entries()].map(([k,mm])=>{ const c=mm.get(ST.focus), p=pv?mm.get(pv):null; return {k,c,p,cur:val(c),prev:val(p)}; }).filter(o=>o.cur||o.prev).sort((a,b)=>b.cur-a.cur);
+  const P=shownPeriods();
+  h+=`<div class="card"><h3>Crop mix · ${esc(nodeName)}</h3><div class="note">${unit()} · share of ${esc(nodeName)} in ${ST.focus}</div><div class="scroll"><table>
+    <tr><th class="l">Crop</th>${P.map(p=>`<th>${perTh(p)}</th>`).join('')}<th>Growth</th><th>Share</th><th>Customers</th><th>Hybrids</th><th>Return %</th>${HAS_FOC?'<th>Focus %</th>':''}</tr>
+    ${cropRows.map(o=>`<tr><td>${esc(o.k)}</td>${P.map(p=>{const v=val(byCrop.get(o.k).get(p)); return `<td>${v?fmt(v):'<span class="muted">–</span>'}</td>`;}).join('')}<td>${grTxt(o.cur,o.prev)}</td><td>${N.cur?inr(o.cur/N.cur*100,1)+'%':'–'}</td><td>${activeCust(o.c)}</td><td>${breadth(o.c)}</td><td>${pctC(retPct(o.c))}</td>${HAS_FOC?`<td>${pctC(focPct(o.c))}</td>`:''}</tr>`).join('')}
+  </table></div></div>`;
+  m.innerHTML=h;
+}
+
+/* ---------- LEAGUE TABLE ---------- */
+function sortLg(k){ if(ST.sortLg.k===k) ST.sortLg.d*=-1; else ST.sortLg={k,d:k==='name'?1:-1}; render(); }
+function renderLeague(m){
+  syncPath(); ST.terr='';
+  const F=filtered(), d=ST.lgLevel, pv=prevPeriod();
+  const refName=ST.path.slice(0,2).join(' › ')||'Company', N=nodeStats(F);
+  const units=gradedUnits(F,d); units.forEach(o=>o.share=N.cur?o.cur/N.cur*100:null); N.tg=unitGrade(N);
+  const cols=colsFor(d,N,refName);
+  const rows=sortRows(units.filter(o=>o.cur||o.prev),cols,ST.sortLg);
+  const divs=[...new Set(ROWS.map(r=>r.z))].sort(divSort);
+  const sortName=ST.sortLg.k==='name'?'name':ST.sortLg.k==='cur'?(ST.metric==='val'?'net sales':'net qty'):((cols.find(c=>c.k===ST.sortLg.k)||{}).l||'').replace(/<[^>]+>/g,'').replace(/i$/,'');
+  m.innerHTML=`<div class="row">
+      <div class="seg" id="lgLvl">${[[1,'Regions'],[2,'Territories']].map(([v,l])=>`<button class="${d===v?'on':''}" onclick="ST.lgLevel=${v};render()">${l}</button>`).join('')}</div>
+      <span class="note" style="margin:0">${ST.path.length?'Within <b>'+esc(refName)+'</b> (Division / Region filter above) · ':''}</span>
+      <span class="note" style="margin:0">Ranked by <b>${esc(sortName)}</b> – click any column heading to re-rank</span></div>
+    <div class="card" id="lgCard"><h3>${LEVEL_PL[d]} league table · ${esc(refName)} · ${ST.focus}</h3>
+      <div class="note">${rows.length} ${LEVEL_PL[d].toLowerCase()} · ${unit()} · colours compare each unit with ${esc(refName)} · click a row to open it in Review</div>
+      <div class="scroll" style="max-height:${MODE==='phone'?'72vh':'680px'}">${reviewTable(rows,cols,{sort:ST.sortLg,sortFn:'sortLg',nameLabel:LEVEL[d],rank:true,
+        extra:{l:d===1?'Division':'Division › Region',f:o=>esc(o.parts.slice(0,d).join(' › '))},
+        click:o=>`ST.path=${esc(JSON.stringify(o.parts))};setTab('rv')`,
+        total:Object.assign({label:'Total '+refName,share:100},N)})}</div></div>`;
+}
+
+/* ---------- PRODUCT MIX ---------- */
+function renderMix(m){
+  syncPath();
+  const F=filtered(), d=ST.path.length, pv=prevPeriod(), P=shownPeriods(), nodeName=d?ST.path[d-1]:'Company';
+  const N=nodeStats(F);
+  let h=crumbs().replace('click a','click a').replace(/customer list/,'customer list');
+  // focus vs non-focus by child unit
+  if(HAS_FOC && d<3){
+    const keyUp=r=>KEYF.slice(0,d+1).map(f=>f(r)).join('¦');
+    const byKF=groupBy(F,r=>keyUp(r)+'¦'+(r.foc==='Focus'?'F':'N')), byK=groupBy(F,keyUp);
+    const rows=[...byK.keys()].map(k=>{ const fm=byKF.get(k+'¦F')||new Map(), nm=byKF.get(k+'¦N')||new Map();
+      const fc=val(fm.get(ST.focus)), fp=pv?val(fm.get(pv)):0, nc=val(nm.get(ST.focus)), np=pv?val(nm.get(pv)):0;
+      return {k,label:k.split('¦')[d],fc,fp,nc,np,share:(fc+nc)?fc/(fc+nc)*100:null,sharePrev:(fp+np)?fp/(fp+np)*100:null}; }).filter(o=>o.fc||o.nc||o.fp||o.np).sort((a,b)=>d===0? divSort(a.label,b.label) : b.fc-a.fc);
+    const tf=rows.reduce((s,o)=>s+o.fc,0), tn=rows.reduce((s,o)=>s+o.nc,0), tfp=rows.reduce((s,o)=>s+o.fp,0), tnp=rows.reduce((s,o)=>s+o.np,0);
+    const ref=(tf+tn)?tf/(tf+tn)*100:null;
+    h+=`<div class="card"><h3>Focus vs Non Focus by ${LEVEL[d].toLowerCase()} · ${esc(nodeName)} · ${ST.focus}</h3><div class="note">${unit()} · Focus = column N “Product Category” · click a row to drill down</div>
+      <div class="scroll"><table><tr><th class="l">${LEVEL[d]}</th><th>Focus ${pv||''}</th><th>Focus ${ST.focus}</th><th>Focus growth</th><th>Non Focus ${ST.focus}</th><th>Focus share ${pv||''}</th><th>Focus share ${ST.focus}${info('focus')}</th><th class="l">Share bar</th></tr>
+      ${rows.map(o=>`<tr class="click" onclick="drill('${o.k.replace(/'/g,"\\'")}');ST.tab='pm'"><td><span class="drill">▸</span> ${esc(o.label)}</td><td>${fmt(o.fp)}</td><td>${fmt(o.fc)}</td><td>${grTxt(o.fc,o.fp)}</td><td>${fmt(o.nc)}</td><td>${pctC(o.sharePrev)}</td><td${tint('fp',o.share,ref,nodeName)}><b>${pctC(o.share)}</b></td>
+        <td style="width:22%"><div style="display:flex;height:11px;gap:2px;min-width:90px"><div style="flex:${o.fc||0};background:var(--s1);border-radius:2px"></div><div style="flex:${o.nc||0};background:#d6d4cd;border-radius:2px"></div></div></td></tr>`).join('')}
+      <tr class="tot"><td>Total ${esc(nodeName)}</td><td>${fmt(tfp)}</td><td>${fmt(tf)}</td><td>${grTxt(tf,tfp)}</td><td>${fmt(tn)}</td><td>${pctC((tfp+tnp)?tfp/(tfp+tnp)*100:null)}</td><td><b>${pctC(ref)}</b></td><td></td></tr></table></div>
+      <div class="legend" style="margin-top:6px"><span><i style="background:var(--s1)"></i>Focus</span><span><i style="background:#d6d4cd"></i>Non Focus</span></div></div>`;
+  }
+  // hybrids of the node
+  const byH=groupBy(F,r=>r.crop+'¦'+r.hyb);
+  const hr=[...byH.entries()].map(([k,mm])=>{ const [cr,hy]=k.split('¦'), c=mm.get(ST.focus), p=pv?mm.get(pv):null;
+    return {cr,hy,mm,c,cur:val(c),prev:val(p),cc:activeCust(c),pc:activeCust(p)}; }).filter(o=>o.cur||o.prev).sort((a,b)=>b.cur-a.cur);
+  h+=`<div class="card"><h3>Hybrid performance · ${esc(nodeName)}</h3><div class="note">${unit()} · customers = dealers who bought the hybrid (reach)</div><div class="scroll" style="max-height:${MODE==='phone'?'72vh':'560px'}"><table>
+    <tr><th class="l">Crop</th><th class="l">Hybrid</th>${P.map(p=>`<th>${perTh(p)}</th>`).join('')}<th>Growth</th><th>Share</th><th>Customers ${ST.focus}</th><th>Customers ${pv||'prev'}</th><th>Return %</th><th>₹ / kg</th></tr>
+    ${hr.map(o=>`<tr><td>${esc(o.cr)}</td><td class="l">${esc(o.hy)} ${(HYB_INFO.get(o.hy)||{}).foc==='Focus'?'<span class="ftag">FOCUS</span>':''}</td>${P.map(p=>{const v=val(o.mm.get(p)); return `<td>${v?fmt(v):'<span class="muted">–</span>'}</td>`;}).join('')}<td>${grTxt(o.cur,o.prev)}</td><td>${N.cur?pctC(o.cur/N.cur*100):'–'}</td><td>${o.cc}</td><td>${o.pc}</td><td>${pctC(retPct(o.c))}</td><td>${o.c&&o.c.kg>0?inr(o.c.net/o.c.kg,1):'–'}</td></tr>`).join('')}
+  </table></div></div>`;
+  m.innerHTML=h;
+}
+
+/* ===================== UNIT (TERRITORY) GRADE ===================== */
+// Score out of 100 for every Territory (and Region / Division) – Focus business carries the most weight.
+// dir 'hi' = higher is better (cut = minimum), 'lo' = lower is better (cut = maximum). na = points when the value can't be worked out.
+const TG_DEFAULT = { crit:[
+  {k:'fp',  n:'Focus share %',           u:'%',  dir:'hi', cuts:[50,35,20,10],  pts:[20,15,10,5,0],  na:0,  why:'Share of business from Focus products'},
+  {k:'fg',  n:'Focus business growth %', u:'%',  dir:'hi', cuts:[25,10,0,-10],  pts:[15,11,7,3,0],   na:7,  why:'Growth of Focus product sales vs previous period (new Focus business = middle points)'},
+  {k:'g',   n:'Total growth %',          u:'%',  dir:'hi', cuts:[20,10,0,-10],  pts:[20,15,10,5,0],  na:10, why:'Growth of total sales vs previous period'},
+  {k:'rp',  n:'Return %',                u:'%',  dir:'lo', cuts:[2,5,10],       pts:[15,10,5,0],     na:15, why:'Returns ÷ gross billing'},
+  {k:'retn',n:'Customer retention %',    u:'%',  dir:'hi', cuts:[80,65,50],     pts:[15,10,5,0],     na:7,  why:'Previous-period customers who bought again'},
+  {k:'avgBr',n:'Avg hybrid breadth',     u:'',   dir:'hi', cuts:[4,3,2],        pts:[8,6,3,1],       na:1,  why:'Average number of hybrids per active customer'},
+  {k:'disc',n:'Discount %',              u:'%',  dir:'lo', cuts:[1,3,5],        pts:[7,5,2,0],       na:7,  why:'Discount ÷ base value'}
+], grade:[80,60,40] };
+const TG_KEY='rasiorg_tgrade_v1';
+let TG=JSON.parse(JSON.stringify(TG_DEFAULT));
+try{ const s=localStorage.getItem(TG_KEY); if(s){ const o=JSON.parse(s); if(o&&o.crit&&o.crit.length===TG.crit.length) TG=o; } }catch(e){}
+function saveTG(){ try{ localStorage.setItem(TG_KEY,JSON.stringify(TG)); }catch(e){} }
+const tgCrit = () => TG.crit.filter(c=>c.k!=='fp'&&c.k!=='fg' || HAS_FOC);
+const tgMax = () => tgCrit().reduce((s,c)=>s+Math.max(c.na,...c.pts),0);
+function bandIdx(c,v){ if(v==null||isNaN(v)) return -1; const i=c.dir==='hi'? c.cuts.findIndex(x=>v>=x) : c.cuts.findIndex(x=>v<=x); return i<0?c.cuts.length:i; }
+function bandLabel(c,i){
+  if(i<0) return 'not available'; const u=c.u, x=c.cuts;
+  if(c.dir==='hi'){ if(i===0) return `≥ ${x[0]}${u}`; if(i===x.length) return `< ${x[x.length-1]}${u}`; return `${x[i]}${u} to < ${x[i-1]}${u}`; }
+  if(i===0) return `≤ ${x[0]}${u}`; if(i===x.length) return `> ${x[x.length-1]}${u}`; return `> ${x[i-1]}${u} to ${x[i]}${u}`;
+}
+function unitGrade(o){
+  if(!(o.cur>0)) return null;
+  let raw=0; const parts=[];
+  for(const c of tgCrit()){
+    let v=o[c.k]; if(c.k==='fg' && v==null && o.fc>0) v=null;          // new focus business -> na points
+    const i=bandIdx(c,v), p=i<0? c.na : c.pts[i], mx=Math.max(c.na,...c.pts);
+    raw+=p; parts.push({k:c.k,n:c.n,v,i,p,mx,gap:mx-p});
+  }
+  const s=Math.round(raw/tgMax()*100), gi=TG.grade.findIndex(x=>s>=x), grade=gi<0?'D':'ABC'[gi];
+  const lever=parts.slice().sort((a,b)=>b.gap-a.gap)[0];
+  return {s,raw,grade,parts,lever:lever&&lever.gap>0?lever:null};
+}
+const tgChip = (t,big) => t? `<span class="chip g-${t.grade}" style="${big?'font-size:13px;padding:3px 10px':''}" data-tip="${esc(tgTip(t))}">${t.grade} · ${t.s}</span>` : '<span class="muted">–</span>';
+function tgTip(t){ return '<b>Grade '+t.grade+' · '+t.s+' / 100</b><br>'+t.parts.map(p=>`${p.n}: ${p.v==null?'n/a':(p.k==='avgBr'?inr(p.v,1):inr(p.v,1)+'%')} → ${p.p}/${p.mx}`).join('<br>')+(t.lever?`<br><i>Biggest lever: ${t.lever.n} (+${t.lever.gap} pts possible)</i>`:''); }
+const moveTxt = (now,before) => { if(!now||!before) return now&&!before?'<span class="muted">new</span>':'<span class="muted">–</span>';
+  const d='ABCD'.indexOf(before.grade)-'ABCD'.indexOf(now.grade);
+  return d>0?`<span class="up" title="was ${before.grade} · ${before.s}">▲ from ${before.grade}</span>`: d<0?`<span class="dn" title="was ${before.grade} · ${before.s}">▼ from ${before.grade}</span>`:`<span class="muted" title="${before.s} → ${now.s}">= ${before.grade}</span>`; };
+
+// units at a level, graded for the focus period AND the previous period (for grade movement)
+function gradedUnits(F,depth){
+  const now=unitsAt(F,depth); now.forEach(o=>o.tg=unitGrade(o));
+  const pv=prevPeriod(), keep=ST.focus;
+  if(pv){ ST.focus=pv; try{ const before=new Map(unitsAt(F,depth).map(o=>[o.k,unitGrade(o)])); now.forEach(o=>o.tgPrev=before.get(o.k)||null); } finally { ST.focus=keep; } }
+  return now;
+}
+
+/* ---------- GRADES TAB ---------- */
+ST.grLevel=2; ST.grDiv=''; ST.grGrade=''; ST.sortGr={k:'s',d:-1};
+function sortGr(k){ if(ST.sortGr.k===k) ST.sortGr.d*=-1; else ST.sortGr={k,d:(k==='name'||k==='parent')?1:-1}; render(); }
+function tgCriteriaHTML(){
+  const rows=c=>{ const L=c.cuts.length; let h='';
+    for(let i=0;i<=L;i++) h+=`<tr><td class="l band">${i<L?`${c.dir==='hi'?'≥':'≤'} <input type="number" step="any" value="${c.cuts[i]}" data-tg="${c.k}.cuts.${i}"> ${c.u}`:`${c.dir==='hi'?'below':'above'} ${c.cuts[L-1]}${c.u}`}</td><td><input type="number" step="any" value="${c.pts[i]}" data-tg="${c.k}.pts.${i}"></td></tr>`;
+    return h+`<tr><td class="l band muted">not available</td><td><input type="number" step="any" value="${c.na}" data-tg="${c.k}.na"></td></tr>`; };
+  const C=tgCrit(), mx=tgMax();
+  const wbar=`<div class="wbar">${C.map((c,i)=>{ const w=Math.max(c.na,...c.pts); return `<div style="flex:${w};background:${['#14532d','#1f6b3a','var(--s1)','var(--s2)','var(--s3)','var(--s4)','#8a8984'][i%7]}" data-tip="${esc(c.n+': '+w+' of '+mx+' pts ('+inr(w/mx*100,0)+'%)')}"><span>${c.n.replace(' %','').replace('Customer ','')} ${inr(w/mx*100,0)}%</span></div>`; }).join('')}</div>`;
+  return `<div class="card" id="tgCrit"><h3>Grading criteria${info('tgrade')}</h3>
+    <div class="note">Score = sum of points (max ${mx}${mx!==100?', shown out of 100':''}) · <b>Focus business = ${inr(C.filter(c=>c.k==='fp'||c.k==='fg').reduce((s,c)=>s+Math.max(c.na,...c.pts),0)/mx*100,0)}% of the score</b> (share + growth) · Grade A ≥ <input type="number" value="${TG.grade[0]}" data-tg="grade.0" style="width:52px"> · B ≥ <input type="number" value="${TG.grade[1]}" data-tg="grade.1" style="width:52px"> · C ≥ <input type="number" value="${TG.grade[2]}" data-tg="grade.2" style="width:52px"> · D below · change any number, it is remembered in this browser <button class="linkbtn" onclick="TG=JSON.parse(JSON.stringify(TG_DEFAULT));saveTG();render()">Reset to default</button></div>
+    ${wbar}
+    <div class="tggrid">${C.map((c,i)=>`<div><b>${i+1} · ${c.n}</b> <span class="muted">(max ${Math.max(c.na,...c.pts)})</span><div class="muted" style="font-size:11.5px;margin:2px 0 4px">${c.why}</div><table class="crit"><tr><th class="l">Band</th><th>Points</th></tr>${rows(c)}</table></div>`).join('')}</div></div>`;
+}
+function quadrant(units,ref){
+  const pts=units.filter(o=>o.tg&&o.fp!=null&&o.g!=null);
+  if(pts.length<2) return '<div class="muted">Needs Focus share and growth for at least 2 units (growth needs a previous period).</div>';
+  const W=760,H=440,pad={l:52,r:26,t:30,b:40}, iw=W-pad.l-pad.r, ih=H-pad.t-pad.b;
+  const gs=pts.map(o=>o.g), gmin=Math.max(-60,Math.min(-10,...gs)), gmax=Math.min(200,Math.max(30,...gs)), span=gmax-gmin, lo=gmin-span*0.08, hi=gmax+span*0.1;
+  const x=v=>pad.l+Math.max(0,Math.min(100,v))/100*iw, y=v=>pad.t+(hi-Math.max(lo,Math.min(hi,v)))/(hi-lo)*ih;
+  const maxV=Math.max(...pts.map(o=>o.cur)), r=v=>5+Math.sqrt(Math.max(0,v)/maxV)*20;
+  const fx=ref.fp??50, gy=ref.g??0;
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" class="quad">`;
+  s+=`<rect x="${x(fx)}" y="${pad.t}" width="${pad.l+iw-x(fx)}" height="${y(gy)-pad.t}" fill="#e3f3e8" opacity=".55"/><rect x="${pad.l}" y="${y(gy)}" width="${x(fx)-pad.l}" height="${pad.t+ih-y(gy)}" fill="#fbe4e2" opacity=".55"/>`;
+  for(let k=0;k<=5;k++){ const v=k*20; s+=`<line x1="${x(v)}" x2="${x(v)}" y1="${pad.t}" y2="${pad.t+ih}" stroke="#eceae4"/><text x="${x(v)}" y="${H-pad.b+16}" text-anchor="middle" font-size="11" fill="#8a8984">${v}%</text>`; }
+  const st=(hi-lo)>150?50:(hi-lo)>60?25:10; for(let v=Math.ceil(lo/st)*st; v<=hi; v+=st){ s+=`<line x1="${pad.l}" x2="${pad.l+iw}" y1="${y(v)}" y2="${y(v)}" stroke="#eceae4"/><text x="${pad.l-6}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="#8a8984">${v}%</text>`; }
+  s+=`<line x1="${x(fx)}" x2="${x(fx)}" y1="${pad.t}" y2="${pad.t+ih}" stroke="#8a8984" stroke-dasharray="4 3"/><line x1="${pad.l}" x2="${pad.l+iw}" y1="${y(gy)}" y2="${y(gy)}" stroke="#8a8984" stroke-dasharray="4 3"/>`;
+  const lab=(tx,ty,anchor,t1,t2)=>`<text x="${tx}" y="${ty}" text-anchor="${anchor}" font-size="12" font-weight="700" fill="#52514e">${t1}</text><text x="${tx}" y="${ty+14}" text-anchor="${anchor}" font-size="10.5" fill="#8a8984">${t2}</text>`;
+  s+=lab(pad.l+iw-6,pad.t+14,'end','★ Stars','high focus · high growth')+lab(pad.l+6,pad.t+14,'start','Growing on Non Focus','push focus mix')+lab(pad.l+iw-6,pad.t+ih-22,'end','Focus-rich, slowing','re-ignite growth')+lab(pad.l+6,pad.t+ih-22,'start','⚠ Needs attention','low focus · low growth');
+  pts.sort((a,b)=>b.cur-a.cur).forEach(o=>{ const cx=x(o.fp), cy=y(o.g);
+    s+=`<g data-tip="${esc(`<b>${esc(o.label)}</b> · Grade ${o.tg.grade} (${o.tg.s})<br>Focus share ${inr(o.fp,1)}% · Growth ${inr(o.g,1)}%<br>${ST.focus}: ${fmt(o.cur)} ${unit()}`)}" style="cursor:pointer" onclick="${esc(`ST.path=${JSON.stringify(o.parts)};setTab('rv')`)}"><circle cx="${cx}" cy="${cy}" r="${r(o.cur)}" fill="${GCOL[o.tg.grade]}" fill-opacity=".78" stroke="#fff" stroke-width="2"/></g>`; });
+  // label the biggest few
+  pts.filter(o=>o.g>200||o.g<-60).forEach(o=>{ s+=`<text x="${x(o.fp)}" y="${y(o.g)+4}" text-anchor="middle" font-size="11" fill="#fff" font-weight="700" style="pointer-events:none">${o.g>200?'↑':'↓'}</text>`; });
+  pts.slice(0,8).forEach(o=>{ const ly=y(o.g)-r(o.cur)-4; s+=`<text x="${x(o.fp)}" y="${ly<12?y(o.g)+r(o.cur)+12:ly}" text-anchor="middle" font-size="10.5" fill="#0b0b0b" style="pointer-events:none">${esc(o.label.length>14?o.label.slice(0,13)+'…':o.label)}</text>`; });
+  s+=`<text x="${pad.l+iw/2}" y="${H-4}" text-anchor="middle" font-size="11.5" fill="#52514e">Focus share % →</text><text transform="translate(12 ${pad.t+ih/2}) rotate(-90)" text-anchor="middle" font-size="11.5" fill="#52514e">Growth % vs ${prevPeriod()||'prev'} →</text></svg>`;
+  if(pts.some(o=>o.g>200||o.g<-60)) s+=`<div class="note" style="margin-top:4px">↑ / ↓ inside a bubble = growth beyond the chart scale (exact value in the tooltip)</div>`;
+  return s;
+}
+function setTab(t){ fillFilters(); ST.tab=t; [...$('tabs').children].forEach(b=>b.classList.toggle('on',b.dataset.t===t)); render(); scrollTo(0,0); }
+function renderGrades(m){
+  syncPath(); ST.terr='';
+  const F=filtered(), d=ST.grLevel, pv=prevPeriod(), refName=ST.path.slice(0,2).join(' › ')||'Company';
+  const N=nodeStats(F); N.tg=unitGrade(N);
+  const units=gradedUnits(F,d).filter(o=>o.cur>0||o.prev>0); units.forEach(o=>o.share=N.cur?o.cur/N.cur*100:null);
+  const graded=units.filter(o=>o.tg), totV=graded.reduce((s,o)=>s+o.cur,0);
+  const G={A:[],B:[],C:[],D:[]}; graded.forEach(o=>G[o.tg.grade].push(o));
+  const up=graded.filter(o=>o.tgPrev&&'ABCD'.indexOf(o.tgPrev.grade)>'ABCD'.indexOf(o.tg.grade)).length, dn=graded.filter(o=>o.tgPrev&&'ABCD'.indexOf(o.tgPrev.grade)<'ABCD'.indexOf(o.tg.grade)).length;
+  const divs=[...new Set(ROWS.map(r=>r.z))].sort(divSort), Lp=LEVEL_PL[d].toLowerCase();
+  let h=`<div class="row"><div class="seg">${[[2,'Territories'],[1,'Regions'],[0,'Divisions']].map(([v,l])=>`<button class="${d===v?'on':''}" onclick="ST.grLevel=${v};ST.grGrade='';ST.sortGr=${v===0?`{k:'org',d:1}`:`{k:'s',d:-1}`};render()">${l}</button>`).join('')}</div>
+    ${ST.path.length?`<span class="note" style="margin:0">Within <b>${esc(refName)}</b> (Division / Region filter above)</span>`:''}
+    <span class="note" style="margin:0">${refName} grade: ${tgChip(N.tg,true)}</span></div>`;
+  h+=`<div class="statusbar">${['','A','B','C','D'].map(g=>{ const L=g?G[g]:graded, v=L.reduce((s,o)=>s+o.cur,0);
+     return `<div class="stat ${ST.grGrade===g?'on':''}" onclick="ST.grGrade='${g}';render()" style="min-width:150px"><div class="s">${g?`<span class="chip g-${g}">${g} · ${GRADE_TXT[g]}</span>`:`<b>All ${Lp}</b>`}</div>
+       <div class="n">${L.length}</div><div class="s">${totV?inr(v/totV*100,1):0}% of ${ST.focus} ${ST.metric==='val'?'sales':'qty'}</div></div>`; }).join('')}
+     <div class="stat" style="cursor:default"><div class="s"><b>Grade movement</b> vs ${pv||'–'}</div><div class="n"><span class="up">▲ ${up}</span> <span class="dn" style="margin-left:8px">▼ ${dn}</span></div><div class="s">upgraded · downgraded</div></div></div>`;
+  h+=`<div class="grid2"><div class="card" id="quadCard"><h3>Focus vs Growth map · ${LEVEL_PL[d]} · ${ST.focus}${info('quad')}</h3><div class="note">Bubble = ${LEVEL[d].toLowerCase()} (size = ${ST.metric==='val'?'sales':'qty'}, colour = grade) · dashed lines = ${esc(refName)} average · click a bubble to open it in Review</div>
+      <div class="legend">${['A','B','C','D'].map(g=>`<span><i style="background:${GCOL[g]};border-radius:50%"></i>${g} · ${GRADE_TXT[g]}</span>`).join('')}</div>${quadrant(units,N)}</div>
+    <div class="card"><h3>Biggest levers · ${LEVEL_PL[d]}${info('lever')}</h3><div class="note">Where ${Lp} lose most points – fix these first</div>${leverSummary(graded)}</div></div>`;
+  h+=tgCriteriaHTML();
+  // scorecard
+  const C=tgCrit(); let list=ST.grGrade?G[ST.grGrade]:graded;
+  const S=ST.sortGr, key=o=> S.k==='org'? divRank(o.label)*1000+(o.label.charCodeAt(0)||0) : S.k==='name'?o.label : S.k==='parent'?o.parts.slice(0,d).join('›') : S.k==='s'?o.tg.s : S.k==='cur'?o.cur : S.k==='mv'?(o.tgPrev?o.tg.s-o.tgPrev.s:-999) : (o.tg.parts.find(p=>p.k===S.k)||{}).p??-1;
+  list=list.slice().sort((a,b)=>{ const x=key(a),y=key(b); return (x>y?1:x<y?-1:0)*S.d; });
+  const th=(k,l,c)=>`<th class="${c||''}" onclick="sortGr('${k}')">${l}${S.k===k?(S.d>0?' ▲':' ▼'):''}</th>`;
+  h+=`<div class="card" id="grCard"><h3>${LEVEL[d]} scorecard · ${esc(refName)} · ${ST.focus}${ST.grGrade?' · Grade '+ST.grGrade:''}</h3>
+    <div class="note">${list.length} ${Lp} · value (points) for each criterion · click a row to open it in Review · click a heading to sort</div>
+    <div class="scroll" style="max-height:${MODE==='phone'?'72vh':'640px'}"><table class="rv"><tr>${th('name',LEVEL[d],'l')}${d>0?th('parent',d===1?'Division':'Division › Region','l'):''}${th('cur',ST.focus+' '+unit())}
+      ${C.map(c=>th(c.k,c.n.replace(' %','').replace('Customer ','')+' <span class="muted">/'+Math.max(c.na,...c.pts)+'</span>')).join('')}${th('s','Score')}<th class="l">Grade</th>${th('mv','vs '+(pv||'prev'))}<th class="l">Biggest lever</th></tr>
+    ${list.map(o=>`<tr class="click" onclick="${esc(`ST.path=${JSON.stringify(o.parts)};setTab('rv')`)}"><td><span class="drill">▸</span> ${esc(o.label)}</td>${d>0?`<td class="l muted">${esc(o.parts.slice(0,d).join(' › '))}</td>`:''}<td>${fmt(o.cur)}</td>
+      ${o.tg.parts.map(p=>{ const full=p.p===p.mx, zero=p.p===0; return `<td class="${full?'gd':zero?'bd':''}" title="${esc(p.n+' band: '+bandLabel(C.find(c=>c.k===p.k),p.i))}">${p.v==null?'<span class="muted">n/a</span>':(p.k==='avgBr'?inr(p.v,1):inr(p.v,1)+'%')} <span class="muted">(${p.p})</span></td>`; }).join('')}
+      <td><b>${o.tg.s}</b></td><td class="l">${tgChip(o.tg)}</td><td>${moveTxt(o.tg,o.tgPrev)}</td><td class="l" style="white-space:normal;min-width:150px">${o.tg.lever?`${esc(o.tg.lever.n)} <span class="up">+${o.tg.lever.gap}</span>`:'<span class="muted">—</span>'}</td></tr>`).join('')}
+    </table></div></div>`;
+  m.innerHTML=h;
+  m.querySelectorAll('input[data-tg]').forEach(inp=>inp.addEventListener('change',e=>{
+    const p=e.target.dataset.tg.split('.'), v=parseFloat(e.target.value); if(isNaN(v)) return;
+    if(p[0]==='grade') TG.grade[+p[1]]=v; else { const c=TG.crit.find(x=>x.k===p[0]); if(p[1]==='na') c.na=v; else c[p[1]][+p[2]]=v; }
+    saveTG(); render(); }));
+}
+function leverSummary(graded){
+  if(!graded.length) return '<div class="muted">No graded units</div>';
+  const C=tgCrit(), lost=C.map(c=>{ const mx=Math.max(c.na,...c.pts); let tot=0, n=0; graded.forEach(o=>{ const p=o.tg.parts.find(x=>x.k===c.k); tot+=mx-p.p; if(o.tg.lever&&o.tg.lever.k===c.k) n++; }); return {c,avg:tot/graded.length,n,mx}; }).sort((a,b)=>b.avg-a.avg);
+  const max=Math.max(...lost.map(x=>x.avg))||1;
+  return lost.map(x=>`<div style="display:grid;grid-template-columns:minmax(120px,40%) 1fr 92px;gap:8px;align-items:center;padding:4px 0" data-tip="${esc(`${x.c.n}: on average ${inr(x.avg,1)} of ${x.mx} points lost per unit · biggest lever for ${x.n} unit(s)`)}">
+     <div>${esc(x.c.n)}</div><div style="background:#f1f0eb;border-radius:3px;height:12px"><div style="width:${Math.max(2,x.avg/max*100)}%;height:12px;background:var(--bad);opacity:.75;border-radius:0 4px 4px 0"></div></div>
+     <div style="text-align:right;font-size:12px">−${inr(x.avg,1)} pts · <b>${x.n}</b>×</div></div>`).join('')+'<div class="note" style="margin-top:6px">Bar = average points lost per unit · <b>n×</b> = units where this is the biggest lever</div>';
+}
+
+/* ---------- DIVISION COMPARE ---------- */
+ST.cmpLevel=0;
+function renderCompare(m){
+  syncPath();
+  const lvl = ST.cmpLevel===1 && ST.path[0] ? 1 : 0;
+  ST.zone = lvl===1 ? ST.path[0] : ''; ST.region=''; ST.terr='';
+  const F=filtered(), pv=prevPeriod(), refName = lvl===1 ? ST.path[0] : 'Company';
+  const N=nodeStats(F); N.tg=unitGrade(N);
+  if(pv){ const keep=ST.focus; ST.focus=pv; try{ N.tgPrev=unitGrade(nodeStats(F)); } finally { ST.focus=keep; } }
+  const units=gradedUnits(F,lvl).filter(o=>o.cur>0||o.prev>0).sort((a,b)=>lvl===0? divSort(a.label,b.label) : b.cur-a.cur);
+  // territory grade mix per unit
+  const terrs=gradedUnits(F,2).filter(o=>o.tg), mix=new Map(), mixAll={A:0,B:0,C:0,D:0};
+  terrs.forEach(t=>{ const k=t.parts.slice(0,lvl+1).join('¦'); if(!mix.has(k)) mix.set(k,{A:0,B:0,C:0,D:0}); mix.get(k)[t.tg.grade]++; mixAll[t.tg.grade]++; });
+  units.forEach(o=>{ o.tm=mix.get(o.k)||{A:0,B:0,C:0,D:0}; o.share=N.cur?o.cur/N.cur*100:null; }); N.tm=mixAll; N.share=100;
+  const U='measure';
+  const mt=v=>v==null?'–':big(v);
+  const R=[ // rows: label, info key, value getter, formatter, which way is better
+    {sec:'Business'},
+    {l:`Net ${ST.metric==='val'?'sales':'qty'} · ${ST.focus}`, v:o=>o.cur, f:o=>mt(o.cur), b:'hi', bar:true},
+    {l:`Net ${ST.metric==='val'?'sales':'qty'} · ${pv||'prev'}`, v:o=>o.prev, f:o=>mt(o.prev)},
+    {l:'Growth %', i:'growth', v:o=>o.g, f:o=>grTxt(o.cur,o.prev), b:'hi'},
+    {l:'Share of '+refName, i:'share', v:o=>o.share, f:o=>pctC(o.share), bar:true},
+    {l:'Gross billing', v:o=>o.bill, f:o=>mt(o.bill)},
+    {l:'Avg per customer', i:'avgc', v:o=>o.avgC, f:o=>o.avgC==null?'–':big(o.avgC), b:'hi'},
+    {sec:'Customers'},
+    {l:'Active customers', i:'active', v:o=>o.act, f:o=>o.act.toLocaleString('en-IN'), b:'hi'},
+    {l:'New customers', v:o=>o.nw, f:o=>o.nw?`<span class="up">+${o.nw}</span>`:'0', b:'hi'},
+    {l:'Reactivated (back)', v:o=>o.re, f:o=>o.re?`<span class="up">+${o.re}</span>`:'0', b:'hi'},
+    {l:'Lost customers', v:o=>o.lost, f:o=>o.lost?`<span class="dn">−${o.lost}</span>`:'0', b:'lo'},
+    {l:'Retention %', i:'retn', v:o=>o.retn, f:o=>o.retn==null?'–':`${inr(o.retn,0)}% <span class="muted">(${o.kept}/${o.prevAct})</span>`, b:'hi'},
+    {l:'Top 20% customers’ share', i:'conc', v:o=>o.top20, f:o=>pctC(o.top20,0), b:'lo'},
+    {sec:'Quality'},
+    {l:'Return %', i:'ret', v:o=>o.rp, f:o=>pctC(o.rp), b:'lo'},
+    {l:'Liquidation %', i:'liq', v:o=>o.lq, f:o=>pctC(o.lq), b:'hi'},
+    ...(HAS_FOC?[{l:'Focus share %', i:'focus', v:o=>o.fp, f:o=>pctC(o.fp), b:'hi', bar:true},
+                 {l:'Focus business growth %', i:'tgrade', v:o=>o.fg, f:o=>o.fg==null?(o.fc>0?'<span class="up">New</span>':'–'):grTxt(o.fc,o.fpv), b:'hi'}]:[]),
+    {l:'Discount %', i:'disc', v:o=>o.disc, f:o=>pctC(o.disc), b:'lo'},
+    {l:'Realisation ₹/kg', i:'real', v:o=>o.real, f:o=>o.real==null?'–':'₹ '+inr(o.real,1), b:'hi'},
+    {l:'Avg hybrid breadth', i:'breadth', v:o=>o.avgBr, f:o=>numC(o.avgBr), b:'hi'},
+    {l:'Hybrids sold', v:o=>o.hyb, f:o=>o.hyb, b:'hi'},
+    {sec:'Grades'},
+    {l:(lvl?'Region':'Division')+' grade', i:'tgrade', v:o=>o.tg?o.tg.s:null, f:o=>tgChip(o.tg), b:'hi'},
+    {l:'Grade vs '+(pv||'prev'), v:o=>o.tg&&o.tgPrev?o.tg.s-o.tgPrev.s:null, f:o=>moveTxt(o.tg,o.tgPrev)},
+    {l:'Territories A / B / C / D', v:o=>{const t=o.tm,n=t.A+t.B+t.C+t.D; return n?(t.A+t.B)/n*100:null;}, f:o=>gradeMixCell(o.tm), b:'hi', note:'ranked by % of territories graded A or B'},
+    {l:'Dealer health (avg score)', i:'health', v:o=>o.hs, f:o=>o.hs==null?'–':`<b>${inr(o.hs,0)}</b>`, b:'hi'},
+    {l:'Dealers A / B / C / D', v:o=>o.hsN?(o.G.A+o.G.B)/o.hsN*100:null, f:o=>gradeMixCell(o.G), b:'hi', note:'ranked by % of dealers graded A or B'}
+  ];
+  const cols=units;
+  let wins=new Map(cols.map(o=>[o.k,0])), loss=new Map(cols.map(o=>[o.k,0]));
+  let body='';
+  for(const r of R){
+    if(r.sec){ body+=`<tr class="csec"><td colspan="${cols.length+2}">${r.sec}</td></tr>`; continue; }
+    const vals=cols.map(o=>r.v(o)).filter(v=>v!=null&&!isNaN(v));
+    const best=r.b&&vals.length>1? (r.b==='hi'?Math.max(...vals):Math.min(...vals)) : null;
+    const worst=r.b&&vals.length>1? (r.b==='hi'?Math.min(...vals):Math.max(...vals)) : null;
+    const flat = best!=null && Math.abs(best-worst) <= Math.max(Math.abs(best),Math.abs(worst))*0.01;   // differences under 1% are not highlighted
+    const maxBar=r.bar? Math.max(...vals.map(Math.abs),0)||1 : 0;
+    body+=`<tr><td class="cl" title="${r.note?esc(r.note):''}">${r.l}${r.i?info(r.i):''}</td>${cols.map(o=>{ const v=r.v(o);
+        let cls=''; if(best!=null&&!flat&&v!=null&&best!==worst){ if(v===best){cls='cbest'; wins.set(o.k,wins.get(o.k)+1);} else if(v===worst){cls='cworst'; loss.set(o.k,loss.get(o.k)+1);} }
+        const bar=r.bar&&v!=null? `<div class="cbar"><div style="width:${Math.max(2,Math.abs(v)/maxBar*100)}%"></div></div>`:'';
+        return `<td class="${cls}">${cls==='cbest'?'<span class="cmark">★</span>':''}${r.f(o)}${bar}</td>`; }).join('')}
+      <td class="ctot">${r.f(N)}</td></tr>`;
+  }
+  const head=`<tr><th class="l">${lvl?'Regions of '+esc(refName):'Parameter'}</th>${cols.map(o=>`<th class="chd" onclick="${esc(`ST.path=${JSON.stringify(o.parts)};setTab('rv')`)}" title="Open ${esc(o.label)} in Review"><div>${esc(o.label)}</div><div style="margin-top:3px">${tgChip(o.tg)}</div></th>`).join('')}<th class="chd ctot"><div>${esc(lvl?'Total '+refName:'Company')}</div><div style="margin-top:3px">${tgChip(N.tg)}</div></th></tr>`;
+  const foot=`<tr class="csum"><td class="cl">★ best / ▼ weakest count</td>${cols.map(o=>`<td><span class="up">★ ${wins.get(o.k)}</span> · <span class="dn">▼ ${loss.get(o.k)}</span></td>`).join('')}<td class="ctot"></td></tr>`;
+  const divSel = ST.path[0]? `<div class="seg">${[[0,'Divisions'],[1,'Regions of '+esc(ST.path[0])]].map(([v,l])=>`<button class="${lvl===v?'on':''}" onclick="ST.cmpLevel=${v};render()">${l}</button>`).join('')}</div>` : '';
+  m.innerHTML=`<div class="row">${divSel}<span class="note" style="margin:0">${lvl?'':'All divisions compared side by side'}${ST.path[0]&&!lvl?' · pick “Regions of '+esc(ST.path[0])+'” to compare its regions':''}${!ST.path[0]?' · choose a Division in the filter to also compare its Regions':''}</span></div>
+    <div class="card" id="cmpCard"><h3>${lvl?'Region':'Division'} comparison · ${ST.focus} vs ${pv||'–'}</h3>
+      <div class="note">${unit()==='MT'?'Quantities in MT':'Values in ₹'} · <span class="cbest" style="padding:0 6px;border-radius:3px">★ green</span> = best ${lvl?'region':'division'} on that row, <span class="cworst" style="padding:0 6px;border-radius:3px">red</span> = weakest · last column = ${esc(lvl?'Total '+refName:'Company')} · click a ${lvl?'region':'division'} name to open it in Review</div>
+      <div class="scroll cmpwrap" style="max-height:${MODE==='phone'?'78vh':'none'}"><table class="cmp">${head}${body}${foot}</table></div></div>`;
+}
+function gradeMixCell(t){
+  const n=t.A+t.B+t.C+t.D; if(!n) return '<span class="muted">–</span>';
+  return `<div style="display:flex;align-items:center;gap:6px;justify-content:flex-end"><span style="white-space:nowrap;font-size:12px">${['A','B','C','D'].map(g=>`<b style="color:${GCOL[g]}">${t[g]}</b>`).join(' / ')}</span>${mixBar(t,n)}</div>`;
+}
+
+/* ===================== RENDER ===================== */
+function render(){
+  fltSummary();
+  if(!ROWS.length) return;
+  const m=$('main');
+  ({rv:renderReview,cmp:renderCompare,lg:renderLeague,gr:renderGrades,pm:renderMix})[ST.tab](m);
+}
+function stColor(type){ const types=[...new Set(SEASONS.map(s=>s.type))]; return STYPE_COLOR[types.indexOf(type)%4]||'var(--s1)'; }
+
+setMode(MODE,false);
+addEventListener('orientationchange',()=>setTimeout(()=>{ if(ROWS.length) render(); },300));
+</script>
+</body>
+</html>

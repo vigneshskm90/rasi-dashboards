@@ -2,165 +2,225 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1f6f3a">
 <title>Rasi Dashboards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#f3f5f1; --card:#ffffff; --ink:#18221a; --muted:#66705f; --line:#e1e6dc;
-    --brand:#1f6f3a; --brand2:#2e9152; --brand-soft:#e5f2e8;
-    --amber:#a8670f; --amber-soft:#fcf0dc;
-    --shadow:0 1px 2px rgba(16,24,16,.04),0 4px 14px rgba(16,24,16,.06);
+    --bg:#f2f5f0; --card:#ffffff; --ink:#142016; --muted:#5f6b59; --line:#e0e6da;
+    --brand:#1f6f3a; --brand2:#2e9152; --brand-soft:#e4f2e7;
+    --shadow:0 1px 2px rgba(16,24,16,.04),0 6px 20px rgba(16,24,16,.06);
+    --shadow-hi:0 2px 4px rgba(16,24,16,.05),0 16px 36px rgba(16,24,16,.12);
+    --r:20px;
   }
   @media (prefers-color-scheme: dark){
-    :root{ --bg:#0f130f; --card:#181e18; --ink:#e8eee5; --muted:#9aa594; --line:#273026;
-      --brand:#5cbf7a; --brand2:#3f9d5e; --brand-soft:#1b2c1f; --amber:#e4ad55; --amber-soft:#2d2515;
-      --shadow:0 1px 2px rgba(0,0,0,.3); }
+    :root{ --bg:#0d110d; --card:#161c16; --ink:#e8eee5; --muted:#9aa594; --line:#252e24;
+      --brand:#5cbf7a; --brand2:#3f9d5e; --brand-soft:#1a2b1e;
+      --shadow:0 1px 2px rgba(0,0,0,.35); --shadow-hi:0 10px 30px rgba(0,0,0,.5); }
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0}
   body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);
-    -webkit-font-smoothing:antialiased}
+    -webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
 
   /* Hero */
-  .hero{background:linear-gradient(135deg,#1f6f3a 0%,#2e9152 60%,#3fae66 100%);color:#fff;
-    padding:22px 18px 64px}
-  .hero-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:14px}
-  .logo{width:46px;height:46px;flex:none;border-radius:14px;background:rgba(255,255,255,.18);
-    display:grid;place-items:center;font-weight:800;font-size:20px;letter-spacing:.5px;border:1px solid rgba(255,255,255,.28)}
-  .hero h1{font-size:22px;margin:0;font-weight:800;letter-spacing:-.2px}
-  .hero .date{font-size:13px;opacity:.85;margin-top:2px}
-  .hero p{max-width:1080px;margin:14px auto 0;font-size:14px;opacity:.92;line-height:1.5}
+  .hero{position:relative;overflow:hidden;color:#fff;
+    background:
+      radial-gradient(900px 320px at 85% -10%,rgba(255,255,255,.18),transparent 60%),
+      radial-gradient(600px 260px at -10% 120%,rgba(0,0,0,.18),transparent 60%),
+      linear-gradient(135deg,#17592e 0%,#1f6f3a 35%,#2e9152 75%,#3fae66 100%);
+    padding:calc(22px + env(safe-area-inset-top)) 18px 70px}
+  .hero::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.10;
+    background-image:radial-gradient(rgba(255,255,255,.9) 1px,transparent 1.2px);background-size:18px 18px;
+    mask-image:linear-gradient(180deg,#000 0%,transparent 85%);-webkit-mask-image:linear-gradient(180deg,#000 0%,transparent 85%)}
+  .hero-in{position:relative;z-index:1;max-width:1100px;margin:0 auto}
+  .brand{display:flex;align-items:center;gap:14px}
+  .logo{width:48px;height:48px;flex:none;border-radius:15px;background:rgba(255,255,255,.16);
+    display:grid;place-items:center;font-weight:800;font-size:21px;border:1px solid rgba(255,255,255,.3);
+    backdrop-filter:blur(6px);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+  .hero h1{font-size:23px;margin:0;font-weight:800;letter-spacing:-.4px}
+  .hero .tag{font-size:12.5px;opacity:.85;margin-top:3px;font-weight:500}
+  .hero p{margin:16px 0 0;font-size:14px;opacity:.92;line-height:1.55;max-width:560px}
+  .count{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:12px;font-weight:600;
+    background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);padding:5px 11px;border-radius:99px}
+  .count i{width:7px;height:7px;border-radius:50%;background:#9ff0b8;box-shadow:0 0 0 3px rgba(159,240,184,.25)}
 
-  /* Stats */
-  .wrap{max-width:1080px;margin:-44px auto 0;padding:0 14px 36px}
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
-  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow)}
-  .stat b{display:block;font-size:22px;font-weight:800}
-  .stat span{font-size:12px;color:var(--muted)}
-
-  .section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:6px 4px 10px}
+  /* Layout */
+  .wrap{flex:1;width:100%;max-width:1100px;margin:-46px auto 0;padding:0 14px 28px;position:relative;z-index:2}
+  .section-title{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.9px;color:#fff;margin:0 4px 12px;opacity:.95}
 
   /* Cards */
   .grid{display:grid;grid-template-columns:1fr;gap:12px}
-  .card{position:relative;display:flex;gap:14px;align-items:flex-start;text-decoration:none;color:inherit;
-    background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow);
-    min-height:96px;transition:transform .15s ease, box-shadow .15s ease, border-color .15s}
-  a.card:active{transform:scale(.985)}
-  .ic{width:48px;height:48px;flex:none;border-radius:14px;display:grid;place-items:center;font-size:24px;background:var(--brand-soft)}
+  .card{--accent:#1f6f3a;--accent-soft:#e4f2e7;
+    position:relative;display:flex;gap:14px;align-items:center;text-decoration:none;color:inherit;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);
+    overflow:hidden;transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent);opacity:.9}
+  .card:active{transform:scale(.985)}
+  .card:focus-visible{outline:3px solid var(--brand2);outline-offset:2px}
+  .ic{width:50px;height:50px;flex:none;border-radius:15px;display:grid;place-items:center;font-size:25px;
+    background:var(--accent-soft)}
   .body{flex:1;min-width:0}
-  .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .card h2{font-size:16px;margin:0;font-weight:700}
-  .card p{font-size:13.5px;color:var(--muted);margin:5px 0 10px;line-height:1.45}
-  .files{display:flex;flex-wrap:wrap;gap:6px}
-  .files code{font-family:inherit;font-size:11.5px;background:var(--bg);border:1px solid var(--line);padding:3px 8px;border-radius:8px;color:var(--muted)}
-  .pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap}
-  .live{background:var(--brand-soft);color:var(--brand)}
-  .soon{background:var(--amber-soft);color:var(--amber)}
-  .go{flex:none;align-self:center;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
-    background:var(--brand-soft);color:var(--brand);font-size:18px;font-weight:700}
-  .card.pending{opacity:.92}
-  .card.pending .go{background:transparent;color:var(--muted);font-size:15px}
+  .card h2{font-size:16px;margin:0;font-weight:700;letter-spacing:-.2px}
+  .card p{font-size:13.2px;color:var(--muted);margin:4px 0 0;line-height:1.45}
+  .files{display:none;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .files code{font-family:inherit;font-size:11.5px;font-weight:500;background:var(--bg);border:1px solid var(--line);
+    padding:3px 9px;border-radius:8px;color:var(--muted)}
+  .go{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent);transition:transform .18s ease, background .18s ease, color .18s ease}
+  .go svg{width:16px;height:16px}
 
+  /* Accents per dashboard */
+  .c-bu    {--accent:#1f6f3a;--accent-soft:#e2f1e6}
+  .c-target{--accent:#c2410c;--accent-soft:#fdeee4}
+  .c-cust  {--accent:#2563eb;--accent-soft:#e6eefc}
+  .c-pog   {--accent:#7c3aed;--accent-soft:#f0e9fd}
+  .c-disp  {--accent:#0f766e;--accent-soft:#e1f3f1}
+  .c-rew   {--accent:#b45309;--accent-soft:#fcf1dc}
+  @media (prefers-color-scheme: dark){
+    .c-bu    {--accent:#5cbf7a;--accent-soft:#1a2b1e}
+    .c-target{--accent:#fb923c;--accent-soft:#2e1d12}
+    .c-cust  {--accent:#7aa5ff;--accent-soft:#16203a}
+    .c-pog   {--accent:#b08cff;--accent-soft:#241a38}
+    .c-disp  {--accent:#4fd1c5;--accent-soft:#12292a}
+    .c-rew   {--accent:#f2b45a;--accent-soft:#2d2313}
+  }
+
+  /* Note */
   .note{margin-top:18px;display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px dashed var(--line);
     border-radius:16px;padding:14px 16px;font-size:13px;color:var(--muted);line-height:1.55}
-  .note .ic{width:36px;height:36px;font-size:18px;border-radius:10px}
+  .note .ic{width:36px;height:36px;font-size:18px;border-radius:11px;background:var(--brand-soft)}
   .note b{color:var(--ink)}
-  footer{text-align:center;color:var(--muted);font-size:12px;margin-top:24px;letter-spacing:.3px}
 
-  /* PC / tablet */
+  /* Footer with date */
+  footer{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 14px calc(22px + env(safe-area-inset-bottom))}
+  footer .d{display:inline-flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);
+    padding:7px 14px;border-radius:99px;font-weight:500}
+  footer svg{width:14px;height:14px;opacity:.75}
+
+  /* Tablet / PC */
   @media (min-width:760px){
-    .hero{padding:34px 28px 80px}
-    .hero h1{font-size:28px}
-    .logo{width:56px;height:56px;font-size:24px;border-radius:16px}
+    .hero{padding:38px 28px 92px}
+    .hero h1{font-size:30px}
+    .logo{width:58px;height:58px;font-size:25px;border-radius:17px}
     .hero p{font-size:15px}
-    .wrap{margin-top:-56px;padding:0 28px 48px}
-    .stats{gap:14px;margin-bottom:24px}
-    .stat{padding:16px 18px}
-    .stat b{font-size:26px}
+    .wrap{margin-top:-60px;padding:0 28px 36px}
     .grid{grid-template-columns:repeat(2,1fr);gap:16px}
-    .card{flex-direction:column;padding:20px;min-height:210px}
-    .card .go{position:absolute;top:18px;right:18px}
-    .card p{min-height:40px}
-    a.card:hover{transform:translateY(-3px);border-color:var(--brand2);box-shadow:0 10px 28px rgba(16,24,16,.10)}
+    .card{flex-direction:column;align-items:flex-start;padding:22px 22px 20px;min-height:200px}
+    .card::before{left:0;right:0;top:0;bottom:auto;width:auto;height:4px}
+    .card .go{position:absolute;top:20px;right:20px}
+    .files{display:flex;margin-top:auto;padding-top:14px}
+    .body{display:flex;flex-direction:column;flex:1;width:100%}
+    .card h2{font-size:17px}
+    .card p{padding-right:8px}
+    .card:hover{transform:translateY(-4px);box-shadow:var(--shadow-hi);border-color:var(--accent)}
+    .card:hover .go{background:var(--accent);color:#fff;transform:translateX(2px)}
   }
-  @media (min-width:1080px){
+  @media (min-width:1060px){
     .grid{grid-template-columns:repeat(3,1fr)}
-    .card{min-height:250px}
+    .card{min-height:220px}
   }
+  @media (prefers-reduced-motion: reduce){ .card,.go{transition:none} }
 </style>
 </head>
 <body>
-  <div class="hero">
+  <header class="hero">
     <div class="hero-in">
-      <div class="logo">R</div>
-      <div>
-        <h1>Rasi Dashboards</h1>
-        <div class="date" id="today"></div>
+      <div class="brand">
+        <div class="logo">R</div>
+        <div>
+          <h1>Rasi Dashboards</h1>
+          <div class="tag">Business intelligence hub</div>
+        </div>
       </div>
+      <p>All dashboards in one place. Data is read from the company OneDrive.</p>
+      <div class="count"><i></i>6 dashboards live</div>
     </div>
-    <p>All dashboards in one place. Data is read from the company OneDrive.</p>
-  </div>
+  </header>
 
-  <div class="wrap">
-
+  <main class="wrap">
     <div class="section-title">Dashboards</div>
     <div class="grid">
-      <a class="card" href="target-coach.html">
+
+      <!-- Row 1 -->
+      <a class="card c-bu" href="fc-bu-360.html">
+        <div class="ic">🏢</div>
+        <div class="body">
+          <h2>Rasi FC BU 360</h2>
+          <p>Division › Region › Territory review with A/B/C/D grading and Division comparison.</p>
+          <div class="files"><code>Customer transactions</code></div>
+        </div>
+        <div class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>
+      </a>
+
+      <a class="card c-target" href="target-coach.html">
         <div class="ic">🎯</div>
         <div class="body">
-          <div class="top"><h2>Target Coach</h2></div>
+          <h2>Target Coach</h2>
           <p>Market potential, last year and plan targets by season, down to Territory.</p>
           <div class="files"><code>Sales plan</code></div>
         </div>
-        <div class="go">›</div>
+        <div class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>
       </a>
-      <a class="card" href="customer-360.html">
+
+      <a class="card c-cust" href="customer-360.html">
         <div class="ic">👥</div>
         <div class="body">
-          <div class="top"><h2>Customer 360</h2></div>
+          <h2>Customer 360</h2>
           <p>Customer intelligence on 3 years of transactions.</p>
           <div class="files"><code>Customer transactions</code></div>
         </div>
-        <div class="go">›</div>
+        <div class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>
       </a>
-      <a class="card" href="plan-invoice-pog.html">
+
+      <!-- Row 2 -->
+      <a class="card c-pog" href="plan-invoice-pog.html">
         <div class="ic">📊</div>
         <div class="body">
-          <div class="top"><h2>Plan vs Invoice vs POG</h2></div>
+          <h2>Plan vs Invoice vs POG</h2>
           <p>Business, Crop and Product views with %POG, Division to Territory.</p>
           <div class="files"><code>Plan.xlsx</code><code>Invoice.csv</code><code>POG.csv</code></div>
         </div>
-        <div class="go">›</div>
+        <div class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>
       </a>
-      <a class="card" href="dispatch.html">
+
+      <a class="card c-disp" href="dispatch.html">
         <div class="ic">🚚</div>
         <div class="body">
-          <div class="top"><h2>Dispatch Dashboard</h2></div>
+          <h2>Dispatch Dashboard</h2>
           <p>DS and STO indents against regional targets, with stock position.</p>
           <div class="files"><code>Dispatch.csv</code><code>Stock.csv</code><code>Plan.xlsx</code></div>
         </div>
-        <div class="go">›</div>
+        <div class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>
       </a>
-      <a class="card" href="rewards.html">
+
+      <a class="card c-rew" href="rewards.html">
         <div class="ic">🏆</div>
         <div class="body">
-          <div class="top"><h2>Rasi Connect Rewards</h2></div>
+          <h2>Rasi Connect Rewards</h2>
           <p>Retailer rewards and performance across 3 years of seasons.</p>
           <div class="files"><code>3 Year Combined</code></div>
         </div>
-        <div class="go">›</div>
+        <div class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>
       </a>
+
     </div>
 
     <div class="note">
       <div class="ic">☁️</div>
       <div><b>Data from OneDrive</b><br>Open a dashboard, tap <b>Load File</b> and pick the latest file from the OneDrive folder. Use the browser Back button to return here.</div>
     </div>
+  </main>
 
-    <footer>By SKMV</footer>
-  </div>
+  <footer>
+    <span class="d">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+      <span id="today"></span>
+    </span>
+  </footer>
 
 <script>
   try{
