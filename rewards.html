@@ -53,6 +53,7 @@ header .sp{flex:1}
 .btn:hover{border-color:var(--accent)}
 .btn:focus-visible,select:focus-visible,input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
 header .btn{background:transparent;color:#fff;border-color:rgba(255,255,255,.45)}
+header .btn.warn{background:#b42323;border-color:#b42323;color:#fff;font-weight:600}
 header .btn.primary{background:var(--gold);color:#1b2a22;border-color:var(--gold);font-weight:600}
 header select{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.45)}
 header select option{color:#18231d;background:#fff}
@@ -204,6 +205,7 @@ body.touch .rasi-thbtn,body.m-phone .rasi-thbtn,body.m-tab .rasi-thbtn,body.m-ip
   <select id="roleSel" title="Set the filters and opening tab for a role" style="display:none" aria-label="View as"></select>
   <input type="file" id="file" accept=".csv,.xlsx,.xls,.xlsb,.xlsm" multiple hidden>
   <button class="btn primary" id="loadBtn" type="button">Load data file</button>
+  <button class="btn" id="clearBtn" type="button" style="display:none" title="Remove the loaded data from this browser so a new file can be loaded">Clear data</button>
   <button class="btn" type="button" id="guideBtn">Guide</button>
   <div class="modesw" id="modeSw" title="Layout"><button type="button" data-mode="pc">PC</button><button type="button" data-mode="phone">Phone</button><button type="button" data-mode="tab">iPad</button></div>
   <button type="button" class="rasi-thbtn" id="rasiThemeBtn" onclick="rasiTheme.cycle()" title="Theme" aria-label="Theme">🌓</button>
@@ -248,7 +250,7 @@ body.touch .rasi-thbtn,body.m-phone .rasi-thbtn,body.m-tab .rasi-thbtn,body.m-ip
       Choose <b>Load data file</b>, or drop the file here. Excel (.xlsx) and CSV both work. CSV is faster for heavy files.<br><br>
       <b>Columns needed:</b> Retailer Code, Product, Quantity In Kg, Season (KH25, RB25 …).<br>
       <b>Also used when present:</b> Division, Region, Territory, District, Category, Retailer Mobile No, Retailer Shop Name, Retailer Name, Product Category, Supply Distributor Code and Name, Registration Status, Product Category2 (Focus).<br><br>
-      Several files chosen together are combined. Names are put in capitals after loading, so the same shop, product or area typed in different cases is counted as one. Loading again replaces the data. The file stays in this browser, and the dashboard remembers it for next time.<br><br>
+      Several files chosen together are combined. Names are put in capitals after loading, so the same shop, product or area typed in different cases is counted as one. Loading again replaces the data. The file stays in this browser, and the dashboard remembers it for next time; <b>Clear data</b> removes it.<br><br>
       <button class="btn" type="button" id="exBtn">Try it with example data</button>
     </div>
   </div>
@@ -274,6 +276,9 @@ const pctTxt=(v,d=1)=>v==null?'<span class="muted">–</span>':inr(v,d)+'%';
 const dash='<span class="muted">–</span>';
 const tick=()=>new Promise(r=>setTimeout(r,0));
 
+/* fixed division order: North 1, North 2, South, Central, then any other */
+function divRank(name){const n=norm(name);if(/^(nd1|north1|n1|northdivision1)$/.test(n)||/north.*1$/.test(n))return 0;if(/^(nd2|north2|n2|northdivision2)$/.test(n)||/north.*2$/.test(n))return 1;if(/south/.test(n))return 2;if(/central/.test(n))return 3;return 4}
+const divCmp=(a,b)=>divRank(a)-divRank(b)||String(a).localeCompare(String(b));
 /* ===================== STATE ===================== */
 let D=null;            // {S:[season codes], L:{div,reg,ter,dis,cat,pc,dst}, RT:[retailers], PR:[products], R:[rows], hasFoc, hasSt, src}
 // row = [season, div, reg, ter, dis, retailer, product, distributor, kg, transactions]
@@ -416,6 +421,18 @@ function exampleData(){
       seas.forEach((s,si)=>{if(si<start||si>=stop||rnd()<.12)return;for(const p of my){if(rnd()<.25)continue;const t=1+Math.floor(rnd()*3);for(let j=0;j<t;j++)B.add({div:dv,reg:rg,ter,dis,cat,rc,mob,shop,rn,prod:p[0],pc:p[1],kg:Math.round(size*(0.5+rnd())*(1+si*.06)/t),sea:s,dc:(multi&&j%2?dists[1-dists.indexOf(ds)]:ds)[0],dn:(multi&&j%2?dists[1-dists.indexOf(ds)]:ds)[1],st:stt,foc:p[2],sc:multi?2:1,sp:multi?'One To Many':'One To One'})}})}}
   return B.finish({name:'Example data (made up)',rows:B.rows,when:'',example:true})}
 $('exBtn').addEventListener('click',()=>applyData(exampleData()));
+/* Clear: forget the loaded data so a new file can be loaded */
+const EMPTY_HTML=$('main').innerHTML;
+async function idbClear(){try{const db=await idb();await new Promise(res=>{const tx=db.transaction('kv','readwrite');tx.objectStore('kv').delete('data');tx.oncomplete=tx.onerror=tx.onabort=()=>res()})}catch(e){}}
+let clearArm=null;
+$('clearBtn').addEventListener('click',async()=>{const b=$('clearBtn');
+  if(!clearArm){b.textContent='Tap again to clear';b.classList.add('warn');clearArm=setTimeout(()=>{clearArm=null;b.textContent='Clear data';b.classList.remove('warn')},4000);return}
+  clearTimeout(clearArm);clearArm=null;b.textContent='Clear data';b.classList.remove('warn');
+  await idbClear();D=null;C=null;RL=null;
+  ['filters','tabs','sum','exbar','chips','fltBtn','roleSel','status','clearBtn'].forEach(id=>{$(id).style.display='none'});
+  $('filters').classList.remove('open');$('mini').classList.remove('show');$('shareMenu').style.display='none';
+  $('loadinfo').textContent='No data loaded';$('main').innerHTML=EMPTY_HTML;$('exBtn').addEventListener('click',()=>applyData(exampleData()));
+  scrollTo(0,0);toast('Data cleared. Choose Load data file to load a new file.')});
 
 /* ===================== APPLY DATA / FILTER UI ===================== */
 const ROLES={head:['Business Head','ov'],division:['Divisional Manager','geo'],region:['Region Business Manager','geo'],territory:['Territory Manager','rt'],product:['Product Manager','pr']};
@@ -426,7 +443,7 @@ function applyData(nd){
   Object.assign(ST,{focus:-1,comp:-1,div:-1,reg:-1,ter:-1,dis:-1,cat:-1,pc:-1,foc:'',prod:-1,rst:'',src:'',dst:-1,ret:-1,rStatus:'',rq:'',hsGrade:'',hsTer:-1,role:'head',tab:'ov'});OPEN.clear();HSOPEN.clear();TYOPEN.clear();SRC_SET.clear();
   $('filters').style.display=MODE==='pc'?'flex':'';$('filters').classList.remove('open');$('tabs').style.display='flex';$('sum').style.display='block';$('roleSel').style.display='';
   $('roleSel').innerHTML=Object.entries(ROLES).map(([k,v])=>`<option value="${k}">View as: ${v[0]}</option>`).join('');
-  $('exbar').style.display=D.src.example?'block':'none';
+  $('exbar').style.display=D.src.example?'block':'none';$('clearBtn').style.display='';
   $('loadinfo').textContent=`${D.src.name} · ${inr(D.src.rows)} rows · ${inr(D.RT.length)} retailers · ${D.S[0]} to ${D.S[D.S.length-1]}`+(D.src.when?' · loaded '+D.src.when:'');
   fillFilters();setTab('ov');
 }
@@ -439,7 +456,7 @@ function fillFilters(){
   const byName=(a,b)=>String(a[1]).localeCompare(String(b[1]));
   const regs=new Set(),ters=new Set(),diss=new Set();
   for(const r of D.R){if(ST.div>=0&&r[1]!==ST.div)continue;regs.add(r[2]);if(ST.reg>=0&&r[2]!==ST.reg)continue;ters.add(r[3]);if(ST.ter>=0&&r[3]!==ST.ter)continue;diss.add(r[4])}
-  ST.div=opt($('fDiv'),L.div.map((x,i)=>[i,x]).sort(byName),ST.div,'All divisions');
+  ST.div=opt($('fDiv'),L.div.map((x,i)=>[i,x]).sort((a,b)=>divCmp(a[1],b[1])),ST.div,'All divisions');
   ST.reg=opt($('fReg'),[...regs].map(i=>[i,L.reg[i]]).sort(byName),ST.reg,'All regions');
   ST.ter=opt($('fTer'),[...ters].map(i=>[i,L.ter[i][0]+(ST.reg<0?' ('+L.reg[L.ter[i][1]]+')':'')]).sort(byName),ST.ter,'All territories');
   ST.dis=opt($('fDis'),[...diss].map(i=>[i,L.dis[i][0]+(ST.ter<0?' ('+L.ter[L.dis[i][1]][0]+')':'')]).sort(byName),ST.dis,'All districts');
@@ -626,7 +643,7 @@ function renderGeo(m){const {F,fi,ci,a,b}=C,NP=D.PR.length,N=new Map();
     return `<tr class="${cls}${click?' click':''}" ${click?`data-k="${esc(k)}"`:''}><td>${label}</td>${b?`<td>${MT(o.b)}</td>`:''}<td>${MT(o.a)}</td><td>${b?grTxt(o.a,o.b):''}</td><td>${inr(o.ra.size)}</td><td>${b&&o.rb.size?inr(kept/o.rb.size*100,0)+'%':'–'}</td><td>${b?inr(o.rb.size-kept):'–'}</td>${D.hasFoc?`<td>${o.a>0?inr(o.fa/o.a*100,1)+'%':'–'}</td>`:''}<td>${o.ra.size?inr(o.pr.size/o.ra.size,1):'–'}</td></tr>`};
   const kids=(pre,depth)=>[...N.keys()].filter(k=>k!=='T'&&k.split('¦').length===depth&&(pre==null||k.startsWith(pre+'¦'))).sort((x,y)=>N.get(y).a-N.get(x).a);
   let rows='';
-  for(const dk of kids(null,1)){const od=OPEN.has(dk);rows+=line('l0',(od?'▾ ':'▸ ')+esc(D.L.div[+dk]),dk,true);if(!od)continue;
+  for(const dk of kids(null,1).sort((x,y)=>divCmp(D.L.div[+x],D.L.div[+y]))){const od=OPEN.has(dk);rows+=line('l0',(od?'▾ ':'▸ ')+esc(D.L.div[+dk]),dk,true);if(!od)continue;
     for(const gk of kids(dk,2)){const og=OPEN.has(gk);rows+=line('l1',(og?'▾ ':'▸ ')+esc(D.L.reg[+gk.split('¦')[1]]),gk,true);
       if(og)for(const tk of kids(gk,3)){const ot=OPEN.has(tk);rows+=line('l2',(ot?'▾ ':'▸ ')+esc(D.L.ter[+tk.split('¦')[2]][0]),tk,true);
         if(ot)for(const xk of kids(tk,4))rows+=line('l3',esc(D.L.dis[+xk.split('¦')[3]][0]),xk)}}}
@@ -834,7 +851,7 @@ function renderType(m){const L=retList(),{F,fi,ci,a,b}=C,T=typeStats(L),gcol={A:
 /* Division › Region › Territory tree. M: Map of keys 'd|<div>', 'g|<div>|<reg>', 't|<div>|<reg>|<ter>' -> stats */
 function treeAdd(M,d,g,t,fn){for(const k of ['d|'+d,'g|'+d+'|'+g,'t|'+d+'|'+g+'|'+t]){let x=M.get(k);x=fn(x);M.set(k,x)}}
 function treeRows(M,S,set,rowFn,tAttr){const lv=k=>k.split('|').length-1,ch=(pre,n)=>[...M].filter(([k])=>lv(k)===n&&(pre==null||k.startsWith(pre.slice(2)+'|',2))).sort(S);let h='';
-  for(const [dk,dx] of ch(null,1)){const od=set.has(dk);h+=rowFn('l0 click',(od?'▾ ':'▸ ')+esc(D.L.div[+dk.split('|')[1]]),dx,`data-tk="${dk}"`);if(!od)continue;
+  for(const [dk,dx] of ch(null,1).sort((x,y)=>divCmp(D.L.div[+x[0].split('|')[1]],D.L.div[+y[0].split('|')[1]]))){const od=set.has(dk);h+=rowFn('l0 click',(od?'▾ ':'▸ ')+esc(D.L.div[+dk.split('|')[1]]),dx,`data-tk="${dk}"`);if(!od)continue;
     for(const [gk,gx] of ch(dk,2)){const og=set.has(gk);h+=rowFn('l1 click',(og?'▾ ':'▸ ')+esc(D.L.reg[+gk.split('|')[2]]),gx,`data-tk="${gk}"`);if(!og)continue;
       for(const [tk,tx] of ch(gk,3)){const t=+tk.split('|')[3];h+=rowFn('l2'+(tAttr?' click'+(tAttr(t)?' sel':''):''),esc(D.L.ter[t][0]),tx,tAttr?`data-tt="${t}"`:'')}}}
   return h}
